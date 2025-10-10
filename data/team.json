@@ -105,18 +105,15 @@
       "badge": "Electrical",
       "photo": "assets/images/team/weston-keller.jpg",
       "bio": {
-        "full": "Weston handles the power electronics and control systems for the DRIP project. He designs the high-power circuits needed for the induction heating system and integrates all electrical subsystems.",
+        "full": "Weston is studying Electrical Engineering and Music with a focus in DSP, analog circuits, and information theory. He works with fMRI neural imaging techniques and functional analysis with the CLiMB Lab at Stanford Bio-X. Recent side projects include (RV)iolin - Logistic Regression and RV Filtering for Realistic Violin Timbre FM Synthesis, and Tone Death - Sound Stem Separation and Neuroplasticity Aids in VR Space at Stanford's Center for Computer Research In Music and Acoustics (CCRMA). In his free time, Weston plays violin and works on documentary short films.",
         "responsibilities": [
-          "Power electronics design",
-          "Control circuit development",
-          "System integration and wiring",
-          "Electrical safety and compliance"
+          "Manage AC/DC power distribution and controls",
+          "PCB design"
         ],
         "expertise": [
-          "Power electronics",
-          "Circuit design",
-          "PCB layout and fabrication",
-          "Embedded systems"
+          "Hardware Rapid Prototyping",
+          "Digital Signal Processing",
+          "Embedded Systems Design"
         ]
       },
       "social": {

@@ -38,7 +38,7 @@ Message:
 ${data.message}`;
         
         // Create mailto link
-        const mailtoLink = `mailto:drip-team@stanford.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        const mailtoLink = `mailto:jamie@drip-3d.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
         
         // Open email client
         window.location.href = mailtoLink;
