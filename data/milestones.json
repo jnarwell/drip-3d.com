@@ -1,0 +1,248 @@
+{
+  "lastUpdated": "2025-08-27",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Design & Planning",
+      "status": "in-progress",
+      "progress": 50,
+      "startDate": "2025-08-27",
+      "endDate": "2026-01-30",
+      "milestones": [
+        {
+          "id": "m1-1",
+          "title": "Requirements Definition",
+          "status": "complete",
+          "description": "Completed SR001-SR015 system requirements documentation",
+          "completedDate": "2025-01-10",
+          "details": {
+            "summary": "Defined comprehensive system requirements covering performance, safety, materials, and operational specifications.",
+            "deliverables": [
+              "System Requirements Document (SRD)",
+              "Performance specifications matrix",
+              "Safety requirements checklist"
+            ]
+          }
+        },
+        {
+          "id": "m1-2",
+          "title": "System Architecture",
+          "status": "complete",
+          "description": "Finalized modular architecture with 9 subsystems",
+          "completedDate": "2025-01-15",
+          "details": {
+            "summary": "Designed modular system architecture enabling scalability from Level 1 to Level 4 systems.",
+            "deliverables": [
+              "System architecture diagrams",
+              "Interface Control Documents (ICDs)",
+              "Subsystem specifications"
+            ]
+          }
+        },
+        {
+          "id": "m1-3",
+          "title": "Component Selection",
+          "status": "pending",
+          "description": "Select ultrasonic transducers, power systems, and control hardware",
+          "targetDate": "2025-01-22",
+          "details": {
+            "summary": "Completed vendor evaluation and selected all critical components based on performance requirements.",
+            "deliverables": [
+              "Bill of Materials (BOM)",
+              "Vendor comparison matrix",
+              "Component datasheets"
+            ]
+          }
+        },
+        {
+          "id": "m1-4",
+          "title": "CAD Design",
+          "status": "pending",
+          "description": "Complete preliminary CAD models for all subsystems",
+          "targetDate": "2025-01-28",
+          "details": {
+            "summary": "Created detailed 3D models of all subsystems with assembly instructions and tolerance analysis.",
+            "deliverables": [
+              "SolidWorks assembly files",
+              "Engineering drawings",
+              "Tolerance stack-up analysis"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Validation",
+      "status": "pending",
+      "progress": 0,
+      "startDate": "2025-10-12",
+      "endDate": "2026-02-28",
+      "milestones": [
+        {
+          "id": "m2-1",
+          "title": "Particle Steering",
+          "status": "pending",
+          "description": "Demonstrate acoustic steering with styrofoam particles",
+          "targetDate": "2025-12-01"
+        },
+        {
+          "id": "m2-2",
+          "title": "Liquid Metal Steering",
+          "status": "pending",
+          "description": "Control gallium-indium droplets using acoustic field",
+          "targetDate": "2026-01-15"
+        },
+        {
+          "id": "m2-3",
+          "title": "Aluminum Testing",
+          "status": "pending",
+          "description": "Initial tests with molten aluminum droplets",
+          "targetDate": "2026-02-28"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Procurement",
+      "status": "pending",
+      "progress": 0,
+      "startDate": "2026-03-01",
+      "endDate": "2026-04-26",
+      "milestones": [
+        {
+          "id": "m3-1",
+          "title": "Ultrasonic Components",
+          "status": "pending",
+          "description": "Order ultrasonic transducers for acoustic array",
+          "targetDate": "2026-03-20"
+        },
+        {
+          "id": "m3-2",
+          "title": "Power Electronics",
+          "status": "pending",
+          "description": "Acquire MESA induction heater and DC power supplies",
+          "targetDate": "2026-04-05"
+        },
+        {
+          "id": "m3-3",
+          "title": "Control Systems",
+          "status": "pending",
+          "description": "Purchase NI DAQ, Arduino controllers, and interface boards",
+          "targetDate": "2026-04-20"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Integration",
+      "status": "pending",
+      "progress": 0,
+      "startDate": "2026-03-01",
+      "endDate": "2026-05-10",
+      "milestones": [
+        {
+          "id": "m4-1",
+          "title": "Subsystem Assembly",
+          "status": "pending",
+          "description": "Assemble and test individual subsystems",
+          "targetDate": "2026-03-30"
+        },
+        {
+          "id": "m4-2",
+          "title": "System Integration",
+          "status": "pending",
+          "description": "Integrate all subsystems per ICDs",
+          "targetDate": "2026-04-20"
+        },
+        {
+          "id": "m4-3",
+          "title": "Software Development",
+          "status": "pending",
+          "description": "Implement control algorithms and user interface",
+          "targetDate": "2026-05-05"
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Verification",
+      "status": "pending",
+      "progress": 0,
+      "startDate": "2026-05-11",
+      "endDate": "2026-06-07",
+      "milestones": [
+        {
+          "id": "m5-1",
+          "title": "Performance Testing",
+          "status": "pending",
+          "description": "Verify all system requirements",
+          "targetDate": "2026-05-20"
+        },
+        {
+          "id": "m5-2",
+          "title": "Material Studies",
+          "status": "pending",
+          "description": "Test with aluminum, steel, and exotic alloys",
+          "targetDate": "2026-05-30"
+        },
+        {
+          "id": "m5-3",
+          "title": "Optimization",
+          "status": "pending",
+          "description": "Refine control algorithms and improve performance",
+          "targetDate": "2026-06-07"
+        }
+      ]
+    }
+  ],
+  "subsystems": [
+    {
+      "name": "Acoustic Array",
+      "progress": 0,
+      "status": "design",
+      "lead": "TBD"
+    },
+    {
+      "name": "Thermal System",
+      "progress": 0,
+      "status": "design",
+      "lead": "TBD"
+    },
+    {
+      "name": "Power & Control",
+      "progress": 0,
+      "status": "design",
+      "lead": "TBD"
+    },
+    {
+      "name": "Environment Control",
+      "progress": 0,
+      "status": "planning",
+      "lead": "TBD"
+    },
+    {
+      "name": "User Interface",
+      "progress": 0,
+      "status": "development",
+      "lead": "TBD"
+    }
+  ],
+  "upcomingMilestones": [
+    {
+      "date": "2025-12-01",
+      "title": "Particle Steering Demonstration",
+      "description": "Demonstrate acoustic control of styrofoam particles"
+    },
+    {
+      "date": "2026-01-15",
+      "title": "Liquid Metal Testing",
+      "description": "Control gallium-indium droplets using acoustic field"
+    },
+    {
+      "date": "2026-02-28",
+      "title": "Aluminum Testing",
+      "description": "Initial tests with molten aluminum droplets"
+    }
+  ]
+}

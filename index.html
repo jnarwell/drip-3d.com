@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRIP - Acoustic Deposition Manufacturing</title>
+    <meta name="description" content="Precision metal 3D printing without contact. Revolutionary acoustic deposition manufacturing system.">
+    
+    <!-- Preconnect to font services -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="site-header__inner">
+                <div class="logo">
+                    <a href="/">DRIP</a>
+                </div>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="/" class="active">Home</a></li>
+                        <li><a href="/progress.html">Progress</a></li>
+                        <li><a href="/team.html">Team</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="section--hero hero">
+        <div class="container">
+            <div class="hero__content">
+                <div class="hero__model animate-fade-in-left">
+                    <div class="hero__model-placeholder">
+                        <p>3D System Visualization</p>
+                        <small>Coming Soon</small>
+                    </div>
+                </div>
+                <div class="hero__text animate-fade-in-right">
+                    <h1>Acoustic Deposition Manufacturing</h1>
+                    <p class="hero__tagline">Precision metal 3D printing without contact</p>
+                    <div class="hero__cta">
+                        <a href="/team.html#contact" class="btn btn--primary btn--large">Join the Team</a>
+                        <a href="https://calendar.app.google/a5oi75jJrwbRFFWG9" target="_blank" class="btn btn--secondary btn--large">Schedule Info Meeting</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Specs Section -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center mb-xl reveal">POC System Capabilities</h2>
+            <div class="grid grid--4">
+                <div class="spec-card reveal stagger-1">
+                    <div class="spec-card__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2v10.5a1.5 1.5 0 0 0 3 0V2a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1z"></path>
+                            <path d="M14 22h2a1 1 0 0 0 1-1v-3.5a1.5 1.5 0 0 0-3 0V21a1 1 0 0 0 1 1z"></path>
+                            <path d="M10 2v7.5a1.5 1.5 0 0 1-3 0V2a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1z"></path>
+                            <path d="M7 22h1a1 1 0 0 0 1-1v-6.5a1.5 1.5 0 0 0-3 0V21a1 1 0 0 0 1 1z"></path>
+                        </svg>
+                    </div>
+                    <div class="spec-card__value">700-1200°C</div>
+                    <div class="spec-card__label">Temperature Range</div>
+                </div>
+                <div class="spec-card reveal stagger-2">
+                    <div class="spec-card__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="6"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                    </div>
+                    <div class="spec-card__value">±2mm</div>
+                    <div class="spec-card__label">Droplet Steering</div>
+                </div>
+                <div class="spec-card reveal stagger-3">
+                    <div class="spec-card__icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="7.5 4.21 12 6.81 16.5 4.21"></polyline>
+                            <polyline points="7.5 19.79 7.5 14.6 3 12"></polyline>
+                            <polyline points="21 12 16.5 14.6 16.5 19.79"></polyline>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="spec-card__value">1 cm³/hr</div>
+                    <div class="spec-card__label">Production Rate</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Overview Section -->
+    <section class="section bg-light tech-overview">
+        <div class="container">
+            <h2 class="text-center mb-xl reveal">How It Works</h2>
+            <div class="tech-overview__grid">
+                <div class="tech-overview__content reveal-left">
+                    <h3>Acoustic Steering Technology</h3>
+                    <p>DRIP uses acoustic deposition to manipulate molten metal, enabling contact-free 3D printing of complex geometries. Our system combines a crucible, acoustic phased array, and heated copper bed to achieve a novel form of material processing.</p>
+                    <p>This method overcomes the fundamental incompatibility between high temperature materials and traditional electromechanical components. Without high cost, specialty components and complex integration, motors, belt drives, and most electronics cease functioning before even reaching the desired 600-1200°C range. Our system is entirely static, so we can utilize low temp and low cost components through clever thermodynamic control.</p>
+                    <ul class="mt-lg">
+                        <li>✓ Contact-free processing prevents contamination</li>
+                        <li>✓ Works with aluminum, steel, and exotic alloys</li>
+                        <li>✓ Real-time droplet tracking and control</li>
+                    </ul>
+                </div>
+                <div class="reveal-right">
+                    <table class="tech-overview__table">
+                        <thead>
+                            <tr>
+                                <th>Specification</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Cost</td>
+                                <td>$19,139</td>
+                            </tr>
+                            <tr>
+                                <td>Build Volume</td>
+                                <td>5×5×5 cm</td>
+                            </tr>
+                            <tr>
+                                <td>Build Rate</td>
+                                <td>1 cm³/hr</td>
+                            </tr>
+                            <tr>
+                                <td>Power (AC)</td>
+                                <td>11 kW</td>
+                            </tr>
+                            <tr>
+                                <td>Resolution</td>
+                                <td>±0.5 mm</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subsystems Carousel -->
+    <section class="section">
+        <div class="container">
+            <h2 class="text-center mb-lg reveal">System Architecture</h2>
+            <p class="text-center text-lg mb-xl reveal">Explore the key subsystems that make DRIP possible</p>
+            
+            <div class="carousel-container">
+                <div class="carousel" id="subsystems-carousel">
+                    <div class="carousel__track">
+                        <!-- Acoustic Array -->
+                        <div class="carousel__slide" data-subsystem="acoustic">
+                            <div class="subsystem-card">
+                                <div class="subsystem-card__model">
+                                    <!-- 3D model placeholder -->
+                                    <div class="model-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                            <circle cx="12" cy="12" r="3"/>
+                                            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/>
+                                            <path d="M20.5 7.5L16 12l4.5 4.5M3.5 7.5L8 12l-4.5 4.5"/>
+                                        </svg>
+                                        <p>3D Model Coming Soon</p>
+                                    </div>
+                                </div>
+                                <div class="subsystem-card__content">
+                                    <h3>Acoustic Phased Array</h3>
+                                    <div class="subsystem-info">
+                                        <div class="info-section">
+                                            <h4>What It Is</h4>
+                                            <p>A high-density array of ultrasonic transducers that generates precisely controlled acoustic fields for droplet manipulation.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>Why It Exists</h4>
+                                            <p>Enables contact-free manipulation of molten metal droplets, eliminating contamination and enabling processing of reactive materials.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>How It Interfaces</h4>
+                                            <p>Connects to the Power & Control system via high-speed DACs and receives real-time commands from the control software.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thermal System -->
+                        <div class="carousel__slide" data-subsystem="thermal">
+                            <div class="subsystem-card">
+                                <div class="subsystem-card__model">
+                                    <div class="model-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                            <path d="M14 2v10.5a1.5 1.5 0 0 0 3 0V2M14 22h2a1 1 0 0 0 1-1v-3.5a1.5 1.5 0 0 0-3 0V21a1 1 0 0 0 1 1z"/>
+                                            <path d="M10 2v7.5a1.5 1.5 0 0 1-3 0V2M7 22h1a1 1 0 0 0 1-1v-6.5a1.5 1.5 0 0 0-3 0V21a1 1 0 0 0 1 1z"/>
+                                        </svg>
+                                        <p>3D Model Coming Soon</p>
+                                    </div>
+                                </div>
+                                <div class="subsystem-card__content">
+                                    <h3>Thermal Management</h3>
+                                    <div class="subsystem-info">
+                                        <div class="info-section">
+                                            <h4>What It Is</h4>
+                                            <p>Induction heating crucible with precision temperature control and heated copper build platform.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>Why It Exists</h4>
+                                            <p>Maintains metals in liquid state (700-1200°C) while protecting acoustic components from extreme temperatures.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>How It Interfaces</h4>
+                                            <p>Thermocouples feed data to control system; power electronics regulate induction heater and bed heaters.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Power & Control -->
+                        <div class="carousel__slide" data-subsystem="power">
+                            <div class="subsystem-card">
+                                <div class="subsystem-card__model">
+                                    <div class="model-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                            <line x1="8" y1="21" x2="16" y2="21"/>
+                                            <line x1="12" y1="17" x2="12" y2="21"/>
+                                        </svg>
+                                        <p>3D Model Coming Soon</p>
+                                    </div>
+                                </div>
+                                <div class="subsystem-card__content">
+                                    <h3>Power & Control Electronics</h3>
+                                    <div class="subsystem-info">
+                                        <div class="info-section">
+                                            <h4>What It Is</h4>
+                                            <p>High-power amplifiers, signal generators, and real-time control hardware for system orchestration.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>Why It Exists</h4>
+                                            <p>Provides the computational power and signal generation needed for real-time acoustic field control.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>How It Interfaces</h4>
+                                            <p>NI DAQ for sensor input, Arduino for actuator control, custom PCBs for transducer driving.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Environment Control -->
+                        <div class="carousel__slide" data-subsystem="environment">
+                            <div class="subsystem-card">
+                                <div class="subsystem-card__model">
+                                    <div class="model-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                        <p>3D Model Coming Soon</p>
+                                    </div>
+                                </div>
+                                <div class="subsystem-card__content">
+                                    <h3>Environment Control</h3>
+                                    <div class="subsystem-info">
+                                        <div class="info-section">
+                                            <h4>What It Is</h4>
+                                            <p>Inert gas management system with pressure and flow control for oxidation prevention.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>Why It Exists</h4>
+                                            <p>Prevents oxidation of molten metals and ensures consistent processing conditions.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>How It Interfaces</h4>
+                                            <p>Mass flow controllers regulated by control system, pressure sensors for feedback.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Interface -->
+                        <div class="carousel__slide" data-subsystem="ui">
+                            <div class="subsystem-card">
+                                <div class="subsystem-card__model">
+                                    <div class="model-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="9" y1="9" x2="15" y2="9"/>
+                                            <line x1="9" y1="15" x2="15" y2="15"/>
+                                        </svg>
+                                        <p>3D Model Coming Soon</p>
+                                    </div>
+                                </div>
+                                <div class="subsystem-card__content">
+                                    <h3>User Interface</h3>
+                                    <div class="subsystem-info">
+                                        <div class="info-section">
+                                            <h4>What It Is</h4>
+                                            <p>Software interface for system control, monitoring, and real-time visualization of the printing process.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>Why It Exists</h4>
+                                            <p>Provides operators with intuitive control and real-time feedback for process optimization.</p>
+                                        </div>
+                                        <div class="info-section">
+                                            <h4>How It Interfaces</h4>
+                                            <p>Communicates with control system via high-speed serial, displays sensor data and system status.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Carousel Controls -->
+                <button class="carousel__btn carousel__btn--prev" aria-label="Previous subsystem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                <button class="carousel__btn carousel__btn--next" aria-label="Next subsystem">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+                
+                <!-- Carousel Dots -->
+                <div class="carousel__dots">
+                    <button class="carousel__dot carousel__dot--active" data-slide="0" aria-label="Go to slide 1"></button>
+                    <button class="carousel__dot" data-slide="1" aria-label="Go to slide 2"></button>
+                    <button class="carousel__dot" data-slide="2" aria-label="Go to slide 3"></button>
+                    <button class="carousel__dot" data-slide="3" aria-label="Go to slide 4"></button>
+                    <button class="carousel__dot" data-slide="4" aria-label="Go to slide 5"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section bg-gradient text-center">
+        <div class="container container--content">
+            <h2 class="mb-lg reveal">Ready to revolutionize manufacturing?</h2>
+            <p class="text-lg mb-xl reveal">Join us in developing the future of metal 3D printing.</p>
+            <div class="flex flex--center flex--wrap reveal">
+                <a href="/progress.html" class="btn btn--secondary btn--large mr-md">View Progress</a>
+                <a href="/team.html" class="btn btn--primary btn--large">Meet the Team</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__section">
+                    <h4>Project</h4>
+                    <a href="/">Home</a>
+                    <a href="/progress.html">Development Progress</a>
+                    <a href="/team.html">Team & Recruitment</a>
+                </div>
+                <div class="footer__section">
+                    <h4>Contact</h4>
+                    <p class="text-sm">Email: <a href="mailto:jamie@drip-3d.com" style="display: inline;">jamie@drip-3d.com</a><br>
+                    Primary Contact: Jamie Marwell</p>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p>&copy; 2025 DRIP Acoustic Manufacturing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/navigation.js"></script>
+    <script src="assets/js/carousel.js"></script>
+</body>
+</html>

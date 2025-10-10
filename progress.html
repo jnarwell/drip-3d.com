@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development Progress - DRIP</title>
+    <meta name="description" content="Track the development progress of the DRIP acoustic deposition manufacturing system.">
+    
+    <!-- Preconnect to font services -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="site-header__inner">
+                <div class="logo">
+                    <a href="/">DRIP</a>
+                </div>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/progress.html" class="active">Progress</a></li>
+                        <li><a href="/team.html">Team</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Hero -->
+    <section class="progress-hero">
+        <div class="container container--content text-center">
+            <h1 class="animate-fade-in-down">Development Progress</h1>
+            <p class="text-lg mt-lg animate-fade-in-up">Building the future of acoustic deposition manufacturing</p>
+        </div>
+    </section>
+
+    <!-- Phase Checklist -->
+    <section class="section">
+        <div class="container">
+            <div class="phase-checklist">
+                <h2 class="text-center mb-xl">Project Phases</h2>
+                
+                <!-- Phase 1 -->
+                <div class="phase reveal" data-phase="1">
+                    <div class="phase__header">
+                        <div class="phase__title">
+                            <span class="phase__icon">1</span>
+                            <span>Phase 1: Design & Planning</span>
+                        </div>
+                        <div class="phase__date">Aug 27, 2025 - Jan 30, 2026</div>
+                    </div>
+                    <div class="phase__content">
+                        <div class="phase__milestones">
+                            <div class="milestone milestone--complete">
+                                <h4>Requirements Definition</h4>
+                                <p>Completed SR001-SR015 system requirements documentation</p>
+                            </div>
+                            <div class="milestone milestone--complete">
+                                <h4>System Architecture</h4>
+                                <p>Finalized modular architecture with 9 subsystems</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Component Selection</h4>
+                                <p>Select ultrasonic transducers, power systems, and control hardware</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>CAD Design</h4>
+                                <p>Complete preliminary CAD models for all subsystems</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="phase reveal" data-phase="2">
+                    <div class="phase__header">
+                        <div class="phase__title">
+                            <span class="phase__icon">2</span>
+                            <span>Phase 2: Validation</span>
+                        </div>
+                        <div class="phase__date">Oct 12, 2025 - Feb 28, 2026</div>
+                    </div>
+                    <div class="phase__content">
+                        <div class="phase__milestones">
+                            <div class="milestone">
+                                <h4>Particle Steering</h4>
+                                <p>Demonstrate acoustic steering with styrofoam particles</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Liquid Metal Steering</h4>
+                                <p>Control gallium-indium droplets using acoustic field</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Aluminum Testing</h4>
+                                <p>Initial tests with molten aluminum droplets</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="phase reveal" data-phase="3">
+                    <div class="phase__header">
+                        <div class="phase__title">
+                            <span class="phase__icon">3</span>
+                            <span>Phase 3: Procurement</span>
+                        </div>
+                        <div class="phase__date">Mar 1 - Apr 26, 2026</div>
+                    </div>
+                    <div class="phase__content">
+                        <div class="phase__milestones">
+                            <div class="milestone">
+                                <h4>Ultrasonic Components</h4>
+                                <p>Order ultrasonic transducers for acoustic array</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Power Electronics</h4>
+                                <p>Acquire MESA induction heater and DC power supplies</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Control Systems</h4>
+                                <p>Purchase NI DAQ, Arduino controllers, and interface boards</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="phase reveal" data-phase="4">
+                    <div class="phase__header">
+                        <div class="phase__title">
+                            <span class="phase__icon">4</span>
+                            <span>Phase 4: Integration</span>
+                        </div>
+                        <div class="phase__date">Mar 1 - May 10, 2026</div>
+                    </div>
+                    <div class="phase__content">
+                        <div class="phase__milestones">
+                            <div class="milestone">
+                                <h4>Subsystem Assembly</h4>
+                                <p>Assemble and test individual subsystems</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>System Integration</h4>
+                                <p>Integrate all subsystems per ICDs</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Software Development</h4>
+                                <p>Implement control algorithms and user interface</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 5 -->
+                <div class="phase reveal" data-phase="5">
+                    <div class="phase__header">
+                        <div class="phase__title">
+                            <span class="phase__icon">5</span>
+                            <span>Phase 5: Verification</span>
+                        </div>
+                        <div class="phase__date">May 11 - Jun 7, 2026</div>
+                    </div>
+                    <div class="phase__content">
+                        <div class="phase__milestones">
+                            <div class="milestone">
+                                <h4>Performance Testing</h4>
+                                <p>Validate all system requirements</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Material Studies</h4>
+                                <p>Test with aluminum, steel, and exotic alloys</p>
+                            </div>
+                            <div class="milestone">
+                                <h4>Optimization</h4>
+                                <p>Refine control algorithms and improve performance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Subsystem Progress -->
+    <section class="section bg-light">
+        <div class="container">
+            <h2 class="text-center mb-xl">Subsystem Progress</h2>
+            <div class="container--content">
+                <div class="progress-bar reveal">
+                    <div class="progress-bar__label">
+                        <span>Acoustic Array</span>
+                        <span class="progress-bar__percent">0%</span>
+                    </div>
+                    <div class="progress-bar__track">
+                        <div class="progress-bar__fill progress-bar__fill--animated" style="--progress-width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar reveal">
+                    <div class="progress-bar__label">
+                        <span>Thermal System</span>
+                        <span class="progress-bar__percent">0%</span>
+                    </div>
+                    <div class="progress-bar__track">
+                        <div class="progress-bar__fill progress-bar__fill--animated" style="--progress-width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar reveal">
+                    <div class="progress-bar__label">
+                        <span>Power & Control</span>
+                        <span class="progress-bar__percent">0%</span>
+                    </div>
+                    <div class="progress-bar__track">
+                        <div class="progress-bar__fill progress-bar__fill--animated" style="--progress-width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar reveal">
+                    <div class="progress-bar__label">
+                        <span>Environment Control</span>
+                        <span class="progress-bar__percent">0%</span>
+                    </div>
+                    <div class="progress-bar__track">
+                        <div class="progress-bar__fill progress-bar__fill--animated" style="--progress-width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="progress-bar reveal">
+                    <div class="progress-bar__label">
+                        <span>User Interface</span>
+                        <span class="progress-bar__percent">0%</span>
+                    </div>
+                    <div class="progress-bar__track">
+                        <div class="progress-bar__fill progress-bar__fill--animated" style="--progress-width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upcoming Milestones -->
+    <section class="section">
+        <div class="container container--content">
+            <h2 class="text-center mb-xl">Upcoming Milestones</h2>
+            <div class="grid grid--1">
+                <div class="milestone-card reveal">
+                    <div class="milestone-card__date">December 1, 2025</div>
+                    <h3>Particle Steering Demonstration</h3>
+                    <p>Demonstrate acoustic control of styrofoam particles</p>
+                </div>
+                
+                <div class="milestone-card reveal">
+                    <div class="milestone-card__date">January 15, 2026</div>
+                    <h3>Liquid Metal Testing</h3>
+                    <p>Control gallium-indium droplets using acoustic field</p>
+                </div>
+                
+                <div class="milestone-card reveal">
+                    <div class="milestone-card__date">February 28, 2026</div>
+                    <h3>Aluminum Testing</h3>
+                    <p>Initial tests with molten aluminum droplets</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-xl">
+                <p class="text-sm text-muted">Last updated: August 27, 2025</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__section">
+                    <h4>Project</h4>
+                    <a href="/">Home</a>
+                    <a href="/progress.html">Development Progress</a>
+                    <a href="/team.html">Team & Recruitment</a>
+                </div>
+                <div class="footer__section">
+                    <h4>Contact</h4>
+                    <p class="text-sm">Email: <a href="mailto:jamie@drip-3d.com" style="display: inline;">jamie@drip-3d.com</a><br>
+                    Primary Contact: Jamie Marwell</p>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p>&copy; 2025 DRIP Acoustic Manufacturing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/navigation.js"></script>
+    <script src="assets/js/progress.js"></script>
+</body>
+</html>

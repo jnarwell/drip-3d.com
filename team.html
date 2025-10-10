@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team & Recruitment - DRIP</title>
+    <meta name="description" content="Meet the DRIP team and learn about open positions in acoustic deposition manufacturing.">
+    
+    <!-- Preconnect to font services -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/variables.css">
+    <link rel="stylesheet" href="assets/css/layout.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    <link rel="stylesheet" href="assets/css/pages.css">
+    <link rel="stylesheet" href="assets/css/animations.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="site-header__inner">
+                <div class="logo">
+                    <a href="/">DRIP</a>
+                </div>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/progress.html">Progress</a></li>
+                        <li><a href="/team.html" class="active">Team</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Current Team -->
+    <section class="section" style="padding-top: 100px;">
+        <div class="container">
+            <h2 class="text-center mb-xl">Current Team Members</h2>
+            <div class="grid grid--3" id="team-grid">
+                <!-- Team Lead -->
+                <div class="team-card reveal stagger-1" data-member-id="lead">
+                    <div class="team-card__photo">
+                        <img src="assets/images/team/jamie-marwell.jpg" alt="Jamie Marwell">
+                        <div class="role-badge">Lead Engineer</div>
+                    </div>
+                    <div class="team-card__content">
+                        <h3 class="team-card__name">Jamie Marwell</h3>
+                        <p class="team-card__title">Mechanical/Systems Engineering</p>
+                    </div>
+                </div>
+
+                <!-- Chemical Engineer -->
+                <div class="team-card reveal stagger-2" data-member-id="chemical">
+                    <div class="team-card__photo">
+                        <img src="assets/images/team/emma-blemaster.jpg" alt="Emma Blemaster">
+                        <div class="role-badge">Chemical</div>
+                    </div>
+                    <div class="team-card__content">
+                        <h3 class="team-card__name">Emma Blemaster</h3>
+                        <p class="team-card__title">Chemical Engineering</p>
+                    </div>
+                </div>
+
+                <!-- Software/Simulation Engineer -->
+                <div class="team-card reveal stagger-3" data-member-id="software">
+                    <div class="team-card__photo">
+                        <img src="assets/images/team/addison-prarie.jpg" alt="Addison Prarie">
+                        <div class="role-badge">Software/Simulation</div>
+                    </div>
+                    <div class="team-card__content">
+                        <h3 class="team-card__name">Addison Prarie</h3>
+                        <p class="team-card__title">Software/Simulation Engineering</p>
+                    </div>
+                </div>
+
+                <!-- Acoustics/Electrical Engineer -->
+                <div class="team-card reveal stagger-4" data-member-id="acoustics">
+                    <div class="team-card__photo">
+                        <img src="assets/images/team/ryota-sato.jpg" alt="Ryota Sato">
+                        <div class="role-badge">Acoustics/Electrical</div>
+                    </div>
+                    <div class="team-card__content">
+                        <h3 class="team-card__name">Ryota Sato</h3>
+                        <p class="team-card__title">Acoustics/Electrical Engineering</p>
+                    </div>
+                </div>
+
+                <!-- Electrical Engineer -->
+                <div class="team-card reveal stagger-5" data-member-id="electrical">
+                    <div class="team-card__photo">
+                        <img src="assets/images/team/weston-keller.jpg" alt="Weston Keller">
+                        <div class="role-badge">Electrical</div>
+                    </div>
+                    <div class="team-card__content">
+                        <h3 class="team-card__name">Weston Keller</h3>
+                        <p class="team-card__title">Electrical Engineering</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Open Positions -->
+    <section class="section open-positions">
+        <div class="container">
+            <h2 class="text-center mb-xl">Open Position</h2>
+            <div class="position-card reveal" style="max-width: 600px; margin: 0 auto;">
+                <h3 class="position-card__title">Mechanical Design Engineer</h3>
+                <p>Design mechanical systems and fixtures for the acoustic deposition platform.</p>
+                <h4 class="mt-md mb-sm">Requirements:</h4>
+                <ul class="position-card__requirements">
+                    <li>ME undergraduate or graduate student</li>
+                    <li>Proficiency in SolidWorks or similar CAD</li>
+                    <li>Experience with GD&T and DFM</li>
+                    <li>Hands-on fabrication experience</li>
+                </ul>
+                <a href="#contact" class="btn btn--primary mt-lg">Apply Now</a>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Join Section -->
+    <section class="section join-section" id="contact">
+        <div class="container container--content">
+            <h2>Join the DRIP Team</h2>
+            <p class="text-lg mb-xl">
+                Be part of a revolutionary project that's pushing the boundaries of 
+                manufacturing technology. We're looking for passionate students who want 
+                to make a real impact.
+            </p>
+            
+            <form id="contact-form" class="contact-form">
+                <input type="text" name="name" placeholder="Your Name" required>
+                <input type="email" name="email" placeholder="Your Email" required>
+                <input type="hidden" name="role" value="mechanical">
+                <textarea name="message" placeholder="Tell us about yourself and why you're interested in the Mechanical Design Engineer position" rows="5" required></textarea>
+                <button type="submit" class="btn btn--primary btn--large">Submit Application</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer__content">
+                <div class="footer__section">
+                    <h4>Project</h4>
+                    <a href="/">Home</a>
+                    <a href="/progress.html">Development Progress</a>
+                    <a href="/team.html">Team & Recruitment</a>
+                </div>
+                <div class="footer__section">
+                    <h4>Contact</h4>
+                    <p class="text-sm">Email: <a href="mailto:jamie@drip-3d.com" style="display: inline;">jamie@drip-3d.com</a><br>
+                    Primary Contact: Jamie Marwell</p>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p>&copy; 2025 DRIP Acoustic Manufacturing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Team Modal -->
+    <div class="modal" id="team-modal">
+        <div class="modal__content">
+            <button class="modal__close" aria-label="Close modal">&times;</button>
+            <div class="modal__header">
+                <img src="" alt="" class="modal__photo">
+                <div>
+                    <h2 class="modal__name">Team Member</h2>
+                    <p class="modal__role">Role</p>
+                </div>
+            </div>
+            <div class="modal__body">
+                <section class="bio">
+                    <h3>Background</h3>
+                    <p class="modal__bio">Biography content will be loaded here.</p>
+                </section>
+                <section class="responsibilities">
+                    <h3>Responsibilities</h3>
+                    <ul class="modal__responsibilities"></ul>
+                </section>
+                <section class="expertise">
+                    <h3>Expertise</h3>
+                    <ul class="modal__expertise"></ul>
+                </section>
+            </div>
+            <div class="modal__footer">
+                <a href="#" class="btn btn--primary modal__contact">Contact</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/navigation.js"></script>
+    <script src="assets/js/team.js"></script>
+    <script src="assets/js/forms.js"></script>
+</body>
+</html>
