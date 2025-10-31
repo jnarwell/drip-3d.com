@@ -1,5 +1,24 @@
 /* Page-specific Styles */
 
+/* Team Page */
+#team-grid {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  #team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  #team-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Home Page */
 .hero {
   min-height: 100vh;

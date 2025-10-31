@@ -119,31 +119,36 @@
       "social": {
         "email": "weston@drip-3d.com"
       }
-    }
-  ],
-  "openPositions": [
+    },
     {
-      "id": "pos-4",
-      "role": "Mechanical Design Engineer",
-      "type": "Core Team",
-      "description": "Design mechanical systems and fixtures for the acoustic deposition platform",
-      "requirements": [
-        "ME undergraduate or graduate student",
-        "Proficiency in SolidWorks or similar CAD",
-        "Experience with GD&T and DFM",
-        "Hands-on fabrication experience"
-      ],
-      "responsibilities": [
-        "Design mechanical subsystems and fixtures",
-        "Create detailed engineering drawings",
-        "Coordinate with machine shop for fabrication",
-        "Perform tolerance and stress analysis"
-      ],
-      "timeCommitment": "10-15 hours/week",
-      "compensation": "Academic credit available",
-      "link": "#contact"
+      "id": "mechanical",
+      "name": "Pierce Thompson",
+      "role": "Mechanical Engineering",
+      "title": "Mechanical Engineering",
+      "badge": "Mechanical",
+      "photo": "assets/images/team/pierce-thompson.jpg",
+      "bio": {
+        "full": "Pierce is a freshman at Stanford University studying Aeronautics & Astronautics and Mechanical Engineering. He brings extensive experience in test engineering, control systems, and rocketry from his internships at Anduril Industries, Caltech ARCL, and Benchmark Space Systems. Pierce has designed and launched thrust-vector-controlled rockets, developed ruggedized UAV payloads for volcanic sampling, and validated propulsion systems now operating in orbit. His current research at Stanford's Morphing Space Structures Lab focuses on developing lightweight interfaces for NASA JPL's Lunar Crater Radio Telescope.",
+        "responsibilities": [
+          "Control system design",
+          "Mechanical team member",
+          "Physical system modeling",
+          "System test engineering"
+        ],
+        "expertise": [
+          "Test engineering and validation",
+          "Control systems (MATLAB/Simulink, PID)",
+          "Mechanical design (SolidWorks, Rhino3D, Onshape)",
+          "PCB design and embedded systems",
+          "3D printing and rapid prototyping"
+        ]
+      },
+      "social": {
+        "email": "pierce@drip-3d.com"
+      }
     }
   ],
+  "openPositions": [],
   "advisors": [],
   "alumniSupport": []
 }
