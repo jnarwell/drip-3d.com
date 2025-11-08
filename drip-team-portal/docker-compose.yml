@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: drip_portal
+      POSTGRES_USER: drip_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drip_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://drip_user:${DB_PASSWORD:-changeme}@postgres/drip_portal
+      REDIS_URL: redis://redis:6379
+      LINEAR_API_KEY: ${LINEAR_API_KEY}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_API_AUDIENCE: ${AUTH0_API_AUDIENCE}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+      SECRET_KEY: ${SECRET_KEY:-development-secret-key}
+      DEV_MODE: ${DEV_MODE:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      VITE_AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      VITE_AUTH0_AUDIENCE: ${AUTH0_API_AUDIENCE}
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  celery:
+    build: ./backend
+    command: celery -A app.celery worker -l info
+    environment:
+      DATABASE_URL: postgresql://drip_user:${DB_PASSWORD:-changeme}@postgres/drip_portal
+      REDIS_URL: redis://redis:6379
+      LINEAR_API_KEY: ${LINEAR_API_KEY}
+      DEV_MODE: ${DEV_MODE:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+volumes:
+  postgres_data:

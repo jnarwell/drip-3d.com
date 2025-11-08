@@ -1,0 +1,39 @@
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+export const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add auth token to requests
+export const useAuthenticatedApi = () => {
+  const authenticatedApi = axios.create({
+    baseURL: API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  authenticatedApi.interceptors.request.use(async (config) => {
+    // In dev mode, use a mock token
+    if (import.meta.env.VITE_AUTH0_DOMAIN === 'dev.auth0.com') {
+      config.headers.Authorization = `Bearer mock-dev-token`;
+    } else {
+      // Real Auth0 implementation would go here
+      try {
+        // const { getAccessTokenSilently } = useAuth0();
+        // const token = await getAccessTokenSilently();
+        // config.headers.Authorization = `Bearer ${token}`;
+      } catch (error) {
+        console.error('Error getting access token:', error);
+      }
+    }
+    return config;
+  });
+
+  return authenticatedApi;
+};

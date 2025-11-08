@@ -1,0 +1,76 @@
+databases:
+  - name: drip-db
+    plan: starter
+    databaseName: drip_portal
+    user: drip_user
+
+services:
+  - type: web
+    name: drip-backend
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    rootDir: backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: drip-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: drip-cache
+          type: redis
+          property: connectionString
+      - key: AUTH0_DOMAIN
+        sync: false
+      - key: AUTH0_API_AUDIENCE
+        sync: false
+      - key: AUTH0_CLIENT_ID
+        sync: false
+      - key: AUTH0_CLIENT_SECRET
+        sync: false
+      - key: LINEAR_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+
+  - type: web
+    name: drip-frontend
+    runtime: static
+    plan: starter
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    rootDir: frontend
+    envVars:
+      - key: VITE_API_URL
+        value: https://drip-backend.onrender.com
+      - key: VITE_AUTH0_DOMAIN
+        sync: false
+      - key: VITE_AUTH0_CLIENT_ID
+        sync: false
+      - key: VITE_AUTH0_AUDIENCE
+        sync: false
+
+  - type: worker
+    name: drip-celery
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A app.celery worker -l info
+    rootDir: backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: drip-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: drip-cache
+          type: redis
+          property: connectionString
+
+  - type: redis
+    name: drip-cache
+    plan: starter
+    maxMemoryPolicy: allkeys-lru
