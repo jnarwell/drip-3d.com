@@ -39,13 +39,13 @@ const Reports: React.FC = () => {
     {
       title: 'Validation Report (PDF)',
       description: 'Comprehensive validation report with component status, test results, and physics validation',
-      icon: '📄',
+      icon: '',
       format: 'pdf' as const,
     },
     {
       title: 'Test Campaign Data (Excel)',
       description: 'Detailed Excel workbook with all components, tests, results, and physics data',
-      icon: '📊',
+      icon: '',
       format: 'excel' as const,
     },
   ];
@@ -89,9 +89,8 @@ const Reports: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {reportTypes.map((report) => (
           <div key={report.format} className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-start space-x-4">
-              <span className="text-4xl">{report.icon}</span>
-              <div className="flex-1">
+            <div>
+              <div>
                 <h3 className="text-lg font-medium text-gray-900">{report.title}</h3>
                 <p className="mt-1 text-sm text-gray-600">{report.description}</p>
                 <button

@@ -1,0 +1,1920 @@
+{
+  "aluminum_wrought": {
+    "1100": {
+      "common_name": "1100 Aluminum (99% Pure)",
+      "uns": "A91100",
+      "composition": {
+        "Al": "99.0 min",
+        "Cu": "0.05-0.20",
+        "Si+Fe": "0.95 max"
+      },
+      "mechanical": {
+        "density": 2.71,
+        "yield_strength": 34,
+        "ultimate_tensile_strength": 90,
+        "elongation": 35,
+        "youngs_modulus": 68.9,
+        "shear_modulus": 26.0,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 643,
+        "thermal_conductivity": 222,
+        "specific_heat": 904
+      },
+      "applications": ["Chemical equipment", "Heat exchangers", "Food handling"],
+      "standards": ["ASTM B209", "ASTM B211"]
+    },
+    "2024": {
+      "common_name": "2024 Aluminum (Aircraft Grade)",
+      "uns": "A92024",
+      "composition": {
+        "Al": "90.7-94.7",
+        "Cu": "3.8-4.9",
+        "Mg": "1.2-1.8",
+        "Mn": "0.30-0.9"
+      },
+      "mechanical": {
+        "density": 2.78,
+        "yield_strength": 345,
+        "ultimate_tensile_strength": 470,
+        "elongation": 18,
+        "youngs_modulus": 73.1,
+        "shear_modulus": 28.0,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 502,
+        "thermal_conductivity": 121,
+        "specific_heat": 875
+      },
+      "applications": ["Aircraft structures", "High strength/weight applications", "Fatigue critical parts"],
+      "standards": ["ASTM B209", "AMS-QQ-A-250/4"]
+    },
+    "3003": {
+      "common_name": "3003 Aluminum (General Purpose)",
+      "uns": "A93003",
+      "composition": {
+        "Al": "96.8-99.0",
+        "Mn": "1.0-1.5",
+        "Cu": "0.05-0.20"
+      },
+      "mechanical": {
+        "density": 2.73,
+        "yield_strength": 125,
+        "ultimate_tensile_strength": 150,
+        "elongation": 30,
+        "youngs_modulus": 68.9,
+        "shear_modulus": 26.0,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 643,
+        "thermal_conductivity": 193,
+        "specific_heat": 893
+      },
+      "applications": ["Sheet metal work", "Cooking utensils", "Storage tanks"],
+      "standards": ["ASTM B209", "ASTM B221"]
+    },
+    "5052": {
+      "common_name": "5052 Aluminum (Marine Grade)",
+      "uns": "A95052",
+      "composition": {
+        "Al": "95.7-97.7",
+        "Mg": "2.2-2.8",
+        "Cr": "0.15-0.35"
+      },
+      "mechanical": {
+        "density": 2.68,
+        "yield_strength": 195,
+        "ultimate_tensile_strength": 260,
+        "elongation": 25,
+        "youngs_modulus": 69.3,
+        "shear_modulus": 25.9,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 607,
+        "thermal_conductivity": 138,
+        "specific_heat": 880
+      },
+      "applications": ["Marine applications", "Fuel tanks", "Pressure vessels"],
+      "standards": ["ASTM B209", "ASTM B928"]
+    },
+    "6061": {
+      "common_name": "6061 Aluminum (Structural)",
+      "uns": "A96061",
+      "composition": {
+        "Al": "95.8-98.6",
+        "Mg": "0.8-1.2",
+        "Si": "0.4-0.8",
+        "Cu": "0.15-0.40",
+        "Cr": "0.04-0.35"
+      },
+      "mechanical": {
+        "density": 2.70,
+        "yield_strength": 276,
+        "ultimate_tensile_strength": 310,
+        "elongation": 12,
+        "youngs_modulus": 68.9,
+        "shear_modulus": 26.0,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 582,
+        "thermal_conductivity": 167,
+        "specific_heat": 896
+      },
+      "applications": ["General structural", "Machinery parts", "Automotive components"],
+      "standards": ["ASTM B209", "ASTM B211", "AMS 4027"]
+    },
+    "6063": {
+      "common_name": "6063 Aluminum (Architectural)",
+      "uns": "A96063",
+      "composition": {
+        "Al": "97.5-99.3",
+        "Mg": "0.45-0.9",
+        "Si": "0.2-0.6"
+      },
+      "mechanical": {
+        "density": 2.69,
+        "yield_strength": 214,
+        "ultimate_tensile_strength": 241,
+        "elongation": 12,
+        "youngs_modulus": 68.9,
+        "shear_modulus": 25.8,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 616,
+        "thermal_conductivity": 200,
+        "specific_heat": 900
+      },
+      "applications": ["Architectural extrusions", "Window frames", "Furniture"],
+      "standards": ["ASTM B221", "ASTM B241"]
+    },
+    "7075": {
+      "common_name": "7075 Aluminum (Aerospace)",
+      "uns": "A97075",
+      "composition": {
+        "Al": "87.1-91.4",
+        "Zn": "5.1-6.1",
+        "Mg": "2.1-2.9",
+        "Cu": "1.2-2.0",
+        "Cr": "0.18-0.28"
+      },
+      "mechanical": {
+        "density": 2.81,
+        "yield_strength": 503,
+        "ultimate_tensile_strength": 572,
+        "elongation": 11,
+        "youngs_modulus": 71.7,
+        "shear_modulus": 26.9,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 477,
+        "thermal_conductivity": 130,
+        "specific_heat": 960
+      },
+      "applications": ["Aerospace structures", "High stress parts", "Competition bicycles"],
+      "standards": ["ASTM B209", "AMS 4045", "AMS-QQ-A-250/12"]
+    },
+    "7050": {
+      "common_name": "7050 Aluminum (Aerospace Forgings)",
+      "uns": "A97050",
+      "composition": {
+        "Al": "87.3-90.3",
+        "Zn": "5.7-6.7",
+        "Mg": "1.9-2.6",
+        "Cu": "2.0-2.6",
+        "Zr": "0.08-0.15"
+      },
+      "mechanical": {
+        "density": 2.83,
+        "yield_strength": 490,
+        "ultimate_tensile_strength": 550,
+        "elongation": 11,
+        "youngs_modulus": 71.7,
+        "shear_modulus": 26.9,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 475,
+        "thermal_conductivity": 157,
+        "specific_heat": 860
+      },
+      "applications": ["Aerospace forgings", "Thick sections", "Stress corrosion critical"],
+      "standards": ["AMS 4050", "AMS 4108"]
+    }
+  },
+  "aluminum_casting": {
+    "A356": {
+      "common_name": "A356 Cast Aluminum (AlSi7Mg)",
+      "uns": "A13560",
+      "composition": {
+        "Al": "91.1-93.3",
+        "Si": "6.5-7.5",
+        "Mg": "0.25-0.45",
+        "Ti": "0.20 max"
+      },
+      "mechanical": {
+        "density": 2.68,
+        "yield_strength": 165,
+        "ultimate_tensile_strength": 228,
+        "elongation": 3.5,
+        "youngs_modulus": 72.4,
+        "shear_modulus": 27.1,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 555,
+        "liquidus": 615,
+        "thermal_conductivity": 151,
+        "specific_heat": 963
+      },
+      "casting": true,
+      "applications": ["Premium wheels", "Aerospace castings", "Structural castings"],
+      "standards": ["ASTM B108", "AMS 4217"]
+    },
+    "380": {
+      "common_name": "380 Die Cast Aluminum (AlSi8Cu3)",
+      "uns": "A03800",
+      "composition": {
+        "Al": "84.1-86.0",
+        "Si": "7.5-9.5",
+        "Cu": "3.0-4.0",
+        "Fe": "1.3 max"
+      },
+      "mechanical": {
+        "density": 2.71,
+        "yield_strength": 160,
+        "ultimate_tensile_strength": 320,
+        "elongation": 3,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 540,
+        "liquidus": 595,
+        "thermal_conductivity": 109,
+        "specific_heat": 963
+      },
+      "casting": true,
+      "applications": ["Die castings", "General purpose", "Automotive components"],
+      "standards": ["ASTM B85"]
+    },
+    "383": {
+      "common_name": "383 Die Cast Aluminum",
+      "uns": "A03830",
+      "composition": {
+        "Al": "83.5-85.5",
+        "Si": "9.5-11.5",
+        "Cu": "2.0-3.0",
+        "Fe": "1.3 max"
+      },
+      "mechanical": {
+        "density": 2.74,
+        "yield_strength": 150,
+        "ultimate_tensile_strength": 310,
+        "elongation": 3.5,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 520,
+        "liquidus": 575,
+        "thermal_conductivity": 96,
+        "specific_heat": 963
+      },
+      "casting": true,
+      "applications": ["Die castings", "Improved fluidity applications"],
+      "standards": ["ASTM B85"]
+    },
+    "390": {
+      "common_name": "390 High Silicon Aluminum",
+      "uns": "A03900",
+      "composition": {
+        "Al": "78.5-81.5",
+        "Si": "16.0-18.0",
+        "Cu": "4.0-5.0",
+        "Mg": "0.45-0.65"
+      },
+      "mechanical": {
+        "density": 2.73,
+        "yield_strength": 250,
+        "ultimate_tensile_strength": 280,
+        "elongation": 1,
+        "youngs_modulus": 81.2,
+        "shear_modulus": 30.7,
+        "poisson_ratio": 0.32
+      },
+      "thermal": {
+        "solidus": 507,
+        "liquidus": 650,
+        "thermal_conductivity": 134,
+        "specific_heat": 963
+      },
+      "casting": true,
+      "applications": ["Engine blocks", "Wear resistant parts", "Pistons"],
+      "standards": ["ASTM B85"]
+    },
+    "413": {
+      "common_name": "413 Cast Aluminum (AlSi12)",
+      "uns": "A04130",
+      "composition": {
+        "Al": "87.0-89.0",
+        "Si": "11.0-13.0",
+        "Fe": "1.3 max"
+      },
+      "mechanical": {
+        "density": 2.66,
+        "yield_strength": 130,
+        "ultimate_tensile_strength": 290,
+        "elongation": 2.5,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 574,
+        "liquidus": 582,
+        "thermal_conductivity": 121,
+        "specific_heat": 963
+      },
+      "casting": true,
+      "applications": ["Pressure tight castings", "Thin wall castings", "Brazeable castings"],
+      "standards": ["ASTM B85"]
+    },
+    "443": {
+      "common_name": "443 Sand Cast Aluminum",
+      "uns": "B04430",
+      "composition": {
+        "Al": "93.5-95.5",
+        "Si": "4.5-6.0"
+      },
+      "mechanical": {
+        "density": 2.69,
+        "yield_strength": 55,
+        "ultimate_tensile_strength": 130,
+        "elongation": 8,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 574,
+        "liquidus": 632,
+        "thermal_conductivity": 163,
+        "specific_heat": 896
+      },
+      "casting": true,
+      "applications": ["Sand castings", "Corrosion resistant applications"],
+      "standards": ["ASTM B26"]
+    },
+    "514": {
+      "common_name": "514 Magnesium Aluminum",
+      "uns": "A05140",
+      "composition": {
+        "Al": "95.2-96.2",
+        "Mg": "3.5-4.5"
+      },
+      "mechanical": {
+        "density": 2.65,
+        "yield_strength": 110,
+        "ultimate_tensile_strength": 172,
+        "elongation": 6,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 560,
+        "liquidus": 630,
+        "thermal_conductivity": 146,
+        "specific_heat": 900
+      },
+      "casting": true,
+      "applications": ["Marine castings", "Architectural castings"],
+      "standards": ["ASTM B26"]
+    },
+    "535": {
+      "common_name": "535 AlMgTi Sand Cast",
+      "uns": "A05350",
+      "composition": {
+        "Al": "91.9-93.3",
+        "Mg": "6.2-7.5",
+        "Ti": "0.15-0.25"
+      },
+      "mechanical": {
+        "density": 2.62,
+        "yield_strength": 125,
+        "ultimate_tensile_strength": 240,
+        "elongation": 9,
+        "youngs_modulus": 71.0,
+        "shear_modulus": 26.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "solidus": 450,
+        "liquidus": 635,
+        "thermal_conductivity": 125,
+        "specific_heat": 900
+      },
+      "casting": true,
+      "applications": ["Anodizing quality castings", "Architectural"],
+      "standards": ["ASTM B26"]
+    }
+  },
+  "steel_carbon": {
+    "1018": {
+      "common_name": "1018 Mild Steel",
+      "uns": "G10180",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.14-0.20",
+        "Mn": "0.60-0.90"
+      },
+      "mechanical": {
+        "density": 7.87,
+        "yield_strength": 370,
+        "ultimate_tensile_strength": 440,
+        "elongation": 15,
+        "youngs_modulus": 200,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1514,
+        "thermal_conductivity": 51.9,
+        "specific_heat": 486
+      },
+      "applications": ["General machining", "Cold rolled bars", "Carburizing applications"],
+      "standards": ["ASTM A29", "ASTM A108"]
+    },
+    "1045": {
+      "common_name": "1045 Medium Carbon Steel",
+      "uns": "G10450",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.42-0.50",
+        "Mn": "0.60-0.90"
+      },
+      "mechanical": {
+        "density": 7.87,
+        "yield_strength": 530,
+        "ultimate_tensile_strength": 625,
+        "elongation": 12,
+        "youngs_modulus": 200,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1495,
+        "thermal_conductivity": 49.8,
+        "specific_heat": 486
+      },
+      "applications": ["Shafts", "Gears", "General purpose parts"],
+      "standards": ["ASTM A29", "SAE J412"]
+    },
+    "4140": {
+      "common_name": "4140 Chromoly Steel",
+      "uns": "G41400",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.38-0.43",
+        "Cr": "0.80-1.10",
+        "Mo": "0.15-0.25",
+        "Mn": "0.75-1.00"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "yield_strength": 655,
+        "ultimate_tensile_strength": 1020,
+        "elongation": 17.7,
+        "youngs_modulus": 205,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1500,
+        "thermal_conductivity": 42.6,
+        "specific_heat": 473
+      },
+      "applications": ["High strength applications", "Heat treatable parts", "Gears and shafts"],
+      "standards": ["ASTM A29", "AMS 6382"]
+    },
+    "4340": {
+      "common_name": "4340 Alloy Steel",
+      "uns": "G43400",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.38-0.43",
+        "Ni": "1.65-2.00",
+        "Cr": "0.70-0.90",
+        "Mo": "0.20-0.30"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "yield_strength": 1275,
+        "ultimate_tensile_strength": 1420,
+        "elongation": 11,
+        "youngs_modulus": 205,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1427,
+        "thermal_conductivity": 44.5,
+        "specific_heat": 475
+      },
+      "applications": ["Aircraft landing gear", "Critical high strength parts"],
+      "standards": ["ASTM A29", "AMS 6414"]
+    },
+    "A36": {
+      "common_name": "A36 Structural Steel",
+      "uns": "K02600",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.25-0.29",
+        "Mn": "0.80-1.20",
+        "Si": "0.15-0.40"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "yield_strength": 250,
+        "ultimate_tensile_strength": 400,
+        "elongation": 20,
+        "youngs_modulus": 200,
+        "shear_modulus": 79.3,
+        "poisson_ratio": 0.26
+      },
+      "thermal": {
+        "melting_point": 1425,
+        "thermal_conductivity": 60.5,
+        "specific_heat": 434
+      },
+      "applications": ["Structural beams", "Construction", "Bridges"],
+      "standards": ["ASTM A36"]
+    },
+    "A572-50": {
+      "common_name": "A572 Grade 50 High Strength Steel",
+      "uns": "K12043",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.23 max",
+        "Mn": "1.35 max",
+        "Si": "0.40 max"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "yield_strength": 345,
+        "ultimate_tensile_strength": 450,
+        "elongation": 18,
+        "youngs_modulus": 200,
+        "shear_modulus": 79.3,
+        "poisson_ratio": 0.26
+      },
+      "thermal": {
+        "melting_point": 1425,
+        "thermal_conductivity": 50.7,
+        "specific_heat": 434
+      },
+      "applications": ["High strength structures", "Bridges", "Buildings"],
+      "standards": ["ASTM A572"]
+    }
+  },
+  "steel_stainless": {
+    "303": {
+      "common_name": "303 Free Machining Stainless",
+      "uns": "S30300",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "17.0-19.0",
+        "Ni": "8.0-10.0",
+        "S": "0.15 min",
+        "C": "0.15 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 241,
+        "ultimate_tensile_strength": 620,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1455,
+        "thermal_conductivity": 16.2,
+        "specific_heat": 500
+      },
+      "applications": ["Fasteners", "Fittings", "Machined parts"],
+      "standards": ["ASTM A582"]
+    },
+    "304": {
+      "common_name": "304 Stainless Steel (18-8)",
+      "uns": "S30400",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "18.0-20.0",
+        "Ni": "8.0-10.5",
+        "C": "0.08 max",
+        "Mn": "2.0 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 215,
+        "ultimate_tensile_strength": 505,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1400,
+        "thermal_conductivity": 16.2,
+        "specific_heat": 500
+      },
+      "applications": ["General purpose", "Food equipment", "Chemical processing"],
+      "standards": ["ASTM A240", "ASTM A276"]
+    },
+    "304L": {
+      "common_name": "304L Low Carbon Stainless",
+      "uns": "S30403",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "18.0-20.0",
+        "Ni": "8.0-12.0",
+        "C": "0.03 max",
+        "Mn": "2.0 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 170,
+        "ultimate_tensile_strength": 485,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1400,
+        "thermal_conductivity": 16.2,
+        "specific_heat": 500
+      },
+      "applications": ["Weldments", "Corrosive environments", "Low temperature"],
+      "standards": ["ASTM A240", "ASTM A276"]
+    },
+    "316": {
+      "common_name": "316 Marine Grade Stainless",
+      "uns": "S31600",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "16.0-18.0",
+        "Ni": "10.0-14.0",
+        "Mo": "2.0-3.0",
+        "C": "0.08 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 205,
+        "ultimate_tensile_strength": 515,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1375,
+        "thermal_conductivity": 16.3,
+        "specific_heat": 500
+      },
+      "applications": ["Marine equipment", "Chemical processing", "Medical implants"],
+      "standards": ["ASTM A240", "ASTM F138"]
+    },
+    "316L": {
+      "common_name": "316L Low Carbon Marine Grade",
+      "uns": "S31603",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "16.0-18.0",
+        "Ni": "10.0-14.0",
+        "Mo": "2.0-3.0",
+        "C": "0.03 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 170,
+        "ultimate_tensile_strength": 485,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1375,
+        "thermal_conductivity": 16.3,
+        "specific_heat": 500
+      },
+      "applications": ["Weldments in corrosive environments", "Medical implants"],
+      "standards": ["ASTM A240", "ASTM F138"]
+    },
+    "321": {
+      "common_name": "321 Titanium Stabilized Stainless",
+      "uns": "S32100",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "17.0-19.0",
+        "Ni": "9.0-12.0",
+        "Ti": "5xC min",
+        "C": "0.08 max"
+      },
+      "mechanical": {
+        "density": 8.00,
+        "yield_strength": 205,
+        "ultimate_tensile_strength": 515,
+        "elongation": 40,
+        "youngs_modulus": 193,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.29
+      },
+      "thermal": {
+        "melting_point": 1400,
+        "thermal_conductivity": 16.1,
+        "specific_heat": 500
+      },
+      "applications": ["High temperature service", "Exhaust systems", "Furnace parts"],
+      "standards": ["ASTM A240", "AMS 5510"]
+    },
+    "17-4PH": {
+      "common_name": "17-4 PH Stainless (UNS S17400)",
+      "uns": "S17400",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "15.0-17.5",
+        "Ni": "3.0-5.0",
+        "Cu": "3.0-5.0",
+        "Nb": "0.15-0.45"
+      },
+      "mechanical": {
+        "density": 7.75,
+        "yield_strength": 1100,
+        "ultimate_tensile_strength": 1310,
+        "elongation": 14,
+        "youngs_modulus": 197,
+        "shear_modulus": 77.4,
+        "poisson_ratio": 0.27
+      },
+      "thermal": {
+        "melting_point": 1400,
+        "thermal_conductivity": 18.3,
+        "specific_heat": 460
+      },
+      "applications": ["Aerospace components", "High strength applications", "Valve parts"],
+      "standards": ["ASTM A564", "AMS 5643"]
+    },
+    "15-5PH": {
+      "common_name": "15-5 PH Stainless",
+      "uns": "S15500",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "14.0-15.5",
+        "Ni": "3.5-5.5",
+        "Cu": "2.5-4.5",
+        "Nb": "0.15-0.45"
+      },
+      "mechanical": {
+        "density": 7.78,
+        "yield_strength": 1170,
+        "ultimate_tensile_strength": 1380,
+        "elongation": 14,
+        "youngs_modulus": 197,
+        "shear_modulus": 77.4,
+        "poisson_ratio": 0.27
+      },
+      "thermal": {
+        "melting_point": 1400,
+        "thermal_conductivity": 17.8,
+        "specific_heat": 460
+      },
+      "applications": ["Aerospace", "Nuclear", "Chemical processing equipment"],
+      "standards": ["ASTM A564", "AMS 5659"]
+    },
+    "410": {
+      "common_name": "410 Martensitic Stainless",
+      "uns": "S41000",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "11.5-13.5",
+        "C": "0.15 max",
+        "Mn": "1.0 max"
+      },
+      "mechanical": {
+        "density": 7.75,
+        "yield_strength": 485,
+        "ultimate_tensile_strength": 760,
+        "elongation": 20,
+        "youngs_modulus": 200,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.28
+      },
+      "thermal": {
+        "melting_point": 1480,
+        "thermal_conductivity": 24.9,
+        "specific_heat": 460
+      },
+      "applications": ["Valve components", "Pump shafts", "Fasteners"],
+      "standards": ["ASTM A276", "ASTM A580"]
+    },
+    "416": {
+      "common_name": "416 Free Machining Martensitic",
+      "uns": "S41600",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "12.0-14.0",
+        "S": "0.15 min",
+        "C": "0.15 max"
+      },
+      "mechanical": {
+        "density": 7.75,
+        "yield_strength": 655,
+        "ultimate_tensile_strength": 900,
+        "elongation": 18,
+        "youngs_modulus": 200,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.28
+      },
+      "thermal": {
+        "melting_point": 1480,
+        "thermal_conductivity": 24.9,
+        "specific_heat": 460
+      },
+      "applications": ["Screw machine products", "Gears", "Valve parts"],
+      "standards": ["ASTM A582"]
+    },
+    "420": {
+      "common_name": "420 Cutlery Grade Stainless",
+      "uns": "S42000",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "12.0-14.0",
+        "C": "0.15 min",
+        "Mn": "1.0 max"
+      },
+      "mechanical": {
+        "density": 7.75,
+        "yield_strength": 655,
+        "ultimate_tensile_strength": 965,
+        "elongation": 15,
+        "youngs_modulus": 200,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.28
+      },
+      "thermal": {
+        "melting_point": 1450,
+        "thermal_conductivity": 24.9,
+        "specific_heat": 460
+      },
+      "applications": ["Cutlery", "Surgical instruments", "Wear parts"],
+      "standards": ["ASTM A276", "ASTM A580"]
+    },
+    "440C": {
+      "common_name": "440C High Carbon Stainless",
+      "uns": "S44004",
+      "composition": {
+        "Fe": "balance",
+        "Cr": "16.0-18.0",
+        "C": "0.95-1.20",
+        "Mo": "0.75 max"
+      },
+      "mechanical": {
+        "density": 7.65,
+        "yield_strength": 1965,
+        "ultimate_tensile_strength": 2030,
+        "elongation": 5,
+        "youngs_modulus": 200,
+        "shear_modulus": 77,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1375,
+        "thermal_conductivity": 24.2,
+        "specific_heat": 460
+      },
+      "applications": ["Bearings", "High hardness knives", "Valve components"],
+      "standards": ["ASTM A276", "AMS 5630"]
+    }
+  },
+  "steel_tool": {
+    "A2": {
+      "common_name": "A2 Air Hardening Tool Steel",
+      "uns": "T30102",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.95-1.05",
+        "Cr": "4.75-5.50",
+        "Mo": "0.90-1.40",
+        "V": "0.15-0.50"
+      },
+      "mechanical": {
+        "density": 7.86,
+        "hardness_hrc": "57-62",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1421,
+        "thermal_conductivity": 38,
+        "specific_heat": 460
+      },
+      "applications": ["General tooling", "Dies", "Punches"],
+      "standards": ["ASTM A681"]
+    },
+    "D2": {
+      "common_name": "D2 High Carbon High Chrome Tool Steel",
+      "uns": "T30402",
+      "composition": {
+        "Fe": "balance",
+        "C": "1.40-1.60",
+        "Cr": "11.0-13.0",
+        "Mo": "0.70-1.20",
+        "V": "1.1 max"
+      },
+      "mechanical": {
+        "density": 7.70,
+        "hardness_hrc": "58-62",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1421,
+        "thermal_conductivity": 20,
+        "specific_heat": 460
+      },
+      "applications": ["Dies", "Punches", "Forming tools", "Wear plates"],
+      "standards": ["ASTM A681"]
+    },
+    "O1": {
+      "common_name": "O1 Oil Hardening Tool Steel",
+      "uns": "T31501",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.90",
+        "Mn": "1.00",
+        "Cr": "0.50",
+        "V": "0.20"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "hardness_hrc": "57-62",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1420,
+        "thermal_conductivity": 36,
+        "specific_heat": 460
+      },
+      "applications": ["General purpose tools", "Knives", "Machine parts"],
+      "standards": ["ASTM A681"]
+    },
+    "W1": {
+      "common_name": "W1 Water Hardening Tool Steel",
+      "uns": "T72301",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.70-1.50"
+      },
+      "mechanical": {
+        "density": 7.85,
+        "hardness_hrc": "50-65",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1420,
+        "thermal_conductivity": 48,
+        "specific_heat": 460
+      },
+      "applications": ["Simple tools", "Springs", "Cutting tools"],
+      "standards": ["ASTM A686"]
+    },
+    "S7": {
+      "common_name": "S7 Shock Resistant Tool Steel",
+      "uns": "T41907",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.45-0.55",
+        "Cr": "3.00-3.50",
+        "Mo": "1.30-1.80",
+        "V": "0.20-0.30"
+      },
+      "mechanical": {
+        "density": 7.83,
+        "hardness_hrc": "54-58",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1424,
+        "thermal_conductivity": 28,
+        "specific_heat": 460
+      },
+      "applications": ["Impact tools", "Chisels", "Punches", "Shear blades"],
+      "standards": ["ASTM A681"]
+    },
+    "H13": {
+      "common_name": "H13 Hot Work Tool Steel",
+      "uns": "T20813",
+      "composition": {
+        "Fe": "balance",
+        "C": "0.32-0.45",
+        "Cr": "4.75-5.50",
+        "Mo": "1.10-1.75",
+        "V": "0.80-1.20"
+      },
+      "mechanical": {
+        "density": 7.80,
+        "hardness_hrc": "48-52",
+        "youngs_modulus": 210,
+        "shear_modulus": 80,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1427,
+        "thermal_conductivity": 24.3,
+        "specific_heat": 460
+      },
+      "applications": ["Die casting dies", "Extrusion dies", "Hot forging"],
+      "standards": ["ASTM A681", "AMS 6407"]
+    }
+  },
+  "copper_brass": {
+    "C260": {
+      "common_name": "C260 Cartridge Brass (70/30)",
+      "uns": "C26000",
+      "composition": {
+        "Cu": "68.5-71.5",
+        "Zn": "balance"
+      },
+      "mechanical": {
+        "density": 8.53,
+        "yield_strength": 140,
+        "ultimate_tensile_strength": 340,
+        "elongation": 65,
+        "youngs_modulus": 110,
+        "shear_modulus": 40,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 915,
+        "thermal_conductivity": 120,
+        "specific_heat": 375
+      },
+      "applications": ["Deep drawing", "Ammunition casings", "Radiator cores"],
+      "standards": ["ASTM B19", "ASTM B36"]
+    },
+    "C360": {
+      "common_name": "C360 Free-Cutting Brass",
+      "uns": "C36000",
+      "composition": {
+        "Cu": "60.0-63.0",
+        "Zn": "35.5",
+        "Pb": "2.5-3.0"
+      },
+      "mechanical": {
+        "density": 8.49,
+        "yield_strength": 160,
+        "ultimate_tensile_strength": 340,
+        "elongation": 53,
+        "youngs_modulus": 97,
+        "shear_modulus": 37,
+        "poisson_ratio": 0.31
+      },
+      "thermal": {
+        "melting_point": 885,
+        "thermal_conductivity": 115,
+        "specific_heat": 380
+      },
+      "applications": ["Screw machine parts", "Fittings", "Valves"],
+      "standards": ["ASTM B16"]
+    },
+    "C464": {
+      "common_name": "C464 Naval Brass",
+      "uns": "C46400",
+      "composition": {
+        "Cu": "59.0-62.0",
+        "Zn": "balance",
+        "Sn": "0.50-1.00"
+      },
+      "mechanical": {
+        "density": 8.41,
+        "yield_strength": 275,
+        "ultimate_tensile_strength": 550,
+        "elongation": 25,
+        "youngs_modulus": 110,
+        "shear_modulus": 40,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 900,
+        "thermal_conductivity": 116,
+        "specific_heat": 380
+      },
+      "applications": ["Marine hardware", "Propeller shafts", "Valve stems"],
+      "standards": ["ASTM B21", "ASTM B124"]
+    },
+    "C110": {
+      "common_name": "C110 ETP Copper (99.9% Pure)",
+      "uns": "C11000",
+      "composition": {
+        "Cu": "99.90 min",
+        "O": "0.04 max"
+      },
+      "mechanical": {
+        "density": 8.94,
+        "yield_strength": 69,
+        "ultimate_tensile_strength": 220,
+        "elongation": 50,
+        "youngs_modulus": 115,
+        "shear_modulus": 44,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 1083,
+        "thermal_conductivity": 391,
+        "specific_heat": 385
+      },
+      "applications": ["Electrical conductors", "Heat exchangers", "Plumbing"],
+      "standards": ["ASTM B152", "ASTM B187"]
+    }
+  },
+  "copper_bronze": {
+    "C510": {
+      "common_name": "C510 Phosphor Bronze (5% Sn)",
+      "uns": "C51000",
+      "composition": {
+        "Cu": "balance",
+        "Sn": "4.2-5.8",
+        "P": "0.03-0.35"
+      },
+      "mechanical": {
+        "density": 8.86,
+        "yield_strength": 380,
+        "ultimate_tensile_strength": 470,
+        "elongation": 65,
+        "youngs_modulus": 110,
+        "shear_modulus": 41,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 1000,
+        "thermal_conductivity": 75,
+        "specific_heat": 380
+      },
+      "applications": ["Springs", "Electrical contacts", "Diaphragms"],
+      "standards": ["ASTM B103", "ASTM B139"]
+    },
+    "C630": {
+      "common_name": "C630 Aluminum Bronze",
+      "uns": "C63000",
+      "composition": {
+        "Cu": "balance",
+        "Al": "9.0-11.0",
+        "Fe": "2.0-4.0",
+        "Ni": "4.0-5.5"
+      },
+      "mechanical": {
+        "density": 7.58,
+        "yield_strength": 450,
+        "ultimate_tensile_strength": 825,
+        "elongation": 12,
+        "youngs_modulus": 110,
+        "shear_modulus": 41,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 1045,
+        "thermal_conductivity": 60,
+        "specific_heat": 410
+      },
+      "applications": ["Marine propellers", "Bearings", "Gears"],
+      "standards": ["ASTM B150", "ASTM B171"]
+    },
+    "C932": {
+      "common_name": "C932 Bearing Bronze (SAE 660)",
+      "uns": "C93200",
+      "composition": {
+        "Cu": "81.0-85.0",
+        "Sn": "6.3-7.5",
+        "Pb": "6.0-8.0",
+        "Zn": "2.0-4.0"
+      },
+      "mechanical": {
+        "density": 8.91,
+        "yield_strength": 125,
+        "ultimate_tensile_strength": 240,
+        "elongation": 20,
+        "youngs_modulus": 100,
+        "shear_modulus": 37,
+        "poisson_ratio": 0.35
+      },
+      "thermal": {
+        "melting_point": 854,
+        "thermal_conductivity": 71,
+        "specific_heat": 380
+      },
+      "casting": true,
+      "applications": ["Sleeve bearings", "Bushings", "Thrust washers"],
+      "standards": ["ASTM B584", "SAE J462"]
+    },
+    "C954": {
+      "common_name": "C954 Aluminum Bronze Casting",
+      "uns": "C95400",
+      "composition": {
+        "Cu": "83.0-86.0",
+        "Al": "10.0-11.5",
+        "Fe": "3.0-5.0"
+      },
+      "mechanical": {
+        "density": 7.53,
+        "yield_strength": 240,
+        "ultimate_tensile_strength": 590,
+        "elongation": 12,
+        "youngs_modulus": 110,
+        "shear_modulus": 41,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 1030,
+        "thermal_conductivity": 60,
+        "specific_heat": 420
+      },
+      "casting": true,
+      "applications": ["Heavy duty gears", "Marine castings", "Valve bodies"],
+      "standards": ["ASTM B148"]
+    }
+  },
+  "titanium": {
+    "Grade2": {
+      "common_name": "Titanium Grade 2 (CP Ti)",
+      "uns": "R50400",
+      "composition": {
+        "Ti": "balance",
+        "O": "0.25 max",
+        "Fe": "0.30 max",
+        "C": "0.08 max"
+      },
+      "mechanical": {
+        "density": 4.51,
+        "yield_strength": 275,
+        "ultimate_tensile_strength": 345,
+        "elongation": 20,
+        "youngs_modulus": 102.7,
+        "shear_modulus": 40,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 1668,
+        "thermal_conductivity": 16.4,
+        "specific_heat": 522
+      },
+      "applications": ["Chemical processing", "Marine", "Architecture"],
+      "standards": ["ASTM B265", "ASTM B348"]
+    },
+    "Grade5": {
+      "common_name": "Ti-6Al-4V Grade 5",
+      "uns": "R56400",
+      "composition": {
+        "Ti": "balance",
+        "Al": "5.5-6.75",
+        "V": "3.5-4.5",
+        "Fe": "0.40 max"
+      },
+      "mechanical": {
+        "density": 4.43,
+        "yield_strength": 880,
+        "ultimate_tensile_strength": 950,
+        "elongation": 14,
+        "youngs_modulus": 113.8,
+        "shear_modulus": 44,
+        "poisson_ratio": 0.342
+      },
+      "thermal": {
+        "melting_point": 1660,
+        "thermal_conductivity": 6.7,
+        "specific_heat": 526
+      },
+      "applications": ["Aerospace", "Medical implants", "High performance automotive"],
+      "standards": ["ASTM B348", "ASTM F1472", "AMS 4928"]
+    },
+    "Grade9": {
+      "common_name": "Ti-3Al-2.5V Grade 9",
+      "uns": "R56320",
+      "composition": {
+        "Ti": "balance",
+        "Al": "2.5-3.5",
+        "V": "2.0-3.0"
+      },
+      "mechanical": {
+        "density": 4.48,
+        "yield_strength": 620,
+        "ultimate_tensile_strength": 690,
+        "elongation": 15,
+        "youngs_modulus": 107,
+        "shear_modulus": 40,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 1700,
+        "thermal_conductivity": 8.1,
+        "specific_heat": 526
+      },
+      "applications": ["Tubing", "Bicycle frames", "Golf clubs"],
+      "standards": ["ASTM B338", "AMS 4943"]
+    },
+    "Grade23": {
+      "common_name": "Ti-6Al-4V ELI Grade 23",
+      "uns": "R56401",
+      "composition": {
+        "Ti": "balance",
+        "Al": "5.5-6.5",
+        "V": "3.5-4.5",
+        "O": "0.13 max"
+      },
+      "mechanical": {
+        "density": 4.43,
+        "yield_strength": 759,
+        "ultimate_tensile_strength": 828,
+        "elongation": 10,
+        "youngs_modulus": 113.8,
+        "shear_modulus": 44,
+        "poisson_ratio": 0.342
+      },
+      "thermal": {
+        "melting_point": 1660,
+        "thermal_conductivity": 6.7,
+        "specific_heat": 526
+      },
+      "applications": ["Medical implants", "Surgical instruments", "Cryogenic vessels"],
+      "standards": ["ASTM F136", "ASTM B348"]
+    }
+  },
+  "nickel_alloys": {
+    "Inconel625": {
+      "common_name": "Inconel 625",
+      "uns": "N06625",
+      "composition": {
+        "Ni": "58.0 min",
+        "Cr": "20.0-23.0",
+        "Mo": "8.0-10.0",
+        "Nb+Ta": "3.15-4.15",
+        "Fe": "5.0 max"
+      },
+      "mechanical": {
+        "density": 8.44,
+        "yield_strength": 415,
+        "ultimate_tensile_strength": 830,
+        "elongation": 42.5,
+        "youngs_modulus": 205,
+        "shear_modulus": 79,
+        "poisson_ratio": 0.31
+      },
+      "thermal": {
+        "melting_point": 1350,
+        "thermal_conductivity": 9.8,
+        "specific_heat": 410
+      },
+      "applications": ["Chemical processing", "Marine", "Aerospace hot sections"],
+      "standards": ["ASTM B443", "AMS 5666"]
+    },
+    "Inconel718": {
+      "common_name": "Inconel 718",
+      "uns": "N07718",
+      "composition": {
+        "Ni": "50.0-55.0",
+        "Cr": "17.0-21.0",
+        "Fe": "balance",
+        "Nb+Ta": "4.75-5.50",
+        "Mo": "2.80-3.30"
+      },
+      "mechanical": {
+        "density": 8.19,
+        "yield_strength": 1100,
+        "ultimate_tensile_strength": 1375,
+        "elongation": 12,
+        "youngs_modulus": 204,
+        "shear_modulus": 77.2,
+        "poisson_ratio": 0.32
+      },
+      "thermal": {
+        "melting_point": 1260,
+        "thermal_conductivity": 11.4,
+        "specific_heat": 435
+      },
+      "applications": ["Gas turbines", "Rocket motors", "Nuclear reactors"],
+      "standards": ["AMS 5662", "AMS 5663", "ASTM B637"]
+    },
+    "Monel400": {
+      "common_name": "Monel 400",
+      "uns": "N04400",
+      "composition": {
+        "Ni": "63.0 min",
+        "Cu": "28.0-34.0",
+        "Fe": "2.5 max",
+        "Mn": "2.0 max"
+      },
+      "mechanical": {
+        "density": 8.80,
+        "yield_strength": 240,
+        "ultimate_tensile_strength": 550,
+        "elongation": 40,
+        "youngs_modulus": 179,
+        "shear_modulus": 66,
+        "poisson_ratio": 0.32
+      },
+      "thermal": {
+        "melting_point": 1350,
+        "thermal_conductivity": 21.8,
+        "specific_heat": 427
+      },
+      "applications": ["Marine engineering", "Chemical equipment", "Heat exchangers"],
+      "standards": ["ASTM B164", "AMS 4544"]
+    },
+    "HastelloyC276": {
+      "common_name": "Hastelloy C-276",
+      "uns": "N10276",
+      "composition": {
+        "Ni": "balance",
+        "Mo": "15.0-17.0",
+        "Cr": "14.5-16.5",
+        "Fe": "4.0-7.0",
+        "W": "3.0-4.5"
+      },
+      "mechanical": {
+        "density": 8.89,
+        "yield_strength": 355,
+        "ultimate_tensile_strength": 790,
+        "elongation": 50,
+        "youngs_modulus": 205,
+        "shear_modulus": 79,
+        "poisson_ratio": 0.31
+      },
+      "thermal": {
+        "melting_point": 1370,
+        "thermal_conductivity": 10.2,
+        "specific_heat": 427
+      },
+      "applications": ["Chemical processing", "Pollution control", "Flue gas desulfurization"],
+      "standards": ["ASTM B575", "AMS 5750"]
+    }
+  },
+  "magnesium": {
+    "AZ31B": {
+      "common_name": "AZ31B Magnesium",
+      "uns": "M11311",
+      "composition": {
+        "Mg": "balance",
+        "Al": "2.5-3.5",
+        "Zn": "0.6-1.4",
+        "Mn": "0.20 min"
+      },
+      "mechanical": {
+        "density": 1.77,
+        "yield_strength": 200,
+        "ultimate_tensile_strength": 290,
+        "elongation": 15,
+        "youngs_modulus": 45,
+        "shear_modulus": 17,
+        "poisson_ratio": 0.35
+      },
+      "thermal": {
+        "melting_point": 630,
+        "thermal_conductivity": 96,
+        "specific_heat": 1024
+      },
+      "applications": ["Sheet and extrusions", "Aircraft components", "Portable electronics"],
+      "standards": ["ASTM B90", "ASTM B107"]
+    },
+    "AZ91D": {
+      "common_name": "AZ91D Die Cast Magnesium",
+      "uns": "M11910",
+      "composition": {
+        "Mg": "balance",
+        "Al": "8.5-9.5",
+        "Zn": "0.45-0.90",
+        "Mn": "0.17-0.40"
+      },
+      "mechanical": {
+        "density": 1.81,
+        "yield_strength": 160,
+        "ultimate_tensile_strength": 240,
+        "elongation": 3,
+        "youngs_modulus": 45,
+        "shear_modulus": 17,
+        "poisson_ratio": 0.35
+      },
+      "thermal": {
+        "solidus": 470,
+        "liquidus": 595,
+        "thermal_conductivity": 51,
+        "specific_heat": 1020
+      },
+      "casting": true,
+      "applications": ["Die castings", "Automotive components", "Power tools"],
+      "standards": ["ASTM B94"]
+    },
+    "AM60B": {
+      "common_name": "AM60B Die Cast Magnesium",
+      "uns": "M10602",
+      "composition": {
+        "Mg": "balance",
+        "Al": "5.6-6.4",
+        "Mn": "0.26-0.40"
+      },
+      "mechanical": {
+        "density": 1.77,
+        "yield_strength": 130,
+        "ultimate_tensile_strength": 225,
+        "elongation": 8,
+        "youngs_modulus": 45,
+        "shear_modulus": 17,
+        "poisson_ratio": 0.35
+      },
+      "thermal": {
+        "solidus": 540,
+        "liquidus": 615,
+        "thermal_conductivity": 61,
+        "specific_heat": 1020
+      },
+      "casting": true,
+      "applications": ["Automotive structural parts", "Steering wheels", "Instrument panels"],
+      "standards": ["ASTM B94"]
+    },
+    "WE43": {
+      "common_name": "WE43 Rare Earth Magnesium",
+      "uns": "M18430",
+      "composition": {
+        "Mg": "balance",
+        "Y": "3.7-4.3",
+        "Rare Earths": "2.0-2.5",
+        "Zr": "0.4 min"
+      },
+      "mechanical": {
+        "density": 1.84,
+        "yield_strength": 170,
+        "ultimate_tensile_strength": 250,
+        "elongation": 10,
+        "youngs_modulus": 44,
+        "shear_modulus": 16.5,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 640,
+        "thermal_conductivity": 51,
+        "specific_heat": 966
+      },
+      "applications": ["Aerospace high temp", "Racing", "Helicopter gearboxes"],
+      "standards": ["ASTM B80", "ASTM B107"]
+    }
+  },
+  "zinc": {
+    "Zamak3": {
+      "common_name": "Zamak 3 Die Cast Zinc",
+      "uns": "Z33520",
+      "composition": {
+        "Zn": "balance",
+        "Al": "3.5-4.3",
+        "Cu": "0.25 max",
+        "Mg": "0.02-0.05"
+      },
+      "mechanical": {
+        "density": 6.6,
+        "yield_strength": 295,
+        "ultimate_tensile_strength": 285,
+        "elongation": 10,
+        "youngs_modulus": 96,
+        "shear_modulus": 36,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 381,
+        "thermal_conductivity": 113,
+        "specific_heat": 419
+      },
+      "casting": true,
+      "applications": ["Die castings", "Decorative hardware", "Toys"],
+      "standards": ["ASTM B86"]
+    },
+    "Zamak5": {
+      "common_name": "Zamak 5 Die Cast Zinc",
+      "uns": "Z35531",
+      "composition": {
+        "Zn": "balance",
+        "Al": "3.5-4.3",
+        "Cu": "0.75-1.25",
+        "Mg": "0.03-0.08"
+      },
+      "mechanical": {
+        "density": 6.7,
+        "yield_strength": 335,
+        "ultimate_tensile_strength": 331,
+        "elongation": 7,
+        "youngs_modulus": 96,
+        "shear_modulus": 36,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 380,
+        "thermal_conductivity": 109,
+        "specific_heat": 419
+      },
+      "casting": true,
+      "applications": ["Die castings", "Hardware", "Automotive parts"],
+      "standards": ["ASTM B86"]
+    },
+    "ZA-8": {
+      "common_name": "ZA-8 Zinc Aluminum",
+      "uns": "Z35636",
+      "composition": {
+        "Zn": "balance",
+        "Al": "8.0-8.8",
+        "Cu": "0.8-1.3",
+        "Mg": "0.015-0.03"
+      },
+      "mechanical": {
+        "density": 6.3,
+        "yield_strength": 290,
+        "ultimate_tensile_strength": 375,
+        "elongation": 10,
+        "youngs_modulus": 86,
+        "shear_modulus": 32,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 375,
+        "thermal_conductivity": 114,
+        "specific_heat": 420
+      },
+      "casting": true,
+      "applications": ["Gravity castings", "Bearings", "Bushings"],
+      "standards": ["ASTM B669"]
+    },
+    "ZA-27": {
+      "common_name": "ZA-27 High Aluminum Zinc",
+      "uns": "Z35841",
+      "composition": {
+        "Zn": "balance",
+        "Al": "25.0-28.0",
+        "Cu": "2.0-2.5",
+        "Mg": "0.01-0.02"
+      },
+      "mechanical": {
+        "density": 5.0,
+        "yield_strength": 365,
+        "ultimate_tensile_strength": 425,
+        "elongation": 1,
+        "youngs_modulus": 78,
+        "shear_modulus": 29,
+        "poisson_ratio": 0.34
+      },
+      "thermal": {
+        "melting_point": 375,
+        "thermal_conductivity": 123,
+        "specific_heat": 450
+      },
+      "casting": true,
+      "applications": ["High strength bearings", "Wear plates", "Gears"],
+      "standards": ["ASTM B669"]
+    }
+  },
+  "cobalt": {
+    "Stellite6": {
+      "common_name": "Stellite 6 (Co-Cr-W)",
+      "uns": "R30006",
+      "composition": {
+        "Co": "balance",
+        "Cr": "27.0-32.0",
+        "W": "4.0-6.0",
+        "C": "0.9-1.4"
+      },
+      "mechanical": {
+        "density": 8.3,
+        "hardness_hrc": "36-45",
+        "youngs_modulus": 237,
+        "shear_modulus": 91,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1285,
+        "thermal_conductivity": 14.8,
+        "specific_heat": 410
+      },
+      "applications": ["Wear parts", "Cutting tools", "Valve seats"],
+      "standards": ["AMS 5387", "AMS 5788"]
+    },
+    "MP35N": {
+      "common_name": "MP35N Medical Grade",
+      "uns": "R30035",
+      "composition": {
+        "Co": "balance",
+        "Ni": "33.0-37.0",
+        "Cr": "19.0-21.0",
+        "Mo": "9.0-10.5"
+      },
+      "mechanical": {
+        "density": 8.43,
+        "yield_strength": 1000,
+        "ultimate_tensile_strength": 1310,
+        "elongation": 8,
+        "youngs_modulus": 227,
+        "shear_modulus": 82.7,
+        "poisson_ratio": 0.32
+      },
+      "thermal": {
+        "melting_point": 1315,
+        "thermal_conductivity": 11.2,
+        "specific_heat": 430
+      },
+      "applications": ["Medical implants", "Springs", "Marine fasteners"],
+      "standards": ["ASTM F562", "AMS 5844"]
+    }
+  },
+  "specialty": {
+    "W": {
+      "common_name": "Pure Tungsten",
+      "uns": "R07005",
+      "composition": {
+        "W": "99.95 min"
+      },
+      "mechanical": {
+        "density": 19.25,
+        "yield_strength": 550,
+        "ultimate_tensile_strength": 980,
+        "elongation": 2,
+        "youngs_modulus": 411,
+        "shear_modulus": 161,
+        "poisson_ratio": 0.28
+      },
+      "thermal": {
+        "melting_point": 3422,
+        "thermal_conductivity": 173,
+        "specific_heat": 132
+      },
+      "applications": ["Electrodes", "High temp furnace parts", "Ballast"],
+      "standards": ["ASTM B760", "ASTM F288"]
+    },
+    "W-Cu": {
+      "common_name": "Tungsten-Copper Composite (70W-30Cu)",
+      "composition": {
+        "W": "70",
+        "Cu": "30"
+      },
+      "mechanical": {
+        "density": 14.0,
+        "hardness_hb": "195-225",
+        "youngs_modulus": 260,
+        "shear_modulus": 100,
+        "poisson_ratio": 0.30
+      },
+      "thermal": {
+        "melting_point": 1083,
+        "thermal_conductivity": 200,
+        "specific_heat": 200
+      },
+      "applications": ["Electrical contacts", "Heat sinks", "EDM electrodes"],
+      "standards": ["ASTM B702"]
+    },
+    "Pb": {
+      "common_name": "Pure Lead",
+      "uns": "L50045",
+      "composition": {
+        "Pb": "99.94 min"
+      },
+      "mechanical": {
+        "density": 11.34,
+        "yield_strength": 12,
+        "ultimate_tensile_strength": 18,
+        "elongation": 50,
+        "youngs_modulus": 14,
+        "shear_modulus": 5.6,
+        "poisson_ratio": 0.44
+      },
+      "thermal": {
+        "melting_point": 327,
+        "thermal_conductivity": 35,
+        "specific_heat": 128
+      },
+      "applications": ["Radiation shielding", "Batteries", "Ballast"],
+      "standards": ["ASTM B29"]
+    },
+    "Sn": {
+      "common_name": "Pure Tin",
+      "uns": "L13008",
+      "composition": {
+        "Sn": "99.80 min"
+      },
+      "mechanical": {
+        "density": 7.31,
+        "yield_strength": 11,
+        "ultimate_tensile_strength": 15,
+        "elongation": 60,
+        "youngs_modulus": 50,
+        "shear_modulus": 18,
+        "poisson_ratio": 0.36
+      },
+      "thermal": {
+        "melting_point": 232,
+        "thermal_conductivity": 67,
+        "specific_heat": 228
+      },
+      "applications": ["Solder base", "Coatings", "Pewter"],
+      "standards": ["ASTM B339"]
+    },
+    "Sn63Pb37": {
+      "common_name": "Sn63-Pb37 Eutectic Solder",
+      "composition": {
+        "Sn": "63",
+        "Pb": "37"
+      },
+      "mechanical": {
+        "density": 8.4,
+        "yield_strength": 35,
+        "ultimate_tensile_strength": 42,
+        "elongation": 35,
+        "youngs_modulus": 30,
+        "shear_modulus": 12,
+        "poisson_ratio": 0.40
+      },
+      "thermal": {
+        "melting_point": 183,
+        "thermal_conductivity": 50,
+        "specific_heat": 180
+      },
+      "casting": true,
+      "applications": ["Electronics soldering", "Electrical connections"],
+      "standards": ["IPC J-STD-006"]
+    },
+    "SAC305": {
+      "common_name": "SAC305 Lead-Free Solder",
+      "composition": {
+        "Sn": "96.5",
+        "Ag": "3.0",
+        "Cu": "0.5"
+      },
+      "mechanical": {
+        "density": 7.37,
+        "yield_strength": 55,
+        "ultimate_tensile_strength": 60,
+        "elongation": 25,
+        "youngs_modulus": 50,
+        "shear_modulus": 19,
+        "poisson_ratio": 0.32
+      },
+      "thermal": {
+        "melting_point": 217,
+        "thermal_conductivity": 57,
+        "specific_heat": 220
+      },
+      "casting": true,
+      "applications": ["Lead-free electronics", "RoHS compliant soldering"],
+      "standards": ["IPC J-STD-006", "ISO 9453"]
+    },
+    "Babbitt": {
+      "common_name": "Tin Babbitt (Grade 2)",
+      "uns": "L13840",
+      "composition": {
+        "Sn": "88.75",
+        "Sb": "7.25",
+        "Cu": "3.75",
+        "Pb": "0.35 max"
+      },
+      "mechanical": {
+        "density": 7.35,
+        "yield_strength": 35,
+        "ultimate_tensile_strength": 77,
+        "elongation": 2,
+        "hardness_hb": 27,
+        "youngs_modulus": 53,
+        "shear_modulus": 20,
+        "poisson_ratio": 0.33
+      },
+      "thermal": {
+        "melting_point": 241,
+        "thermal_conductivity": 55,
+        "specific_heat": 209
+      },
+      "casting": true,
+      "applications": ["Bearing linings", "Thrust bearings", "Journal bearings"],
+      "standards": ["ASTM B23", "ISO 4381"]
+    }
+  }
+}

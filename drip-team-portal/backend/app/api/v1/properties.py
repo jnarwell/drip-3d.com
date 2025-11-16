@@ -60,6 +60,11 @@ async def get_component_properties(
     current_user: dict = Depends(get_current_user)
 ):
     """Get all properties for a specific component"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"🔍 Getting properties for component: {component_id}")
+    
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
@@ -67,9 +72,18 @@ async def get_component_properties(
             detail=f"Component {component_id} not found"
         )
     
-    return db.query(ComponentProperty).filter(
+    logger.info(f"📋 Component found: DB ID {component.id}, current material: {component.primary_material_id}")
+    
+    properties = db.query(ComponentProperty).filter(
         ComponentProperty.component_id == component.id
     ).all()
+    
+    logger.info(f"📊 Found {len(properties)} properties:")
+    for prop in properties:
+        notes_preview = (prop.notes[:50] + "...") if prop.notes else "None"
+        logger.info(f"  - {prop.property_definition.name}: {prop.single_value} (ID: {prop.id}, inherited: {prop.inherited_from_material}, notes: '{notes_preview}')")
+    
+    return properties
 
 
 @router.post("/components/{component_id}/properties", response_model=ComponentPropertyResponse)

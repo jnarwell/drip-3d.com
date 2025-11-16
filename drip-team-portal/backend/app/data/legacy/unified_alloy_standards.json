@@ -1,0 +1,403 @@
+{
+  "aluminum": {
+    "1100-O": {
+      "common_name": "1100-O Aluminum (Commercially Pure)",
+      "uns": "A91100",
+      "base_alloy": "1100",
+      "temper": "O",
+      "composition": {
+        "Al": "99.0 min",
+        "Cu": "0.05-0.20",
+        "Fe+Si": "0.95 max"
+      },
+      "properties": {
+        "mechanical": {
+          "density": {
+            "value": 2.71,
+            "unit": "g/cm³",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "yield_strength": {
+            "value": 34,
+            "unit": "MPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "ultimate_tensile_strength": {
+            "value": 90,
+            "unit": "MPa",
+            "source": "ASTM_Standards", 
+            "temperature_dependent": false
+          },
+          "elongation": {
+            "value": 35,
+            "unit": "%",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "youngs_modulus": {
+            "value": 68.9,
+            "unit": "GPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "shear_modulus": {
+            "value": 26,
+            "unit": "GPa", 
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "poisson_ratio": {
+            "value": 0.33,
+            "unit": "",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "brinell_hardness": {
+            "value": 23,
+            "unit": "HB",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          }
+        },
+        "thermal": {
+          "melting_point": {
+            "value": 643,
+            "unit": "°C",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "thermal_conductivity": {
+            "value": 222,
+            "unit": "W/m·K",
+            "source": "ASTM_Standards",
+            "temperature_dependent": true,
+            "nist_available": true
+          },
+          "specific_heat": {
+            "value": 904,
+            "unit": "J/kg·K",
+            "source": "ASTM_Standards", 
+            "temperature_dependent": true
+          }
+        }
+      },
+      "applications": ["Chemical equipment", "Food handling", "Heat exchangers"],
+      "standards": ["ASTM B209", "ASTM B211"],
+      "source": "Original_Database"
+    },
+    "1100-H14": {
+      "common_name": "1100-H14 Aluminum (Half Hard)",
+      "uns": "A91100",
+      "base_alloy": "1100", 
+      "temper": "H14",
+      "composition": {
+        "Al": "99.0 min",
+        "Cu": "0.05-0.20",
+        "Fe+Si": "0.95 max"
+      },
+      "properties": {
+        "mechanical": {
+          "density": {
+            "value": 2.71,
+            "unit": "g/cm³",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "yield_strength": {
+            "value": 117,
+            "unit": "MPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "ultimate_tensile_strength": {
+            "value": 124,
+            "unit": "MPa", 
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "elongation": {
+            "value": 9,
+            "unit": "%",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "youngs_modulus": {
+            "value": 68.9,
+            "unit": "GPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "shear_modulus": {
+            "value": 26,
+            "unit": "GPa",
+            "source": "ASTM_Standards", 
+            "temperature_dependent": false
+          },
+          "poisson_ratio": {
+            "value": 0.33,
+            "unit": "",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "brinell_hardness": {
+            "value": 32,
+            "unit": "HB",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          }
+        },
+        "thermal": {
+          "melting_point": {
+            "value": 643,
+            "unit": "°C",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "thermal_conductivity": {
+            "value": 218,
+            "unit": "W/m·K",
+            "source": "ASTM_Standards",
+            "temperature_dependent": true,
+            "nist_available": true
+          },
+          "specific_heat": {
+            "value": 904,
+            "unit": "J/kg·K",
+            "source": "ASTM_Standards",
+            "temperature_dependent": true
+          }
+        }
+      },
+      "applications": ["Sheet metal work", "Spun hollowware", "Fin stock"],
+      "standards": ["ASTM B209"],
+      "source": "Original_Database"
+    },
+    "2024-T3": {
+      "common_name": "2024-T3 Aluminum",
+      "uns": "A92024",
+      "base_alloy": "2024",
+      "temper": "T3",
+      "composition": {
+        "Al": "90.75-94.7",
+        "Cu": "3.8-4.9", 
+        "Mg": "1.2-1.8",
+        "Mn": "0.30-0.9"
+      },
+      "properties": {
+        "mechanical": {
+          "density": {
+            "value": 2.78,
+            "unit": "g/cm³",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "yield_strength": {
+            "value": 345,
+            "unit": "MPa",
+            "source": "ASTM_Standards", 
+            "temperature_dependent": false
+          },
+          "ultimate_tensile_strength": {
+            "value": 485,
+            "unit": "MPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "elongation": {
+            "value": 18,
+            "unit": "%",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "youngs_modulus": {
+            "value": 73.1,
+            "unit": "GPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "shear_modulus": {
+            "value": 28,
+            "unit": "GPa",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "poisson_ratio": {
+            "value": 0.33,
+            "unit": "",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "brinell_hardness": {
+            "value": 120,
+            "unit": "HB",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          }
+        },
+        "thermal": {
+          "melting_point": {
+            "value": 502,
+            "unit": "°C",
+            "source": "ASTM_Standards",
+            "temperature_dependent": false
+          },
+          "thermal_conductivity": {
+            "value": 121,
+            "unit": "W/m·K",
+            "source": "ASTM_Standards",
+            "temperature_dependent": true,
+            "nist_available": true
+          },
+          "specific_heat": {
+            "value": 875,
+            "unit": "J/kg·K",
+            "source": "ASTM_Standards",
+            "temperature_dependent": true
+          }
+        }
+      },
+      "applications": ["Aircraft structures", "Truck wheels", "Screw machine products"],
+      "standards": ["ASTM B209", "AMS-QQ-A-250/4", "AMS 4037"],
+      "source": "Original_Database"
+    },
+    "6061-T6": {
+      "common_name": "6061-T6 Aluminum",
+      "uns": "A96061",
+      "base_alloy": "6061",
+      "temper": "T6",
+      "composition": {
+        "Al": "95.8-98.6",
+        "Mg": "0.8-1.2",
+        "Si": "0.4-0.8",
+        "Cu": "0.15-0.40", 
+        "Cr": "0.04-0.35"
+      },
+      "properties": {
+        "mechanical": {
+          "density": {
+            "value": 2.70,
+            "unit": "g/cm³",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "yield_strength": {
+            "value": 276,
+            "unit": "MPa",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "ultimate_tensile_strength": {
+            "value": 310,
+            "unit": "MPa",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "elongation": {
+            "value": 12,
+            "unit": "%",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "youngs_modulus": {
+            "value": 68.9,
+            "unit": "GPa",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "shear_modulus": {
+            "value": 26,
+            "unit": "GPa",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "poisson_ratio": {
+            "value": 0.33,
+            "unit": "",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "brinell_hardness": {
+            "value": 95,
+            "unit": "HB",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          }
+        },
+        "thermal": {
+          "melting_point": {
+            "value": 582,
+            "unit": "°C",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "thermal_conductivity": {
+            "value": 167,
+            "unit": "W/m·K",
+            "source": "Basic_Database",
+            "temperature_dependent": true,
+            "nist_available": true
+          },
+          "specific_heat": {
+            "value": 896,
+            "unit": "J/kg·K",
+            "source": "Basic_Database",
+            "temperature_dependent": true
+          }
+        },
+        "acoustic": {
+          "longitudinal_velocity": {
+            "value": 6420,
+            "unit": "m/s",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "shear_velocity": {
+            "value": 3040,
+            "unit": "m/s", 
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          },
+          "acoustic_impedance": {
+            "value": 17.3,
+            "unit": "MRayl",
+            "source": "Basic_Database",
+            "temperature_dependent": false
+          }
+        }
+      },
+      "applications": ["Structural components", "Marine fittings", "Bicycle frames", "Aircraft structures"],
+      "standards": ["ASTM B209", "ASTM B211", "AMS 4027", "AMS-QQ-A-250/11"],
+      "source": "Basic_Database"
+    }
+  },
+  "_metadata": {
+    "version": "1.0.0",
+    "unified": true,
+    "sources": {
+      "Original_Database": "alloy_standards.json",
+      "Basic_Database": "alloy_standards_basic.json", 
+      "Extended_Database": "alloy_standards_extended.json",
+      "NIST": "NIST Chemistry WebBook",
+      "Materials_Project": "Materials Project Database",
+      "MatWeb": "MatWeb Database"
+    },
+    "property_sources": {
+      "ASTM_Standards": "Industry standard values",
+      "Basic_Database": "Basic database compilation", 
+      "NIST": "NIST experimental data",
+      "Materials_Project": "DFT calculations",
+      "MatWeb": "Engineering database"
+    },
+    "temperature_dependent_flags": {
+      "thermal_conductivity": true,
+      "specific_heat": true,
+      "density": true,
+      "dynamic_viscosity": true,
+      "electrical_resistivity": true
+    },
+    "created": "2025-11-12",
+    "consolidation_notes": "Unified from three separate databases, added source tracking and temperature dependency flags"
+  }
+}

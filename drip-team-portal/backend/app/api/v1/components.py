@@ -14,8 +14,10 @@ from app.models.audit import AuditLog
 from app.models.user import User
 from app.schemas.component import ComponentCreate, ComponentUpdate, ComponentResponse, ComponentStatusUpdate
 from app.services.linear import LinearService
+from app.services.material_property_manager import MaterialPropertyManager
 
 router = APIRouter(prefix="/api/v1/components")
+material_manager = MaterialPropertyManager()
 
 @router.get("/", response_model=List[ComponentResponse])
 async def get_components(
@@ -218,3 +220,55 @@ async def delete_component(
     db.commit()
     
     return {"status": "success", "message": f"Component {component_id} deleted"}
+
+@router.put("/{component_id}/material")
+async def change_component_material(
+    component_id: str,
+    material_id: Optional[int] = Query(None, description="New material ID, or null to clear material"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Change the material of a component and update all inherited properties"""
+    # Find component by component_id string
+    component = db.query(Component).filter(Component.component_id == component_id).first()
+    if not component:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Component {component_id} not found"
+        )
+    
+    try:
+        # Use the component's database ID for the material manager
+        result = material_manager.change_component_material(
+            db=db,
+            component_id=component.id,
+            new_material_id=material_id,
+            user_email=current_user["email"]
+        )
+        
+        # Create audit log
+        audit = AuditLog(
+            entity_type="component",
+            entity_id=component_id,
+            action="material_changed",
+            user=current_user["email"],
+            details={
+                "previous_material_id": result["previous_material_id"],
+                "new_material_id": result["new_material_id"],
+                "properties_removed": len(result["properties_removed"]),
+                "properties_added": len(result["properties_added"])
+            }
+        )
+        db.add(audit)
+        db.commit()
+        
+        return {
+            "status": "success",
+            "component_id": component_id,
+            "changes": result
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

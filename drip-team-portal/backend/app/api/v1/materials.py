@@ -37,9 +37,13 @@ async def get_materials(
             Material.astm_grade.ilike(f"%{search}%")
         )
     
-    materials = query.all()
+    # Use eager loading to avoid N+1 query problem
+    from sqlalchemy.orm import joinedload
+    materials = query.options(
+        joinedload(Material.property_values).joinedload(MaterialProperty.property_definition)
+    ).all()
     
-    # Add property values
+    # Add property values (now efficiently loaded)
     for material in materials:
         material.properties = []
         for mat_prop in material.property_values:
@@ -228,6 +232,10 @@ async def remove_component_material(
     current_user: dict = Depends(get_current_user)
 ):
     """Remove material from component and its auto-generated properties"""
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"🗑️ Removing material {material_id} from component {component_id}")
+    
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
@@ -242,12 +250,30 @@ async def remove_component_material(
             detail="Material not found"
         )
     
-    # Remove auto-generated properties (those with "From material:" in notes)
+    logger.info(f"📋 Component: {component.component_id}, Material: {material.name}, Current properties: {len(component.properties)}")
+    
+    # Remove all inherited properties (both old and new patterns)
     removed_properties = []
-    for prop in component.properties:
-        if prop.notes and f"From material: {material.name}" in prop.notes:
-            removed_properties.append(prop.property_definition.name)
-            db.delete(prop)
+    
+    # Get properties that are properly marked as inherited
+    inherited_props = [prop for prop in component.properties if prop.inherited_from_material]
+    
+    # Also get legacy properties with old patterns
+    legacy_props = [prop for prop in component.properties 
+                   if prop.notes and (
+                       "From material:" in prop.notes or 
+                       "Inherited from material:" in prop.notes
+                   )]
+    
+    # Combine and remove duplicates
+    all_props_to_remove = {prop.id: prop for prop in inherited_props + legacy_props}.values()
+    logger.info(f"🔍 Found {len(inherited_props)} properly tracked + {len(legacy_props)} legacy inherited properties = {len(list(all_props_to_remove))} total to remove")
+    
+    for prop in all_props_to_remove:
+        notes_preview = (prop.notes[:50] + "...") if prop.notes else "None"
+        logger.info(f"❌ Removing property: {prop.property_definition.name} = {prop.single_value} (ID: {prop.id}, inherited: {prop.inherited_from_material}, notes: '{notes_preview}')")
+        removed_properties.append(prop.property_definition.name)
+        db.delete(prop)
     
     # Remove primary material reference if it matches
     if component.primary_material_id == material_id:
@@ -257,7 +283,9 @@ async def remove_component_material(
     if material in component.materials:
         component.materials.remove(material)
     
+    logger.info("💾 Committing material removal changes...")
     db.commit()
+    logger.info(f"✅ Material removal completed! Removed {len(removed_properties)} properties: {removed_properties}")
     
     return {
         "status": "success",

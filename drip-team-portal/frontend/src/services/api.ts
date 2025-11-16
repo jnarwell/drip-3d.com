@@ -6,6 +6,7 @@ export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'x-email': 'test@drip-3d.com', // Dev mode authentication
   },
 });
 
@@ -15,6 +16,7 @@ export const useAuthenticatedApi = () => {
     baseURL: API_URL,
     headers: {
       'Content-Type': 'application/json',
+      'x-email': 'test@drip-3d.com', // Dev mode authentication
     },
   });
 

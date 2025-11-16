@@ -14,6 +14,7 @@ class PropertyType(enum.Enum):
     MATERIAL = "material"
     DIMENSIONAL = "dimensional"
     OPTICAL = "optical"
+    PHYSICAL = "physical"
     OTHER = "other"
 
 
@@ -61,9 +62,14 @@ class ComponentProperty(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = Column(String)
     
+    # Material inheritance tracking
+    inherited_from_material = Column(Boolean, default=False)  # True if this property came from a material
+    source_material_id = Column(Integer, ForeignKey("materials.id"))  # Which material it came from
+    
     # Relationships
     component = relationship("Component", back_populates="properties")
     property_definition = relationship("PropertyDefinition", back_populates="property_values")
+    source_material = relationship("Material", foreign_keys=[source_material_id])
 
 
 class UnitSystem(Base):

@@ -78,14 +78,8 @@ const TestCampaign: React.FC = () => {
   };
 
   const getCategoryIcon = (category: string) => {
-    const icons: { [key: string]: string } = {
-      'Acoustic': '🔊',
-      'Thermal': '🌡️',
-      'Mechanical': '⚙️',
-      'Electrical': '⚡',
-      'Material': '🧪',
-    };
-    return icons[category] || '📋';
+    // Removed emojis for professional appearance
+    return '';
   };
 
   const getStatusIcon = (status: TestStatus) => {
@@ -142,12 +136,9 @@ const TestCampaign: React.FC = () => {
           {tests?.map(test => (
             <div key={test.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-2">{getCategoryIcon(test.category || 'Unknown')}</span>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">{test.name}</h3>
-                    <p className="text-sm text-gray-500 font-mono">{test.test_id}</p>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">{test.name}</h3>
+                  <p className="text-sm text-gray-500 font-mono">{test.test_id}</p>
                 </div>
                 <select
                   value={test.status}

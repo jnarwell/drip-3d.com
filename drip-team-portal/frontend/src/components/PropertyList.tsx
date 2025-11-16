@@ -14,6 +14,7 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
   const [groupedProperties, setGroupedProperties] = useState<Record<PropertyType, ComponentProperty[]>>({} as Record<PropertyType, ComponentProperty[]>);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<PropertyType, boolean>>({} as Record<PropertyType, boolean>);
 
   const { data: properties, isLoading } = useQuery<ComponentProperty[]>({
     queryKey: ['component-properties', componentId],
@@ -32,6 +33,18 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
     },
   });
 
+  // Load collapsed state from localStorage on component mount
+  useEffect(() => {
+    const savedCollapsedState = localStorage.getItem('property-categories-collapsed');
+    if (savedCollapsedState) {
+      try {
+        setCollapsedCategories(JSON.parse(savedCollapsedState));
+      } catch (error) {
+        console.error('Failed to parse saved collapsed state:', error);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     if (properties) {
       const grouped = properties.reduce((acc, prop) => {
@@ -46,22 +59,25 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
     }
   }, [properties]);
 
+  // Toggle collapse state for a category
+  const toggleCategoryCollapse = (category: PropertyType) => {
+    const newCollapsedState = {
+      ...collapsedCategories,
+      [category]: !collapsedCategories[category]
+    };
+    setCollapsedCategories(newCollapsedState);
+    
+    // Save to localStorage
+    localStorage.setItem('property-categories-collapsed', JSON.stringify(newCollapsedState));
+  };
+
   const getPropertyTypeLabel = (type: PropertyType) => {
     return type.charAt(0).toUpperCase() + type.slice(1) + ' Properties';
   };
 
   const getPropertyTypeIcon = (type: PropertyType) => {
-    const icons: Record<PropertyType, string> = {
-      [PropertyType.THERMAL]: '🌡️',
-      [PropertyType.ELECTRICAL]: '⚡',
-      [PropertyType.MECHANICAL]: '⚙️',
-      [PropertyType.ACOUSTIC]: '🔊',
-      [PropertyType.MATERIAL]: '🧱',
-      [PropertyType.DIMENSIONAL]: '📐',
-      [PropertyType.OPTICAL]: '🔍',
-      [PropertyType.OTHER]: '📋',
-    };
-    return icons[type] || '📋';
+    // Removed emojis for professional appearance
+    return '';
   };
 
   if (isLoading) {
@@ -85,24 +101,60 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
 
       {/* Properties grouped by type */}
       <div className="space-y-6">
-        {Object.entries(groupedProperties).map(([type, props]) => (
-          <div key={type} className="bg-gray-50 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-              <span>{getPropertyTypeIcon(type as PropertyType)}</span>
-              {getPropertyTypeLabel(type as PropertyType)}
-            </h4>
-            <div className="space-y-2">
-              {props.map((property) => (
-                <PropertyValue
-                  key={property.id}
-                  property={property}
-                  componentId={componentId}
-                  onDelete={() => deleteProperty.mutate(property.id)}
-                />
-              ))}
+        {Object.entries(groupedProperties).map(([type, props]) => {
+          const isCollapsed = collapsedCategories[type as PropertyType];
+          return (
+            <div key={type} className="bg-gray-50 rounded-lg overflow-hidden">
+              {/* Category Header - Clickable */}
+              <button
+                onClick={() => toggleCategoryCollapse(type as PropertyType)}
+                className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-100 transition-colors duration-150 focus:outline-none focus:bg-gray-100"
+              >
+                <h4 className="text-sm font-medium text-gray-700">
+                  {getPropertyTypeLabel(type as PropertyType)}
+                </h4>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                    {props.length}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                      isCollapsed ? 'rotate-0' : 'rotate-90'
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </button>
+              
+              {/* Category Content - Collapsible */}
+              <div
+                className={`transition-all duration-300 ease-in-out ${
+                  isCollapsed ? 'max-h-0' : 'max-h-[1000px]'
+                } overflow-hidden`}
+              >
+                <div className="px-4 pt-2 pb-4 space-y-2">
+                  {props.map((property) => (
+                    <PropertyValue
+                      key={property.id}
+                      property={property}
+                      componentId={componentId}
+                      onDelete={() => deleteProperty.mutate(property.id)}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Empty state */}

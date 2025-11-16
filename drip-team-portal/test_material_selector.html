@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material Selector Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ccc; }
+        .api-response { background: #f5f5f5; padding: 10px; margin-top: 10px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Material Selector Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Local Materials API</h2>
+        <button onclick="testLocalMaterials()">Test Local Materials</button>
+        <div id="local-response" class="api-response"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Materials Project Search API</h2>
+        <input type="text" id="mp-search" placeholder="Enter formula (e.g., Al, Al-Si)" value="Al">
+        <button onclick="testMaterialsProject()">Search Materials Project</button>
+        <div id="mp-response" class="api-response"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Component Materials</h2>
+        <input type="number" id="component-id" placeholder="Component ID" value="1">
+        <button onclick="testComponentMaterials()">Get Component Materials</button>
+        <div id="component-response" class="api-response"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        const headers = {
+            'Content-Type': 'application/json',
+            'x-email': 'test@drip-3d.com'
+        };
+
+        async function testLocalMaterials() {
+            try {
+                const response = await fetch(`${API_URL}/api/v1/materials`, { headers });
+                const data = await response.json();
+                document.getElementById('local-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('local-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testMaterialsProject() {
+            try {
+                const searchTerm = document.getElementById('mp-search').value;
+                const response = await fetch(`${API_URL}/api/v1/materials-project/search`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        query_type: 'alloy_system',
+                        alloy_system: searchTerm,
+                        limit: 5
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('mp-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('mp-response').textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function testComponentMaterials() {
+            try {
+                const componentId = document.getElementById('component-id').value;
+                const response = await fetch(`${API_URL}/api/v1/components/${componentId}/materials`, { headers });
+                const data = await response.json();
+                document.getElementById('component-response').textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('component-response').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

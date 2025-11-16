@@ -31,9 +31,11 @@ class Material(Base):
     # Source information
     data_source = Column(String)  # NIST, MatWeb, etc.
     source_url = Column(String)
+    mp_id = Column(String, unique=True)  # Materials Project ID
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = Column(String)  # Email of user who created/imported the material
     
     # Relationships
     property_values = relationship("MaterialProperty", back_populates="material", cascade="all, delete-orphan")
@@ -64,6 +66,7 @@ class MaterialProperty(Base):
     source = Column(String)
     reliability = Column(String)  # "measured", "typical", "estimated"
     notes = Column(String)
+    created_by = Column(String)  # Email of user who created the property value
     
     # Relationships
     material = relationship("Material", back_populates="property_values")

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { ComponentProperty, ValueType } from '../types';
+import { useUnits } from '../contexts/UnitContext';
+import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
 
 interface PropertyValueProps {
   property: ComponentProperty;
@@ -13,16 +15,62 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState({
-    single_value: property.single_value || 0,
-    min_value: property.min_value || 0,
-    max_value: property.max_value || 0,
-    average_value: property.average_value || 0,
-    tolerance: property.tolerance || 0,
-  });
+  const [inputValue, setInputValue] = useState('');
+  const { formatWithUserUnit, formatRangeWithUserUnit, getUserUnit, getDimensionFromUnit, convertToUserUnit } = useUnits();
+
+  // Get dimension from property unit
+  const dimension = getDimensionFromUnit(property.property_definition.unit);
+  const userUnit = dimension ? getUserUnit(dimension) : property.property_definition.unit;
+
+  // Initialize input value when entering edit mode
+  useEffect(() => {
+    if (isEditing) {
+      const def = property.property_definition;
+      let initialValue = '';
+      
+      switch (def.value_type) {
+        case ValueType.SINGLE:
+          if (property.single_value !== null && property.single_value !== undefined) {
+            if (dimension) {
+              const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
+              initialValue = `${convertedValue} ${userUnit}`;
+            } else {
+              initialValue = `${property.single_value} ${def.unit}`;
+            }
+          }
+          break;
+        case ValueType.RANGE:
+          if (property.min_value !== null && property.min_value !== undefined && 
+              property.max_value !== null && property.max_value !== undefined) {
+            if (dimension) {
+              const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
+              const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
+              initialValue = `${convertedMin} - ${convertedMax} ${userUnit}`;
+            } else {
+              initialValue = `${property.min_value} - ${property.max_value} ${def.unit}`;
+            }
+          }
+          break;
+        case ValueType.AVERAGE:
+          if (property.average_value !== null && property.average_value !== undefined) {
+            if (dimension) {
+              const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
+              const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, def.unit, dimension) : 0;
+              initialValue = convertedTol ? `${convertedAvg} ± ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
+            } else {
+              const tol = property.tolerance || 0;
+              initialValue = tol ? `${property.average_value} ± ${tol} ${def.unit}` : `${property.average_value} ${def.unit}`;
+            }
+          }
+          break;
+      }
+      
+      setInputValue(initialValue);
+    }
+  }, [isEditing]);
 
   const updateProperty = useMutation({
-    mutationFn: async (values: Partial<typeof editValues>) => {
+    mutationFn: async (values: any) => {
       await api.patch(`/api/v1/components/${componentId}/properties/${property.id}`, values);
     },
     onSuccess: () => {
@@ -32,20 +80,54 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   });
 
   const handleSave = () => {
+    const parsed = parseValueWithUnit(inputValue, userUnit);
     const values: any = {};
+    const baseUnit = property.property_definition.unit;
     
-    switch (property.property_definition.value_type) {
-      case ValueType.SINGLE:
-        values.single_value = editValues.single_value;
-        break;
-      case ValueType.RANGE:
-        values.min_value = editValues.min_value;
-        values.max_value = editValues.max_value;
-        break;
-      case ValueType.AVERAGE:
-        values.average_value = editValues.average_value;
-        values.tolerance = editValues.tolerance;
-        break;
+    // Always try to convert to base unit if we have a known dimension
+    // If user didn't specify a unit, parsed.unit will be userUnit (their preference)
+    // We need to convert from that to the base unit
+    
+    if (parsed.isRange && parsed.min !== undefined && parsed.max !== undefined) {
+      // Convert from parsed unit (which could be user's unit) to base unit
+      let minBase = parsed.min;
+      let maxBase = parsed.max;
+      
+      if (dimension) {
+        // We know the dimension, so convert from parsed unit to base unit
+        minBase = convertUnit(parsed.min, parsed.unit, baseUnit);
+        maxBase = convertUnit(parsed.max, parsed.unit, baseUnit);
+      }
+      
+      if (property.property_definition.value_type === ValueType.AVERAGE) {
+        // For average type, calculate average and tolerance
+        values.average_value = (minBase + maxBase) / 2;
+        values.tolerance = (maxBase - minBase) / 2;
+      } else {
+        // For range type
+        values.min_value = minBase;
+        values.max_value = maxBase;
+      }
+    } else if (!parsed.isRange && parsed.value !== undefined) {
+      // Single value - convert to base unit
+      let valueBase = parsed.value;
+      
+      if (dimension) {
+        // We know the dimension, so convert from parsed unit to base unit
+        valueBase = convertUnit(parsed.value, parsed.unit, baseUnit);
+        console.log('Converting value:', parsed.value, parsed.unit, '->', valueBase, baseUnit);
+      }
+      
+      if (property.property_definition.value_type === ValueType.SINGLE) {
+        values.single_value = valueBase;
+      } else if (property.property_definition.value_type === ValueType.AVERAGE) {
+        values.average_value = valueBase;
+        values.tolerance = 0;
+      } else if (property.property_definition.value_type === ValueType.RANGE) {
+        // If they entered a single value for a range property, use it as both min and max
+        values.min_value = valueBase;
+        values.max_value = valueBase;
+      }
     }
     
     updateProperty.mutate(values);
@@ -55,78 +137,72 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     const def = property.property_definition;
     
     if (isEditing) {
-      switch (def.value_type) {
-        case ValueType.SINGLE:
-          return (
-            <input
-              type="number"
-              value={editValues.single_value}
-              onChange={(e) => setEditValues({ ...editValues, single_value: parseFloat(e.target.value) })}
-              className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
-              autoFocus
-            />
-          );
-        case ValueType.RANGE:
-          return (
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={editValues.min_value}
-                onChange={(e) => setEditValues({ ...editValues, min_value: parseFloat(e.target.value) })}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-              <span className="text-gray-500">to</span>
-              <input
-                type="number"
-                value={editValues.max_value}
-                onChange={(e) => setEditValues({ ...editValues, max_value: parseFloat(e.target.value) })}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
-          );
-        case ValueType.AVERAGE:
-          return (
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={editValues.average_value}
-                onChange={(e) => setEditValues({ ...editValues, average_value: parseFloat(e.target.value) })}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-              <span className="text-gray-500">±</span>
-              <input
-                type="number"
-                value={editValues.tolerance}
-                onChange={(e) => setEditValues({ ...editValues, tolerance: parseFloat(e.target.value) })}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
-          );
-      }
+      return (
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder={`e.g., "10 ${userUnit}" or "10-20 ${userUnit}"`}
+          className="w-48 px-2 py-1 border border-gray-300 rounded text-sm"
+          autoFocus
+        />
+      );
     }
     
-    // Display mode
+    // Display mode - show values in user's preferred units if conversion available
     switch (def.value_type) {
       case ValueType.SINGLE:
-        return property.single_value !== null ? (
-          <span className="text-gray-900">{property.single_value}</span>
-        ) : (
-          <span className="text-gray-400 italic">Not set</span>
-        );
+        if (property.single_value !== null && property.single_value !== undefined) {
+          if (dimension) {
+            const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
+            return <span className="text-gray-900">{formatWithUserUnit(convertedValue, dimension)}</span>;
+          } else {
+            // No conversion available, show original value with original unit
+            return <span className="text-gray-900">{formatValueWithUnit(property.single_value, def.unit)}</span>;
+          }
+        }
+        return <span className="text-gray-400 italic">Not set</span>;
+        
       case ValueType.RANGE:
-        return property.min_value !== null && property.max_value !== null ? (
-          <span className="text-gray-900">{property.min_value} - {property.max_value}</span>
-        ) : (
-          <span className="text-gray-400 italic">Not set</span>
-        );
+        if (property.min_value !== null && property.min_value !== undefined && 
+            property.max_value !== null && property.max_value !== undefined) {
+          if (dimension) {
+            const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
+            const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
+            return <span className="text-gray-900">{formatRangeWithUserUnit(convertedMin, convertedMax, dimension)}</span>;
+          } else {
+            // No conversion available, show original values with original unit
+            return <span className="text-gray-900">{formatRangeWithUnit(property.min_value, property.max_value, def.unit)}</span>;
+          }
+        }
+        return <span className="text-gray-400 italic">Not set</span>;
+        
       case ValueType.AVERAGE:
-        return property.average_value !== null ? (
-          <span className="text-gray-900">
-            {property.average_value} {property.tolerance ? `± ${property.tolerance}` : ''}
-          </span>
-        ) : (
-          <span className="text-gray-400 italic">Not set</span>
-        );
+        if (property.average_value !== null && property.average_value !== undefined) {
+          if (dimension) {
+            const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
+            if (property.tolerance && property.tolerance !== null && property.tolerance !== undefined) {
+              const convertedTol = convertToUserUnit(property.tolerance, def.unit, dimension);
+              return (
+                <span className="text-gray-900">
+                  {formatWithUserUnit(convertedAvg, dimension)} ± {formatWithUserUnit(convertedTol, dimension)}
+                </span>
+              );
+            }
+            return <span className="text-gray-900">{formatWithUserUnit(convertedAvg, dimension)}</span>;
+          } else {
+            // No conversion available, show original values with original unit
+            if (property.tolerance && property.tolerance !== null && property.tolerance !== undefined) {
+              return (
+                <span className="text-gray-900">
+                  {formatValueWithUnit(property.average_value, '')} ± {formatValueWithUnit(property.tolerance, def.unit)}
+                </span>
+              );
+            }
+            return <span className="text-gray-900">{formatValueWithUnit(property.average_value, def.unit)}</span>;
+          }
+        }
+        return <span className="text-gray-400 italic">Not set</span>;
     }
   };
 
@@ -142,7 +218,6 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
             onClick={() => !isEditing && setIsEditing(true)}
           >
             {renderValue()}
-            <span className="text-xs text-gray-500">{property.property_definition.unit}</span>
           </div>
         </div>
         {property.notes && (
@@ -170,7 +245,10 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
               </svg>
             </button>
             <button
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setInputValue('');
+              }}
               className="p-1 text-gray-500 hover:bg-gray-100 rounded transition-colors"
               aria-label="Cancel"
             >
