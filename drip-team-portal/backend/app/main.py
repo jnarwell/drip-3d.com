@@ -14,7 +14,7 @@ from app.api.v1.properties import router as properties_router
 from app.api.v1.materials import router as materials_router
 from app.api.v1.materials_project import router as materials_project_router
 from app.api.v1.alloy_enhancements import router as alloy_enhancements_router
-# from app.api.v1.templates import router as templates_router  # Temporarily disabled
+from app.api.v1.templates import router as templates_router
 from app.api.v1.property_tables import router as property_tables_router
 from app.api.v1.property_table_templates import router as property_table_templates_router
 from app.api.v1.property_tables_enhanced import router as property_tables_enhanced_router
@@ -45,7 +45,7 @@ app.include_router(materials_router, tags=["materials"])
 app.include_router(materials_project_router, tags=["materials-project"])
 app.include_router(alloy_enhancements_router, prefix="/api/v1", tags=["alloy-enhancements"])
 app.include_router(constants_router, tags=["constants"])
-# app.include_router(templates_router, tags=["templates"])  # Temporarily disabled
+app.include_router(templates_router, tags=["templates"])
 app.include_router(property_tables_router, tags=["property-tables"])
 app.include_router(property_table_templates_router, prefix="/api/v1/property-table-templates", tags=["property-table-templates"])
 app.include_router(property_tables_enhanced_router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
