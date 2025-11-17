@@ -13,10 +13,11 @@ const Layout: React.FC = () => {
     { name: 'Components', href: '/components' },
     { name: 'Tests', href: '/tests' },
     { name: 'Reports', href: '/reports' },
+    { name: 'Resources', href: '/resources' },
   ];
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   // Close dropdown when clicking outside

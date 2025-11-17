@@ -39,3 +39,16 @@ export const useAuthenticatedApi = () => {
 
   return authenticatedApi;
 };
+
+// Resources API functions
+export const getConstants = async (category?: string, search?: string) => {
+  const params = new URLSearchParams();
+  if (category && category !== 'all') {
+    params.append('category', category);
+  }
+  if (search) {
+    params.append('search', search);
+  }
+  const response = await api.get(`/api/v1/constants${params.toString() ? `?${params}` : ''}`);
+  return response.data;
+};

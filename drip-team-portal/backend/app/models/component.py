@@ -51,6 +51,7 @@ class Component(Base):
     
     test_results = relationship("TestResult", back_populates="component")
     properties = relationship("ComponentProperty", back_populates="component", cascade="all, delete-orphan")
+    property_tables = relationship("PropertyTable", back_populates="component")
     
     # Material relationships
     from app.models.material import component_materials
