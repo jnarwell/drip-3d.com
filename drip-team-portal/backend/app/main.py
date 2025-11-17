@@ -5,11 +5,10 @@ from app.db.database import engine
 from app.models import Base
 
 # Import after models are loaded
-from app.api.v1 import (
-    components, tests, auth, webhooks, reports, properties, materials, 
-    materials_project, alloy_enhancements, constants, templates, property_tables,
-    property_table_templates, property_tables_enhanced, linear
-)
+from app.api.v1 import components, tests, auth, webhooks, reports, properties, materials
+from app.api.v1 import materials_project, alloy_enhancements, templates, property_tables
+from app.api.v1 import property_table_templates, property_tables_enhanced, linear
+from app.api.v1 import constants
 
 app = FastAPI(
     title="DRIP Team Portal API",
