@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, ProtectedRoute } from './services/auth-dev';
+import { AuthProvider, ProtectedRoute } from './services/auth';
 import { UnitProvider } from './contexts/UnitContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
