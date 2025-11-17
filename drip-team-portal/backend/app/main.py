@@ -5,7 +5,11 @@ from app.db.database import engine
 from app.models import Base
 
 # Import after models are loaded
-from app.api.v1 import components, tests, auth, webhooks, reports, properties, materials, materials_project, alloy_enhancements
+from app.api.v1 import (
+    components, tests, auth, webhooks, reports, properties, materials, 
+    materials_project, alloy_enhancements, constants, templates, property_tables,
+    property_table_templates, property_tables_enhanced, linear
+)
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -30,6 +34,12 @@ app.include_router(properties.router, tags=["properties"])
 app.include_router(materials.router, tags=["materials"])
 app.include_router(materials_project.router, tags=["materials-project"])
 app.include_router(alloy_enhancements.router, prefix="/api/v1", tags=["alloy-enhancements"])
+app.include_router(constants.router, tags=["constants"])
+app.include_router(templates.router, tags=["templates"])
+app.include_router(property_tables.router, tags=["property-tables"])
+app.include_router(property_table_templates.router, prefix="/api/v1/property-table-templates", tags=["property-table-templates"])
+app.include_router(property_tables_enhanced.router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
+app.include_router(linear.router, tags=["linear"])
 
 @app.get("/")
 async def root():
