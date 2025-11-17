@@ -1,0 +1,90 @@
+{
+  "lastUpdated": "2025-11-17T19:38:53.458Z",
+  "phases": [
+    {
+      "phase": 1,
+      "title": "Phase 4 - L2 Scale Up & Production",
+      "description": null,
+      "targetDate": "Nov 5, 2027",
+      "progress": 0,
+      "projects": []
+    },
+    {
+      "phase": 2,
+      "title": "Phase 3 - L1 Prototype",
+      "description": "Now were cooking with gas. This phase is about taking all our R&D and making a 3D printer.",
+      "targetDate": "Nov 5, 2026",
+      "progress": 0,
+      "projects": []
+    },
+    {
+      "phase": 3,
+      "title": "Phase 2 - Aluminum Scale Up",
+      "description": "Ok, we can play with acoustics, now lets test something useful. This phase is centered on using what we learned in phase 1 to control aluminum. Secondarily, this phase is about testing and refining auxiliary systems.",
+      "targetDate": "May 31, 2026",
+      "progress": 0,
+      "projects": []
+    },
+    {
+      "phase": 4,
+      "title": "Phase 1 - Fundamental R&D",
+      "description": "Dipping our toes in the water. This phase is about getting all team members familiar with their domain, identifying key problems, and testing our fundamental  control mechanisms.",
+      "targetDate": "Jan 31, 2026",
+      "progress": 0,
+      "projects": [
+        {
+          "id": "781c0888-d75d-4d0f-803b-962b2a78a4ab",
+          "name": "Team Setup",
+          "description": "Drip 3D Inc.",
+          "status": "active",
+          "progress": 0.75,
+          "targetDate": "Dec 31, 2025",
+          "health": null,
+          "lead": {
+            "name": "Jamie Marwell",
+            "email": null
+          }
+        },
+        {
+          "id": "f6fed995-f9b8-436a-913f-27d16257361f",
+          "name": "Liquid Metal Control",
+          "description": "Using acoustics to manage position and shape of gallium-indium",
+          "status": "active",
+          "progress": 0,
+          "targetDate": "Dec 30, 2025",
+          "health": null,
+          "lead": {
+            "name": "pierce@drip-3d.com",
+            "email": null
+          }
+        },
+        {
+          "id": "dd6c077a-41ac-4628-a9df-4bc90f750ff7",
+          "name": "Acoustic Characterization & Styrofoam Testing",
+          "description": "Analyzing machine geometry, control principles, and transducer capacity with styrafoam",
+          "status": "active",
+          "progress": 0.08333333333333333,
+          "targetDate": "Nov 29, 2025",
+          "health": null,
+          "lead": {
+            "name": "ryos17@stanford.edu",
+            "email": null
+          }
+        },
+        {
+          "id": "9b05d454-85eb-4266-a435-d3cb26d58cfa",
+          "name": "Liquid-Solid Aluminum Bonding",
+          "description": "Deriving optimal solutions for machine material bonding",
+          "status": "active",
+          "progress": 0.328125,
+          "targetDate": "Dec 11, 2025",
+          "health": null,
+          "lead": {
+            "name": "Jamie Marwell",
+            "email": null
+          }
+        }
+      ]
+    }
+  ]
+}

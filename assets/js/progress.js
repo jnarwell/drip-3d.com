@@ -24,8 +24,8 @@ domReady(() => {
         });
     });
     
-    // Load milestone data if available
-    loadMilestoneData();
+    // Load milestone data if available (disabled for Linear integration)
+    // loadMilestoneData();
     
     // Animate progress bars when in viewport
     const progressBars = document.querySelectorAll('.progress-bar');
