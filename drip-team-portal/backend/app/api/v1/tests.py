@@ -50,32 +50,47 @@ async def get_critical_path(
     current_user: dict = Depends(get_current_user)
 ):
     """Get tests on critical path (blocking other tests)"""
-    # Get all tests with their prerequisites
-    tests = db.query(Test).filter(Test.status != TestStatus.COMPLETED).all()
-    
-    critical_tests = []
-    for test in tests:
-        if test.prerequisites:
-            # Check if this test is blocking others
-            blocked_tests = []
-            for other_test in tests:
-                if other_test.prerequisites and test.test_id in other_test.prerequisites:
-                    blocked_tests.append(other_test.test_id)
-            
-            if blocked_tests:
-                critical_tests.append({
-                    "id": test.id,
-                    "test_id": test.test_id,
-                    "name": test.name,
-                    "status": test.status,
-                    "blocking": blocked_tests,
-                    "blocked": test.status != TestStatus.NOT_STARTED
-                })
-    
-    # Sort by number of blocked tests
-    critical_tests.sort(key=lambda x: len(x["blocking"]), reverse=True)
-    
-    return critical_tests[:10]  # Top 10 critical path items
+    try:
+        print(f"🔧 Critical path requested by user: {current_user}")
+        
+        # Get all tests with their prerequisites
+        tests = db.query(Test).filter(Test.status != TestStatus.COMPLETED).all()
+        print(f"🔧 Found {len(tests)} incomplete tests")
+        
+        critical_tests = []
+        for test in tests:
+            if test.prerequisites:
+                # Check if this test is blocking others
+                blocked_tests = []
+                for other_test in tests:
+                    if other_test.prerequisites and test.test_id in other_test.prerequisites:
+                        blocked_tests.append(other_test.test_id)
+                
+                if blocked_tests:
+                    critical_tests.append({
+                        "id": test.id,
+                        "test_id": test.test_id,
+                        "name": test.name,
+                        "status": test.status,
+                        "blocking": blocked_tests,
+                        "blocked": test.status != TestStatus.NOT_STARTED
+                    })
+        
+        # Sort by number of blocked tests
+        critical_tests.sort(key=lambda x: len(x["blocking"]), reverse=True)
+        print(f"🔧 Returning {len(critical_tests)} critical tests")
+        
+        return critical_tests[:10]  # Top 10 critical path items
+        
+    except Exception as e:
+        print(f"❌ Error in critical_path: {str(e)}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @router.get("/{test_id}", response_model=TestResponse)
 async def get_test(
