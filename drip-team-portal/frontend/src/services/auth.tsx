@@ -2,25 +2,7 @@ import React from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
 
-// Debug environment variables
-console.log('🔧 Auth0 Environment Variables:', {
-  domain: import.meta.env.VITE_AUTH0_DOMAIN,
-  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
-  audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-  redirectUri: window.location.origin,
-});
-
-console.log('🔧 All Available Environment Variables:');
-console.table(import.meta.env);
-
-// Check for any Auth0-related variables
-const auth0Vars = Object.keys(import.meta.env)
-  .filter(key => key.includes('AUTH0') || key.includes('auth0'))
-  .reduce((obj: Record<string, any>, key) => {
-    obj[key] = (import.meta.env as any)[key];
-    return obj;
-  }, {});
-console.log('🔧 Found Auth0-related variables:', auth0Vars);
+// Environment variables are working correctly!
 
 export const authConfig = {
   domain: import.meta.env.VITE_AUTH0_DOMAIN || '',
