@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http://', 'https://');
 
 // Debug API URL
 console.log('🔧 API_URL being used:', API_URL);
 console.log('🔧 VITE_API_URL from env:', import.meta.env.VITE_API_URL);
+console.log('🔧 After HTTP->HTTPS replacement:', API_URL);
 
 export const api = axios.create({
   baseURL: API_URL,
