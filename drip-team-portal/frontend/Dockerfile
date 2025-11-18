@@ -20,10 +20,10 @@ FROM nginx:alpine
 # Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration and startup script
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY start.sh /start.sh
+# Copy nginx configuration
+COPY nginx-railway.conf /etc/nginx/nginx.conf
 
-EXPOSE 80
+# Expose port 8080 (Railway's default)
+EXPOSE 8080
 
-CMD ["/start.sh"]
+CMD ["nginx", "-g", "daemon off;"]
