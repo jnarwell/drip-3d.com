@@ -11,6 +11,18 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Build arguments for environment variables
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID
+ARG VITE_AUTH0_AUDIENCE
+ARG VITE_API_URL
+
+# Set environment variables for build
+ENV VITE_AUTH0_DOMAIN=$VITE_AUTH0_DOMAIN
+ENV VITE_AUTH0_CLIENT_ID=$VITE_AUTH0_CLIENT_ID
+ENV VITE_AUTH0_AUDIENCE=$VITE_AUTH0_AUDIENCE
+ENV VITE_API_URL=$VITE_API_URL
+
 # Build the application
 RUN npm run build
 
