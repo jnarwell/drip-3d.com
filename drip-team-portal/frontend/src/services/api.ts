@@ -19,6 +19,15 @@ export const api = axios.create({
 // Debug: Ensure api instance is using HTTPS
 console.log('🔧 Unauthenticated api baseURL:', api.defaults.baseURL);
 
+// Force ALL requests to use HTTPS (fix for persistent Mixed Content issues)
+api.interceptors.request.use((config) => {
+  if (config.url && config.url.startsWith('http://')) {
+    config.url = config.url.replace('http://', 'https://');
+    console.log('🔧 Forced HTTP->HTTPS for request:', config.url);
+  }
+  return config;
+});
+
 // Add auth token to requests
 export const useAuthenticatedApi = () => {
   const { getAccessTokenSilently, user } = useAuth0();
