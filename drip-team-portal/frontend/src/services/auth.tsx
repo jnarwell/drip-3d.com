@@ -2,6 +2,15 @@ import React from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
 
+// Debug environment variables
+console.log('🔧 Auth0 Environment Variables:', {
+  domain: import.meta.env.VITE_AUTH0_DOMAIN,
+  clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
+  audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+  redirectUri: window.location.origin,
+  allEnvVars: import.meta.env
+});
+
 export const authConfig = {
   domain: import.meta.env.VITE_AUTH0_DOMAIN || '',
   clientId: import.meta.env.VITE_AUTH0_CLIENT_ID || '',
@@ -11,6 +20,23 @@ export const authConfig = {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Safety check: Don't initialize Auth0 with empty values
+  if (!authConfig.domain || !authConfig.clientId) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-yellow-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-yellow-600 mb-2">Configuration Error</h1>
+          <p className="text-gray-600">Auth0 environment variables are not configured.</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Domain: {authConfig.domain || 'MISSING'}<br />
+            Client ID: {authConfig.clientId || 'MISSING'}<br />
+            Audience: {authConfig.audience || 'MISSING'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Auth0Provider
       domain={authConfig.domain}
