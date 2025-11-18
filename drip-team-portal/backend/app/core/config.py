@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "DRIP Team Portal"
     VERSION: str = "1.0.0"
     
-    DATABASE_URL: str = "postgresql://user:pass@localhost/drip_portal"
+    DATABASE_URL: str
     REDIS_URL: str = "redis://localhost:6379"
     
     SECRET_KEY: str = "your-secret-key-here"
