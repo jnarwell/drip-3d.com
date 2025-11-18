@@ -51,45 +51,13 @@ async def get_critical_path(
 ):
     """Get tests on critical path (blocking other tests)"""
     try:
-        print(f"🔧 Critical path requested by user: {current_user}")
+        print("🔧 ENTERED critical_path endpoint")
+        print(f"🔧 current_user type: {type(current_user)}")
+        print(f"🔧 current_user value: {current_user}")
         print(f"🔧 DEV_MODE environment: {os.getenv('DEV_MODE')}")
         
-        # Test database connection first
-        try:
-            db_test = db.execute("SELECT 1").fetchone()
-            print(f"🔧 Database connection successful: {db_test}")
-        except Exception as db_error:
-            print(f"❌ Database connection failed: {db_error}")
-            raise db_error
-        
-        # Get all tests with their prerequisites
-        tests = db.query(Test).filter(Test.status != TestStatus.COMPLETED).all()
-        print(f"🔧 Found {len(tests)} incomplete tests")
-        
-        critical_tests = []
-        for test in tests:
-            if test.prerequisites:
-                # Check if this test is blocking others
-                blocked_tests = []
-                for other_test in tests:
-                    if other_test.prerequisites and test.test_id in other_test.prerequisites:
-                        blocked_tests.append(other_test.test_id)
-                
-                if blocked_tests:
-                    critical_tests.append({
-                        "id": test.id,
-                        "test_id": test.test_id,
-                        "name": test.name,
-                        "status": test.status,
-                        "blocking": blocked_tests,
-                        "blocked": test.status != TestStatus.NOT_STARTED
-                    })
-        
-        # Sort by number of blocked tests
-        critical_tests.sort(key=lambda x: len(x["blocking"]), reverse=True)
-        print(f"🔧 Returning {len(critical_tests)} critical tests")
-        
-        return critical_tests[:10]  # Top 10 critical path items
+        # Return early for debugging - skip database calls
+        return {"debug": "endpoint_reached", "user": current_user, "dev_mode": os.getenv("DEV_MODE")}
         
     except Exception as e:
         print(f"❌ Error in critical_path: {str(e)}")
