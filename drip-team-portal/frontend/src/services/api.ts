@@ -16,6 +16,9 @@ export const api = axios.create({
   },
 });
 
+// Debug: Ensure api instance is using HTTPS
+console.log('🔧 Unauthenticated api baseURL:', api.defaults.baseURL);
+
 // Add auth token to requests
 export const useAuthenticatedApi = () => {
   const { getAccessTokenSilently, user } = useAuth0();
