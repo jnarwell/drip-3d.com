@@ -8,8 +8,19 @@ console.log('🔧 Auth0 Environment Variables:', {
   clientId: import.meta.env.VITE_AUTH0_CLIENT_ID,
   audience: import.meta.env.VITE_AUTH0_AUDIENCE,
   redirectUri: window.location.origin,
-  allEnvVars: import.meta.env
 });
+
+console.log('🔧 All Available Environment Variables:');
+console.table(import.meta.env);
+
+// Check for any Auth0-related variables
+const auth0Vars = Object.keys(import.meta.env)
+  .filter(key => key.includes('AUTH0') || key.includes('auth0'))
+  .reduce((obj: Record<string, any>, key) => {
+    obj[key] = (import.meta.env as any)[key];
+    return obj;
+  }, {});
+console.log('🔧 Found Auth0-related variables:', auth0Vars);
 
 export const authConfig = {
   domain: import.meta.env.VITE_AUTH0_DOMAIN || '',
