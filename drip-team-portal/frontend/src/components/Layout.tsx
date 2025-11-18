@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useAuth0 } from '../services/auth-dev';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth0();
