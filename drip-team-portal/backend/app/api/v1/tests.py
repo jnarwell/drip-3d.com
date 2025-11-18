@@ -52,6 +52,15 @@ async def get_critical_path(
     """Get tests on critical path (blocking other tests)"""
     try:
         print(f"🔧 Critical path requested by user: {current_user}")
+        print(f"🔧 DEV_MODE environment: {os.getenv('DEV_MODE')}")
+        
+        # Test database connection first
+        try:
+            db_test = db.execute("SELECT 1").fetchone()
+            print(f"🔧 Database connection successful: {db_test}")
+        except Exception as db_error:
+            print(f"❌ Database connection failed: {db_error}")
+            raise db_error
         
         # Get all tests with their prerequisites
         tests = db.query(Test).filter(Test.status != TestStatus.COMPLETED).all()
