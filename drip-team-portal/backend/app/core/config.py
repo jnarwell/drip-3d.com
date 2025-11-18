@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "DRIP Team Portal"
     VERSION: str = "1.0.0"
     
-    DATABASE_URL: str
+    DATABASE_URL: str = None
     REDIS_URL: str = "redis://localhost:6379"
     
     SECRET_KEY: str = "your-secret-key-here"
