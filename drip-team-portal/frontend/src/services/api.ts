@@ -40,6 +40,12 @@ export const useAuthenticatedApi = () => {
   });
 
   authenticatedApi.interceptors.request.use(async (config) => {
+    // Force HTTPS for authenticated requests too
+    if (config.url && config.url.startsWith('http://')) {
+      config.url = config.url.replace('http://', 'https://');
+      console.log('🔧 Forced HTTP->HTTPS for authenticated request:', config.url);
+    }
+    
     // In dev mode, use mock authentication
     if (import.meta.env.DEV) {
       config.headers['x-email'] = 'test@drip-3d.com';
