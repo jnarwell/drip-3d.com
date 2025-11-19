@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine
@@ -52,6 +52,27 @@ async def startup_event():
         logging.error(f"Error creating database tables: {e}")
         # Don't crash the app, just log the error
         pass
+
+# Custom middleware to handle Railway's HTTP->HTTPS forwarding
+@app.middleware("http")
+async def handle_railway_forwarding(request: Request, call_next):
+    """
+    Railway terminates HTTPS at the edge and forwards HTTP to containers.
+    This middleware ensures we accept HTTP requests from Railway's internal network.
+    """
+    # Log the request for debugging
+    logging.info(f"🌐 Request: {request.method} {request.url.scheme}://{request.url.netloc}{request.url.path}")
+    
+    # Accept all HTTP requests from internal Railway network
+    # Railway handles HTTPS termination, so we don't need to redirect
+    response = await call_next(request)
+    
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    return response
 
 app.add_middleware(
     CORSMiddleware,
