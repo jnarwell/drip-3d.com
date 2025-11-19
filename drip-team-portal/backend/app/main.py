@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine
 from app.models import Base
+import logging
 
 # Import routers directly from modules
 from app.api.v1.components import router as components_router
@@ -26,6 +27,31 @@ app = FastAPI(
     description="Internal validation tracking portal for DRIP project",
     version="1.0.0",
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup"""
+    try:
+        if settings.DATABASE_URL:
+            # Import all models to register them with Base
+            from app.models.audit import AuditLog
+            from app.models.component import Component
+            from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
+            from app.models.resources import PropertyTableTemplate, PropertyTable, SystemConstant, CalculationTemplate
+            from app.models.user import User
+            from app.models.test import Test, TestResult
+            from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
+            
+            # Create all tables
+            logging.info("Creating database tables...")
+            Base.metadata.create_all(bind=engine)
+            logging.info("Database tables created successfully!")
+        else:
+            logging.warning("DATABASE_URL not set - skipping table creation")
+    except Exception as e:
+        logging.error(f"Error creating database tables: {e}")
+        # Don't crash the app, just log the error
+        pass
 
 app.add_middleware(
     CORSMiddleware,
