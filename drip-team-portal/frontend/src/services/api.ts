@@ -21,7 +21,6 @@ export const api = axios.create({
 });
 
 // CRITICAL: Override axios adapter to force HTTPS at the lowest level
-const originalAdapter = axios.defaults.adapter;
 axios.defaults.adapter = async (config) => {
   // Force HTTPS on baseURL at adapter level
   if (config.baseURL && config.baseURL.startsWith('http://')) {
@@ -39,8 +38,9 @@ axios.defaults.adapter = async (config) => {
   const finalUrl = config.url?.startsWith('http') ? config.url : `${config.baseURL}${config.url}`;
   console.error('🚨 ADAPTER: Final request URL will be:', finalUrl);
   
-  // Call original adapter
-  return originalAdapter(config);
+  // Use the default xhr adapter
+  const xhrAdapter = axios.getAdapter('xhr');
+  return xhrAdapter(config);
 };
 
 // Set global axios interceptor to force HTTPS (backup)
