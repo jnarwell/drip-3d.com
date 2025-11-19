@@ -1,12 +1,16 @@
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http://', 'https://');
+// Force HTTPS regardless of environment variable
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = rawApiUrl.replace('http://', 'https://');
 
 // Debug API URL
-console.log('🔧 API_URL being used:', API_URL);
-console.log('🔧 VITE_API_URL from env:', import.meta.env.VITE_API_URL);
-console.log('🔧 After HTTP->HTTPS replacement:', API_URL);
+console.log('🔧 Raw VITE_API_URL from env:', rawApiUrl);
+console.log('🔧 Final API_URL being used:', API_URL);
+
+// Set axios defaults to use HTTPS globally
+axios.defaults.baseURL = API_URL;
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -14,6 +18,31 @@ export const api = axios.create({
     'Content-Type': 'application/json',
     'x-email': 'test@drip-3d.com', // Dev mode authentication
   },
+});
+
+// Set global axios interceptor to force HTTPS
+axios.interceptors.request.use((config) => {
+  // Force HTTPS on baseURL
+  if (config.baseURL && config.baseURL.startsWith('http://')) {
+    config.baseURL = config.baseURL.replace('http://', 'https://');
+    console.warn('🔧 GLOBAL INTERCEPTOR: Forced baseURL to HTTPS:', config.baseURL);
+  }
+  
+  // Force HTTPS on full URL (if absolute)
+  if (config.url && config.url.startsWith('http://')) {
+    config.url = config.url.replace('http://', 'https://');
+    console.warn('🔧 GLOBAL INTERCEPTOR: Forced URL to HTTPS:', config.url);
+  }
+  
+  console.log('🔧 GLOBAL INTERCEPTOR: Final config', {
+    baseURL: config.baseURL,
+    url: config.url,
+    method: config.method
+  });
+  
+  return config;
+}, (error) => {
+  return Promise.reject(error);
 });
 
 // Debug: Ensure api instance is using HTTPS
