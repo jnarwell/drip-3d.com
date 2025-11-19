@@ -87,17 +87,55 @@ const Constants: React.FC = () => {
     operators: ['×', '·', '÷', '±', '∞', '∝', '∑', '∏', '∫', '∂', '∇', '√']
   };
 
-  // Character mapping for subscript/superscript conversion
+  // Comprehensive character mapping for subscript/superscript conversion
   const subscriptMap: { [key: string]: string } = {
+    // Numbers
     '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
+    // Operators and punctuation
     '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
-    'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ', 'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ', 'p': 'ₚ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ', 'v': 'ᵥ', 'x': 'ₓ'
+    // Lowercase letters (using actual Unicode subscripts where available)
+    'a': 'ₐ', 'b': 'ᵦ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ₑ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ', 
+    'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ', 'p': 'ₚ', 'q': 'ᵩ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 
+    'u': 'ᵤ', 'v': 'ᵥ', 'w': 'ᵨ', 'x': 'ₓ', 'y': 'ᵧ', 'z': 'ᵤ',
+    // Uppercase letters (map to lowercase subscripts since Unicode has limited uppercase subscripts)
+    'A': 'ₐ', 'B': 'ᵦ', 'C': 'ᶜ', 'D': 'ᵈ', 'E': 'ₑ', 'F': 'ᶠ', 'G': 'ᵍ', 'H': 'ₕ', 'I': 'ᵢ', 'J': 'ⱼ',
+    'K': 'ₖ', 'L': 'ₗ', 'M': 'ₘ', 'N': 'ₙ', 'O': 'ₒ', 'P': 'ₚ', 'Q': 'ᵩ', 'R': 'ᵣ', 'S': 'ₛ', 'T': 'ₜ',
+    'U': 'ᵤ', 'V': 'ᵥ', 'W': 'ᵨ', 'X': 'ₓ', 'Y': 'ᵧ', 'Z': 'ᵤ',
+    // Special characters and punctuation
+    '.': '·', ',': '‚', '!': '₍!₎', '?': '₍?₎', ':': '₍:₎', ';': '₍;₎', 
+    '"': '₍"₎', "'": '₍'₎', '[': '₍[₎', ']': '₍]₎', '{': '₍{₎', '}': '₍}₎',
+    '<': '₍<₎', '>': '₍>₎', '|': '₍|₎', '\\': '₍\\₎', '/': '₍/₎', '@': '₍@₎',
+    '#': '₍#₎', '$': '₍$₎', '%': '₍%₎', '&': '₍&₎', '*': '₍*₎', '^': '₍^₎',
+    '_': '₍_₎', '~': '₍~₎', '`': '₍`₎', ' ': ' '
   };
   
   const superscriptMap: { [key: string]: string } = {
+    // Numbers
     '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
-    'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ', 'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 'u': 'ᵘ', 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ'
+    // Operators and punctuation  
+    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', '*': '˟', '/': '╱', '.': '·', ',': '˒',
+    // Lowercase letters (comprehensive Unicode superscripts)
+    'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ', 
+    'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'q': 'ᵠ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 
+    'u': 'ᵘ', 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ',
+    // Uppercase letters (comprehensive Unicode superscripts)
+    'A': 'ᴬ', 'B': 'ᴮ', 'C': 'ᶜ', 'D': 'ᴰ', 'E': 'ᴱ', 'F': 'ᶠ', 'G': 'ᴳ', 'H': 'ᴴ', 'I': 'ᴵ', 'J': 'ᴶ',
+    'K': 'ᴷ', 'L': 'ᴸ', 'M': 'ᴹ', 'N': 'ᴺ', 'O': 'ᴼ', 'P': 'ᴾ', 'Q': 'ᵠ', 'R': 'ᴿ', 'S': 'ˢ', 'T': 'ᵀ',
+    'U': 'ᵁ', 'V': 'ⱽ', 'W': 'ᵂ', 'X': 'ˣ', 'Y': 'ʸ', 'Z': 'ᶻ',
+    // Special characters and punctuation
+    '"': '⁽"⁾', "'": '⁽'⁾', '[': '⁽[⁾', ']': '⁽]⁾', '{': '⁽{⁾', '}': '⁽}⁾',
+    '<': '⁽<⁾', '>': '⁽>⁾', '|': '⁽|⁾', '\\': '⁽\\⁾', '@': '⁽@⁾',
+    '#': '⁽#⁾', '$': '⁽$⁾', '%': '⁽%⁾', '&': '⁽&⁾', '_': '⁽_⁾', '~': '⁽~⁾',
+    '`': '⁽`⁾', '!': '⁽!⁾', '?': '⁽?⁾', ':': '⁽:⁾', ';': '⁽;⁾', ' ': ' '
+  };
+
+  // Fallback function for characters without Unicode equivalents
+  const getSubscriptFallback = (char: string): string => {
+    return String.fromCharCode(0x2080 + char.charCodeAt(0) - 48) || char + '₍ₛᵤᵦ₎';
+  };
+
+  const getSuperscriptFallback = (char: string): string => {
+    return String.fromCharCode(0x2070 + char.charCodeAt(0) - 48) || char + '⁽ˢᵘᵖ⁾';
   };
 
   useEffect(() => {
@@ -234,8 +272,21 @@ const Constants: React.FC = () => {
   const convertText = (text: string, mode: 'normal' | 'subscript' | 'superscript'): string => {
     if (mode === 'normal') return text;
     
-    const map = mode === 'subscript' ? subscriptMap : superscriptMap;
-    return text.split('').map(char => map[char] || char).join('');
+    if (mode === 'subscript') {
+      return text.split('').map(char => {
+        // First try the direct mapping
+        if (subscriptMap[char]) return subscriptMap[char];
+        // For any character not in the map, try to convert it
+        return char; // Keep original character if no conversion available
+      }).join('');
+    } else {
+      return text.split('').map(char => {
+        // First try the direct mapping
+        if (superscriptMap[char]) return superscriptMap[char];
+        // For any character not in the map, try to convert it
+        return char; // Keep original character if no conversion available
+      }).join('');
+    }
   };
 
   const handleSymbolInput = (newValue: string) => {
