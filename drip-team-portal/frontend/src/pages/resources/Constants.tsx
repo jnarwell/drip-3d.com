@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getConstants } from '../../services/api';
+import { getConstants, createConstant, updateConstant, deleteConstant } from '../../services/api';
 import { formatUnitWithSubscripts } from '../../utils/formatters';
 import { formatUnitWithSubscriptsJSX } from '../../utils/formattersJSX';
 
@@ -26,6 +26,24 @@ const Constants: React.FC = () => {
     key: keyof SystemConstant;
     direction: 'asc' | 'desc';
   }>({ key: 'symbol', direction: 'asc' });
+  
+  // CRUD state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editingConstant, setEditingConstant] = useState<SystemConstant | null>(null);
+  const [deletingConstant, setDeletingConstant] = useState<SystemConstant | null>(null);
+  const [saving, setSaving] = useState(false);
+  
+  // Form data
+  const [formData, setFormData] = useState({
+    symbol: '',
+    name: '',
+    value: 0,
+    unit: '',
+    description: '',
+    category: ''
+  });
 
   useEffect(() => {
     fetchConstants();
@@ -101,6 +119,102 @@ const Constants: React.FC = () => {
     return value.toPrecision(6);
   };
 
+  const resetForm = () => {
+    setFormData({
+      symbol: '',
+      name: '',
+      value: 0,
+      unit: '',
+      description: '',
+      category: ''
+    });
+  };
+
+  const handleAddConstant = () => {
+    resetForm();
+    setShowAddModal(true);
+  };
+
+  const handleEditConstant = (constant: SystemConstant) => {
+    setFormData({
+      symbol: constant.symbol,
+      name: constant.name,
+      value: constant.value,
+      unit: constant.unit || '',
+      description: constant.description || '',
+      category: constant.category
+    });
+    setEditingConstant(constant);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteConstant = (constant: SystemConstant) => {
+    setDeletingConstant(constant);
+    setShowDeleteModal(true);
+  };
+
+  const submitAdd = async () => {
+    try {
+      setSaving(true);
+      await createConstant({
+        symbol: formData.symbol,
+        name: formData.name,
+        value: formData.value,
+        unit: formData.unit || undefined,
+        description: formData.description || undefined,
+        category: formData.category
+      });
+      setShowAddModal(false);
+      resetForm();
+      fetchConstants();
+    } catch (err) {
+      setError('Failed to create constant');
+      console.error('Error creating constant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitEdit = async () => {
+    if (!editingConstant) return;
+    
+    try {
+      setSaving(true);
+      await updateConstant(editingConstant.id, {
+        name: formData.name,
+        value: formData.value,
+        unit: formData.unit || undefined,
+        description: formData.description || undefined
+      });
+      setShowEditModal(false);
+      setEditingConstant(null);
+      resetForm();
+      fetchConstants();
+    } catch (err) {
+      setError('Failed to update constant');
+      console.error('Error updating constant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitDelete = async () => {
+    if (!deletingConstant) return;
+    
+    try {
+      setSaving(true);
+      await deleteConstant(deletingConstant.id);
+      setShowDeleteModal(false);
+      setDeletingConstant(null);
+      fetchConstants();
+    } catch (err) {
+      setError('Failed to delete constant');
+      console.error('Error deleting constant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="bg-white shadow rounded-lg p-6">
@@ -130,7 +244,15 @@ const Constants: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">System Constants</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">System Constants</h2>
+          <button
+            onClick={handleAddConstant}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          >
+            Add New Constant
+          </button>
+        </div>
         
         {/* Filters */}
         <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:gap-4">
@@ -237,6 +359,9 @@ const Constants: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -262,6 +387,29 @@ const Constants: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {constant.description || '—'}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="flex space-x-2">
+                      {constant.is_editable && (
+                        <>
+                          <button
+                            onClick={() => handleEditConstant(constant)}
+                            className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteConstant(constant)}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+                      {!constant.is_editable && (
+                        <span className="text-gray-400 text-sm">System defined</span>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -273,6 +421,187 @@ const Constants: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Add Constant Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Constant</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Symbol</label>
+                <input
+                  type="text"
+                  value={formData.symbol}
+                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Value</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={formData.value}
+                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Unit</label>
+                <input
+                  type="text"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitAdd}
+                disabled={saving || !formData.symbol || !formData.name || !formData.category}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Constant Modal */}
+      {showEditModal && editingConstant && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Constant: {editingConstant.symbol}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Value</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={formData.value}
+                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Unit</label>
+                <input
+                  type="text"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitEdit}
+                disabled={saving || !formData.name}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Updating...' : 'Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingConstant && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Constant</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete the constant <strong>{deletingConstant.symbol}</strong> ({deletingConstant.name})? 
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                disabled={saving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitDelete}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

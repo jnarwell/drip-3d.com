@@ -81,3 +81,30 @@ export const getConstants = async (category?: string, search?: string) => {
   const response = await api.get(`/api/v1/constants${params.toString() ? `?${params}` : ''}`);
   return response.data;
 };
+
+export const createConstant = async (constantData: {
+  symbol: string;
+  name: string;
+  value: number;
+  unit?: string;
+  description?: string;
+  category: string;
+}) => {
+  const response = await api.post('/api/v1/constants/', constantData);
+  return response.data;
+};
+
+export const updateConstant = async (id: number, updateData: {
+  name?: string;
+  value?: number;
+  unit?: string;
+  description?: string;
+}) => {
+  const response = await api.patch(`/api/v1/constants/${id}`, updateData);
+  return response.data;
+};
+
+export const deleteConstant = async (id: number) => {
+  const response = await api.delete(`/api/v1/constants/${id}`);
+  return response.data;
+};
