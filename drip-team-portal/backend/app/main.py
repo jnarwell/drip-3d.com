@@ -53,19 +53,26 @@ async def startup_event():
         # Don't crash the app, just log the error
         pass
 
-# Custom middleware to handle Railway's HTTP->HTTPS forwarding
+# Custom middleware to handle Railway's HTTP->HTTPS forwarding  
 @app.middleware("http")
 async def handle_railway_forwarding(request: Request, call_next):
     """
     Railway terminates HTTPS at the edge and forwards HTTP to containers.
-    This middleware ensures we accept HTTP requests from Railway's internal network.
+    This middleware fixes FastAPI trailing slash redirects that lose HTTPS.
     """
     # Log the request for debugging
     logging.info(f"🌐 Request: {request.method} {request.url.scheme}://{request.url.netloc}{request.url.path}")
     
-    # Accept all HTTP requests from internal Railway network
-    # Railway handles HTTPS termination, so we don't need to redirect
     response = await call_next(request)
+    
+    # Fix FastAPI 307 redirects that lose HTTPS scheme
+    if response.status_code == 307 and "location" in response.headers:
+        location = response.headers["location"]
+        if location.startswith("http://") and "railway.app" in location:
+            # Fix the redirect to use HTTPS
+            https_location = location.replace("http://", "https://")
+            response.headers["location"] = https_location
+            logging.info(f"🔧 Fixed 307 redirect: {location} -> {https_location}")
     
     # Add security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
