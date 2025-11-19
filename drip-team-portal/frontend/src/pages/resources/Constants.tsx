@@ -87,40 +87,34 @@ const Constants: React.FC = () => {
     operators: ['×', '·', '÷', '±', '∞', '∝', '∑', '∏', '∫', '∂', '∇', '√']
   };
 
-  // Comprehensive character mapping for subscript/superscript conversion
+  // Clean 1:1 subscript mapping - only true subscripts
   const subscriptMap: { [key: string]: string } = {
     // Numbers
     '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
-    // Operators and punctuation
+    // Basic operators
     '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
-    // Lowercase letters (using actual Unicode subscripts where available)
+    // Only letters that have TRUE Unicode subscripts
     'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ', 'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ', 
     'p': 'ₚ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ', 'v': 'ᵥ', 'x': 'ₓ',
-    // Map other letters to available subscripts or wrap in parentheses
-    'b': 'ᵦ', 'c': 'ᶜ', 'd': 'ᵈ', 'f': 'ᶠ', 'g': 'ᵍ', 'q': 'ᵩ', 'w': 'ᵨ', 'y': 'ᵧ', 'z': 'ᵤ',
-    // Uppercase letters (map to lowercase subscripts)
-    'A': 'ₐ', 'B': 'ᵦ', 'C': 'ᶜ', 'D': 'ᵈ', 'E': 'ₑ', 'F': 'ᶠ', 'G': 'ᵍ', 'H': 'ₕ', 'I': 'ᵢ', 'J': 'ⱼ',
-    'K': 'ₖ', 'L': 'ₗ', 'M': 'ₘ', 'N': 'ₙ', 'O': 'ₒ', 'P': 'ₚ', 'Q': 'ᵩ', 'R': 'ᵣ', 'S': 'ₛ', 'T': 'ₜ',
-    'U': 'ᵤ', 'V': 'ᵥ', 'W': 'ᵨ', 'X': 'ₓ', 'Y': 'ᵧ', 'Z': 'ᵤ',
-    // Special characters - keeping only safe ones
-    '.': '·', ' ': ' '
+    // Map uppercase to lowercase subscripts
+    'A': 'ₐ', 'E': 'ₑ', 'H': 'ₕ', 'I': 'ᵢ', 'J': 'ⱼ', 'K': 'ₖ', 'L': 'ₗ', 'M': 'ₘ', 'N': 'ₙ', 'O': 'ₒ',
+    'P': 'ₚ', 'R': 'ᵣ', 'S': 'ₛ', 'T': 'ₜ', 'U': 'ᵤ', 'V': 'ᵥ', 'X': 'ₓ'
   };
   
+  // Clean 1:1 superscript mapping - only true superscripts  
   const superscriptMap: { [key: string]: string } = {
     // Numbers
     '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
-    // Operators and punctuation  
-    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾', '.': '·',
-    // Lowercase letters (comprehensive Unicode superscripts)
+    // Basic operators
+    '+': '⁺', '-': '⁻', '=': '⁼', '(': '⁽', ')': '⁾',
+    // Only letters that have TRUE Unicode superscripts - lowercase
     'a': 'ᵃ', 'b': 'ᵇ', 'c': 'ᶜ', 'd': 'ᵈ', 'e': 'ᵉ', 'f': 'ᶠ', 'g': 'ᵍ', 'h': 'ʰ', 'i': 'ⁱ', 'j': 'ʲ', 
-    'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'q': 'ᵠ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 
+    'k': 'ᵏ', 'l': 'ˡ', 'm': 'ᵐ', 'n': 'ⁿ', 'o': 'ᵒ', 'p': 'ᵖ', 'r': 'ʳ', 's': 'ˢ', 't': 'ᵗ', 
     'u': 'ᵘ', 'v': 'ᵛ', 'w': 'ʷ', 'x': 'ˣ', 'y': 'ʸ', 'z': 'ᶻ',
-    // Uppercase letters (comprehensive Unicode superscripts)
-    'A': 'ᴬ', 'B': 'ᴮ', 'C': 'ᶜ', 'D': 'ᴰ', 'E': 'ᴱ', 'F': 'ᶠ', 'G': 'ᴳ', 'H': 'ᴴ', 'I': 'ᴵ', 'J': 'ᴶ',
-    'K': 'ᴷ', 'L': 'ᴸ', 'M': 'ᴹ', 'N': 'ᴺ', 'O': 'ᴼ', 'P': 'ᴾ', 'Q': 'ᵠ', 'R': 'ᴿ', 'S': 'ˢ', 'T': 'ᵀ',
-    'U': 'ᵁ', 'V': 'ⱽ', 'W': 'ᵂ', 'X': 'ˣ', 'Y': 'ʸ', 'Z': 'ᶻ',
-    // Special characters - keeping only safe ones
-    ' ': ' '
+    // Only letters that have TRUE Unicode superscripts - uppercase
+    'A': 'ᴬ', 'B': 'ᴮ', 'D': 'ᴰ', 'E': 'ᴱ', 'G': 'ᴳ', 'H': 'ᴴ', 'I': 'ᴵ', 'J': 'ᴶ',
+    'K': 'ᴷ', 'L': 'ᴸ', 'M': 'ᴹ', 'N': 'ᴺ', 'O': 'ᴼ', 'P': 'ᴾ', 'R': 'ᴿ', 'T': 'ᵀ',
+    'U': 'ᵁ', 'V': 'ⱽ', 'W': 'ᵂ'
   };
 
   // Fallback function for characters without Unicode equivalents
