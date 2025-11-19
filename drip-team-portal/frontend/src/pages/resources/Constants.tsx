@@ -48,8 +48,10 @@ const Constants: React.FC = () => {
   // Symbol/Unit helper state
   const [showSymbolHelper, setShowSymbolHelper] = useState(false);
   const [showUnitHelper, setShowUnitHelper] = useState(false);
+  const [showCommandMenu, setShowCommandMenu] = useState(false);
   const [symbolInputMode, setSymbolInputMode] = useState<'normal' | 'subscript' | 'superscript'>('normal');
   const [unitInputMode, setUnitInputMode] = useState<'normal' | 'subscript' | 'superscript'>('normal');
+  const [activeField, setActiveField] = useState<'symbol' | 'unit' | null>(null);
 
   // Greek alphabet and mathematical symbols
   const greekLetters = [
@@ -101,6 +103,46 @@ const Constants: React.FC = () => {
   useEffect(() => {
     fetchConstants();
   }, []);
+
+  // Keyboard shortcut handlers
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+, for subscript mode
+      if (e.ctrlKey && e.key === ',') {
+        e.preventDefault();
+        if (activeField) {
+          if (activeField === 'symbol') {
+            setSymbolInputMode(prev => prev === 'subscript' ? 'normal' : 'subscript');
+          } else if (activeField === 'unit') {
+            setUnitInputMode(prev => prev === 'subscript' ? 'normal' : 'subscript');
+          }
+        }
+      }
+      // Ctrl+. for superscript mode
+      else if (e.ctrlKey && e.key === '.') {
+        e.preventDefault();
+        if (activeField) {
+          if (activeField === 'symbol') {
+            setSymbolInputMode(prev => prev === 'superscript' ? 'normal' : 'superscript');
+          } else if (activeField === 'unit') {
+            setUnitInputMode(prev => prev === 'superscript' ? 'normal' : 'superscript');
+          }
+        }
+      }
+      // Ctrl+Space for command menu
+      else if (e.ctrlKey && e.key === ' ') {
+        e.preventDefault();
+        setShowCommandMenu(true);
+      }
+      // Escape to close command menu
+      else if (e.key === 'Escape') {
+        setShowCommandMenu(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeField]);
 
   const fetchConstants = async () => {
     try {
@@ -183,8 +225,10 @@ const Constants: React.FC = () => {
     });
     setShowSymbolHelper(false);
     setShowUnitHelper(false);
+    setShowCommandMenu(false);
     setSymbolInputMode('normal');
     setUnitInputMode('normal');
+    setActiveField(null);
   };
 
   const convertText = (text: string, mode: 'normal' | 'subscript' | 'superscript'): string => {
@@ -539,14 +583,16 @@ const Constants: React.FC = () => {
                     type="text"
                     value={formData.symbol}
                     onChange={(e) => handleSymbolInput(e.target.value)}
+                    onFocus={() => setActiveField('symbol')}
+                    onBlur={() => setActiveField(null)}
                     className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
                       symbolInputMode === 'subscript' ? 'bg-blue-50 border-blue-300' : 
                       symbolInputMode === 'superscript' ? 'bg-green-50 border-green-300' : ''
                     }`}
                     placeholder={
-                      symbolInputMode === 'subscript' ? 'Type normally - will convert to subscript' :
-                      symbolInputMode === 'superscript' ? 'Type normally - will convert to superscript' :
-                      'Enter symbol'
+                      symbolInputMode === 'subscript' ? 'Type normally - will convert to subscript (Ctrl+, to toggle)' :
+                      symbolInputMode === 'superscript' ? 'Type normally - will convert to superscript (Ctrl+. to toggle)' :
+                      'Enter symbol (Ctrl+, for subscript, Ctrl+. for superscript)'
                     }
                     required
                   />
@@ -585,49 +631,6 @@ const Constants: React.FC = () => {
                             </div>
                           ))}
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-700 mb-2">Input Mode</h4>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSymbolInputMode('normal')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              symbolInputMode === 'normal' 
-                                ? 'bg-gray-600 text-white' 
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            Normal
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSymbolInputMode('subscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              symbolInputMode === 'subscript' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}
-                          >
-                            Subscript₁₂₃
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSymbolInputMode('superscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              symbolInputMode === 'superscript' 
-                                ? 'bg-green-600 text-white' 
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                          >
-                            Superscript¹²³
-                          </button>
-                        </div>
-                        {symbolInputMode !== 'normal' && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Type normally - characters will be converted to {symbolInputMode} as you type
-                          </p>
-                        )}
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
@@ -676,14 +679,16 @@ const Constants: React.FC = () => {
                     type="text"
                     value={formData.unit}
                     onChange={(e) => handleUnitInput(e.target.value)}
+                    onFocus={() => setActiveField('unit')}
+                    onBlur={() => setActiveField(null)}
                     className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
                       unitInputMode === 'subscript' ? 'bg-blue-50 border-blue-300' : 
                       unitInputMode === 'superscript' ? 'bg-green-50 border-green-300' : ''
                     }`}
                     placeholder={
-                      unitInputMode === 'subscript' ? 'Type normally - will convert to subscript' :
-                      unitInputMode === 'superscript' ? 'Type normally - will convert to superscript' :
-                      'Enter unit'
+                      unitInputMode === 'subscript' ? 'Type normally - will convert to subscript (Ctrl+, to toggle)' :
+                      unitInputMode === 'superscript' ? 'Type normally - will convert to superscript (Ctrl+. to toggle)' :
+                      'Enter unit (Ctrl+, for subscript, Ctrl+. for superscript)'
                     }
                   />
                   <button
@@ -711,49 +716,6 @@ const Constants: React.FC = () => {
                             </button>
                           ))}
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-700 mb-2">Input Mode</h4>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('normal')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'normal' 
-                                ? 'bg-gray-600 text-white' 
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            Normal
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('subscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'subscript' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}
-                          >
-                            Subscript₁₂₃
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('superscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'superscript' 
-                                ? 'bg-green-600 text-white' 
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                          >
-                            Superscript¹²³
-                          </button>
-                        </div>
-                        {unitInputMode !== 'normal' && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Type normally - characters will be converted to {unitInputMode} as you type
-                          </p>
-                        )}
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
@@ -848,14 +810,16 @@ const Constants: React.FC = () => {
                     type="text"
                     value={formData.unit}
                     onChange={(e) => handleUnitInput(e.target.value)}
+                    onFocus={() => setActiveField('unit')}
+                    onBlur={() => setActiveField(null)}
                     className={`mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
                       unitInputMode === 'subscript' ? 'bg-blue-50 border-blue-300' : 
                       unitInputMode === 'superscript' ? 'bg-green-50 border-green-300' : ''
                     }`}
                     placeholder={
-                      unitInputMode === 'subscript' ? 'Type normally - will convert to subscript' :
-                      unitInputMode === 'superscript' ? 'Type normally - will convert to superscript' :
-                      'Enter unit'
+                      unitInputMode === 'subscript' ? 'Type normally - will convert to subscript (Ctrl+, to toggle)' :
+                      unitInputMode === 'superscript' ? 'Type normally - will convert to superscript (Ctrl+. to toggle)' :
+                      'Enter unit (Ctrl+, for subscript, Ctrl+. for superscript)'
                     }
                   />
                   <button
@@ -883,49 +847,6 @@ const Constants: React.FC = () => {
                             </button>
                           ))}
                         </div>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-700 mb-2">Input Mode</h4>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('normal')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'normal' 
-                                ? 'bg-gray-600 text-white' 
-                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                          >
-                            Normal
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('subscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'subscript' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                            }`}
-                          >
-                            Subscript₁₂₃
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setUnitInputMode('superscript')}
-                            className={`px-3 py-1 text-sm rounded ${
-                              unitInputMode === 'superscript' 
-                                ? 'bg-green-600 text-white' 
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
-                            }`}
-                          >
-                            Superscript¹²³
-                          </button>
-                        </div>
-                        {unitInputMode !== 'normal' && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Type normally - characters will be converted to {unitInputMode} as you type
-                          </p>
-                        )}
                       </div>
                       <div>
                         <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
@@ -999,6 +920,54 @@ const Constants: React.FC = () => {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Command Menu */}
+      {showCommandMenu && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Keyboard Shortcuts</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Toggle Subscript Mode</span>
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Ctrl + ,</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Toggle Superscript Mode</span>
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Ctrl + .</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Open Command Menu</span>
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Ctrl + Space</kbd>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-700">Close Menu/Panel</span>
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Escape</kbd>
+              </div>
+            </div>
+            <div className="mt-6 text-xs text-gray-500">
+              <p><strong>Current Mode:</strong></p>
+              <p>Symbol: <span className={`px-2 py-1 rounded text-xs ${
+                symbolInputMode === 'subscript' ? 'bg-blue-100 text-blue-800' :
+                symbolInputMode === 'superscript' ? 'bg-green-100 text-green-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>{symbolInputMode}</span></p>
+              <p>Unit: <span className={`px-2 py-1 rounded text-xs ${
+                unitInputMode === 'subscript' ? 'bg-blue-100 text-blue-800' :
+                unitInputMode === 'superscript' ? 'bg-green-100 text-green-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>{unitInputMode}</span></p>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowCommandMenu(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Close
               </button>
             </div>
           </div>
