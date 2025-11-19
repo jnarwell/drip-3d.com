@@ -1,6 +1,21 @@
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 
+// NUCLEAR OPTION: Override XMLHttpRequest.open to force HTTPS at browser level
+const originalXHROpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async?: boolean, user?: string | null, password?: string | null) {
+  let finalUrl = url.toString();
+  
+  // Force HTTPS on any Railway backend URLs
+  if (finalUrl.includes('backend-production-aa29.up.railway.app') && finalUrl.startsWith('http://')) {
+    finalUrl = finalUrl.replace('http://', 'https://');
+    console.error('🚨 XMLHttpRequest OVERRIDE: Forced HTTP->HTTPS:', finalUrl);
+  }
+  
+  console.error('🚨 XMLHttpRequest: Opening connection to:', finalUrl);
+  return originalXHROpen.call(this, method, finalUrl, async, user, password);
+};
+
 // Force HTTPS regardless of environment variable
 const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const API_URL = rawApiUrl.replace('http://', 'https://');
