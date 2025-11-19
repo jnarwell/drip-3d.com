@@ -20,8 +20,37 @@ export const api = axios.create({
   },
 });
 
-// Set global axios interceptor to force HTTPS
+// CRITICAL: Override axios adapter to force HTTPS at the lowest level
+const originalAdapter = axios.defaults.adapter;
+axios.defaults.adapter = async (config) => {
+  // Force HTTPS on baseURL at adapter level
+  if (config.baseURL && config.baseURL.startsWith('http://')) {
+    config.baseURL = config.baseURL.replace('http://', 'https://');
+    console.error('🚨 ADAPTER: Fixed baseURL HTTP->HTTPS:', config.baseURL);
+  }
+  
+  // Force HTTPS on URL at adapter level  
+  if (config.url && config.url.startsWith('http://')) {
+    config.url = config.url.replace('http://', 'https://');
+    console.error('🚨 ADAPTER: Fixed URL HTTP->HTTPS:', config.url);
+  }
+  
+  // Construct final URL for logging
+  const finalUrl = config.url?.startsWith('http') ? config.url : `${config.baseURL}${config.url}`;
+  console.error('🚨 ADAPTER: Final request URL will be:', finalUrl);
+  
+  // Call original adapter
+  return originalAdapter(config);
+};
+
+// Set global axios interceptor to force HTTPS (backup)
 axios.interceptors.request.use((config) => {
+  console.log('🔧 GLOBAL INTERCEPTOR: Running...', { 
+    baseURL: config.baseURL, 
+    url: config.url, 
+    method: config.method 
+  });
+  
   // Force HTTPS on baseURL
   if (config.baseURL && config.baseURL.startsWith('http://')) {
     config.baseURL = config.baseURL.replace('http://', 'https://');
@@ -34,14 +63,9 @@ axios.interceptors.request.use((config) => {
     console.warn('🔧 GLOBAL INTERCEPTOR: Forced URL to HTTPS:', config.url);
   }
   
-  console.log('🔧 GLOBAL INTERCEPTOR: Final config', {
-    baseURL: config.baseURL,
-    url: config.url,
-    method: config.method
-  });
-  
   return config;
 }, (error) => {
+  console.error('🔧 GLOBAL INTERCEPTOR ERROR:', error);
   return Promise.reject(error);
 });
 
