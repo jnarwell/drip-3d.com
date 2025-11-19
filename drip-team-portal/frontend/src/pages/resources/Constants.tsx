@@ -44,6 +44,44 @@ const Constants: React.FC = () => {
     description: '',
     category: ''
   });
+  
+  // Symbol/Unit helper state
+  const [showSymbolHelper, setShowSymbolHelper] = useState(false);
+  const [showUnitHelper, setShowUnitHelper] = useState(false);
+
+  // Greek alphabet and mathematical symbols
+  const greekLetters = [
+    { name: 'Alpha', lower: 'α', upper: 'Α' },
+    { name: 'Beta', lower: 'β', upper: 'Β' },
+    { name: 'Gamma', lower: 'γ', upper: 'Γ' },
+    { name: 'Delta', lower: 'δ', upper: 'Δ' },
+    { name: 'Epsilon', lower: 'ε', upper: 'Ε' },
+    { name: 'Zeta', lower: 'ζ', upper: 'Ζ' },
+    { name: 'Eta', lower: 'η', upper: 'Η' },
+    { name: 'Theta', lower: 'θ', upper: 'Θ' },
+    { name: 'Iota', lower: 'ι', upper: 'Ι' },
+    { name: 'Kappa', lower: 'κ', upper: 'Κ' },
+    { name: 'Lambda', lower: 'λ', upper: 'Λ' },
+    { name: 'Mu', lower: 'μ', upper: 'Μ' },
+    { name: 'Nu', lower: 'ν', upper: 'Ν' },
+    { name: 'Xi', lower: 'ξ', upper: 'Ξ' },
+    { name: 'Omicron', lower: 'ο', upper: 'Ο' },
+    { name: 'Pi', lower: 'π', upper: 'Π' },
+    { name: 'Rho', lower: 'ρ', upper: 'Ρ' },
+    { name: 'Sigma', lower: 'σ', upper: 'Σ' },
+    { name: 'Tau', lower: 'τ', upper: 'Τ' },
+    { name: 'Upsilon', lower: 'υ', upper: 'Υ' },
+    { name: 'Phi', lower: 'φ', upper: 'Φ' },
+    { name: 'Chi', lower: 'χ', upper: 'Χ' },
+    { name: 'Psi', lower: 'ψ', upper: 'Ψ' },
+    { name: 'Omega', lower: 'ω', upper: 'Ω' }
+  ];
+
+  const mathSymbols = {
+    subscripts: ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉', '₊', '₋', '₌', '₍', '₎'],
+    superscripts: ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹', '⁺', '⁻', '⁼', '⁽', '⁾'],
+    operators: ['×', '·', '÷', '±', '∞', '∝', '∑', '∏', '∫', '∂', '∇', '√']
+  };
 
   useEffect(() => {
     fetchConstants();
@@ -128,6 +166,16 @@ const Constants: React.FC = () => {
       description: '',
       category: ''
     });
+    setShowSymbolHelper(false);
+    setShowUnitHelper(false);
+  };
+
+  const insertSymbolChar = (char: string) => {
+    setFormData({ ...formData, symbol: formData.symbol + char });
+  };
+
+  const insertUnitChar = (char: string) => {
+    setFormData({ ...formData, unit: formData.unit + char });
   };
 
   const handleAddConstant = () => {
@@ -430,13 +478,98 @@ const Constants: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Symbol</label>
-                <input
-                  type="text"
-                  value={formData.symbol}
-                  onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.symbol}
+                    onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSymbolHelper(!showSymbolHelper)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <span className="text-sm">αβ</span>
+                  </button>
+                </div>
+                {showSymbolHelper && (
+                  <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 max-h-48 overflow-y-auto">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Greek Letters</h4>
+                        <div className="grid grid-cols-6 gap-1">
+                          {greekLetters.map((letter) => (
+                            <div key={letter.name} className="space-x-1">
+                              <button
+                                type="button"
+                                onClick={() => insertSymbolChar(letter.lower)}
+                                className="text-sm px-1 py-1 hover:bg-gray-200 rounded"
+                                title={`${letter.name} (lowercase)`}
+                              >
+                                {letter.lower}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => insertSymbolChar(letter.upper)}
+                                className="text-sm px-1 py-1 hover:bg-gray-200 rounded"
+                                title={`${letter.name} (uppercase)`}
+                              >
+                                {letter.upper}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Subscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.subscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertSymbolChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Superscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.superscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertSymbolChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.operators.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertSymbolChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Name</label>
@@ -461,12 +594,87 @@ const Constants: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Unit</label>
-                <input
-                  type="text"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowUnitHelper(!showUnitHelper)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <span className="text-sm">×₂</span>
+                  </button>
+                </div>
+                {showUnitHelper && (
+                  <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 max-h-48 overflow-y-auto">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Common Unit Prefixes</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {['m', 'k', 'M', 'G', 'T', 'μ', 'n', 'p'].map((prefix) => (
+                            <button
+                              key={prefix}
+                              type="button"
+                              onClick={() => insertUnitChar(prefix)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {prefix}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Subscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.subscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Superscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.superscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {['×', '·', '/', '⁻¹', '²', '³'].map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Category</label>
@@ -537,12 +745,87 @@ const Constants: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Unit</label>
-                <input
-                  type="text"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    className="mt-1 block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowUnitHelper(!showUnitHelper)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <span className="text-sm">×₂</span>
+                  </button>
+                </div>
+                {showUnitHelper && (
+                  <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 max-h-48 overflow-y-auto">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Common Unit Prefixes</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {['m', 'k', 'M', 'G', 'T', 'μ', 'n', 'p'].map((prefix) => (
+                            <button
+                              key={prefix}
+                              type="button"
+                              onClick={() => insertUnitChar(prefix)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {prefix}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Subscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.subscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Superscripts</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {mathSymbols.superscripts.map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-medium text-gray-700 mb-2">Math Symbols</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {['×', '·', '/', '⁻¹', '²', '³'].map((char) => (
+                            <button
+                              key={char}
+                              type="button"
+                              onClick={() => insertUnitChar(char)}
+                              className="text-sm px-2 py-1 hover:bg-gray-200 rounded"
+                            >
+                              {char}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
