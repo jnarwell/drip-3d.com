@@ -21,10 +21,17 @@ console.log('🔧 Unauthenticated api baseURL:', api.defaults.baseURL);
 
 // Force ALL requests to use HTTPS (fix for persistent Mixed Content issues)
 api.interceptors.request.use((config) => {
+  // Force HTTPS on baseURL
+  if (config.baseURL && config.baseURL.startsWith('http://')) {
+    config.baseURL = config.baseURL.replace('http://', 'https://');
+    console.log('🔧 Forced HTTP->HTTPS for baseURL:', config.baseURL);
+  }
+  // Force HTTPS on URL
   if (config.url && config.url.startsWith('http://')) {
     config.url = config.url.replace('http://', 'https://');
-    console.log('🔧 Forced HTTP->HTTPS for request:', config.url);
+    console.log('🔧 Forced HTTP->HTTPS for request URL:', config.url);
   }
+  console.log('🔧 Final request URL:', config.url, 'baseURL:', config.baseURL);
   return config;
 });
 
@@ -41,6 +48,10 @@ export const useAuthenticatedApi = () => {
 
   authenticatedApi.interceptors.request.use(async (config) => {
     // Force HTTPS for authenticated requests too
+    if (config.baseURL && config.baseURL.startsWith('http://')) {
+      config.baseURL = config.baseURL.replace('http://', 'https://');
+      console.log('🔧 Forced HTTP->HTTPS for authenticated baseURL:', config.baseURL);
+    }
     if (config.url && config.url.startsWith('http://')) {
       config.url = config.url.replace('http://', 'https://');
       console.log('🔧 Forced HTTP->HTTPS for authenticated request:', config.url);
