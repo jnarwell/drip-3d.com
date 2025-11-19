@@ -13,7 +13,7 @@ XMLHttpRequest.prototype.open = function(method: string, url: string | URL, asyn
   }
   
   console.error('🚨 XMLHttpRequest: Opening connection to:', finalUrl);
-  return originalXHROpen.call(this, method, finalUrl, async, user, password);
+  return originalXHROpen.call(this, method, finalUrl, async ?? true, user, password);
 };
 
 // Force HTTPS regardless of environment variable
