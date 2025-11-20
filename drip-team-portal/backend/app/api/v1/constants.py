@@ -112,8 +112,10 @@ async def create_constant(
         )
     
     # Only allow creating editable constants
+    constant_dict = constant_data.dict()
+    constant_dict.pop('is_editable', None)  # Remove is_editable from schema data
     constant = SystemConstant(
-        **constant_data.dict(),
+        **constant_dict,
         is_editable=True,
         created_by=current_user["email"]
     )
