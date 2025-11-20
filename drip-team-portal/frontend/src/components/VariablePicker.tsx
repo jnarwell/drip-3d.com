@@ -170,7 +170,6 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({
           <svg 
             className="w-4 h-4 text-gray-400 cursor-pointer hover:text-blue-500" 
             onClick={triggerVariablePicker}
-            title="Click to insert variable reference"
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
