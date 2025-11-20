@@ -55,12 +55,12 @@ class ComponentProperty(Base):
     average_value = Column(Float)
     tolerance = Column(Float)
     
-    # Formula-based calculation fields - STEP 3A: Re-enabling with debugging
-    is_calculated = Column(Boolean, default=False)  # True if value comes from formula
-    formula_id = Column(Integer, nullable=True)  # Removed FK constraint temporarily for safety
-    last_calculated = Column(DateTime, nullable=True)
-    calculation_inputs = Column(JSON, nullable=True)  # Store input values used in calculation
-    calculation_status = Column(String, default="manual")  # "manual", "calculated", "error", "stale"
+    # Formula-based calculation fields - STEP 3A: Temporarily disabled for debugging 500 error
+    # is_calculated = Column(Boolean, default=False)  # True if value comes from formula
+    # formula_id = Column(Integer, nullable=True)  # Removed FK constraint temporarily for safety
+    # last_calculated = Column(DateTime, nullable=True)
+    # calculation_inputs = Column(JSON, nullable=True)  # Store input values used in calculation
+    # calculation_status = Column(String, default="manual")  # "manual", "calculated", "error", "stale"
     
     # Metadata
     notes = Column(String)
