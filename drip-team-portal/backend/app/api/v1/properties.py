@@ -133,9 +133,24 @@ async def add_component_property(
         **property_data.dict(),
         updated_by=current_user["email"]
     )
+    
+    # STEP 3A DEBUG: Log what fields exist on the model
+    logger.info(f"🔍 STEP 3A DEBUG: ComponentProperty model fields:")
+    for attr in dir(db_property):
+        if not attr.startswith('_') and not callable(getattr(db_property, attr)):
+            value = getattr(db_property, attr, 'N/A')
+            logger.info(f"    {attr}: {value}")
+    
     db.add(db_property)
     db.commit()
     db.refresh(db_property)
+    
+    # STEP 3A DEBUG: Log the refreshed object
+    logger.info(f"🔍 STEP 3A DEBUG: After commit/refresh:")
+    for field in ['is_calculated', 'formula_id', 'calculation_status', 'last_calculated']:
+        value = getattr(db_property, field, 'ATTR_NOT_FOUND')
+        logger.info(f"    {field}: {value}")
+    
     return db_property
 
 
