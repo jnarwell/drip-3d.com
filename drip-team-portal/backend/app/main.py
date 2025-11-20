@@ -114,4 +114,4 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "3A-formula-fields", "updated": "2025-11-20"}
+    return {"status": "healthy", "version": "3A-formula-fields", "updated": "2025-11-20"}# Force deploy Thu Nov 20 11:52:00 PST 2025
