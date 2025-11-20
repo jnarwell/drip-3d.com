@@ -39,7 +39,8 @@ class ComponentPropertyBase(BaseModel):
 
 
 class ComponentPropertyCreate(ComponentPropertyBase):
-    pass
+    is_calculated: Optional[bool] = False
+    formula_id: Optional[int] = None
 
 
 class ComponentPropertyUpdate(BaseModel):
@@ -51,6 +52,8 @@ class ComponentPropertyUpdate(BaseModel):
     notes: Optional[str] = None
     source: Optional[str] = None
     conditions: Optional[Dict[str, Any]] = None
+    is_calculated: Optional[bool] = None
+    formula_id: Optional[int] = None
 
 
 class ComponentPropertyResponse(ComponentPropertyBase):

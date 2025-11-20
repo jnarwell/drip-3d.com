@@ -11,8 +11,8 @@ else:
     from app.core.security import get_current_user
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType
 from app.models.component import Component
-# from app.models.formula import PropertyFormula
-# from app.services.formula_engine import FormulaEngine
+from app.models.formula_isolated import PropertyFormula
+from app.services.formula_engine import FormulaEngine
 from app.schemas.property import (
     PropertyDefinitionCreate,
     PropertyDefinitionResponse,
@@ -201,3 +201,114 @@ async def delete_component_property(
     db.commit()
     
     return {"status": "success", "message": "Property deleted"}
+
+
+@router.post("/components/{component_id}/properties/{property_id}/calculate")
+async def calculate_property_value(
+    component_id: str,
+    property_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Calculate a property value using its formula"""
+    component = db.query(Component).filter(Component.component_id == component_id).first()
+    if not component:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Component {component_id} not found"
+        )
+    
+    property_value = db.query(ComponentProperty).filter(
+        ComponentProperty.id == property_id,
+        ComponentProperty.component_id == component.id
+    ).first()
+    if not property_value:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property not found"
+        )
+    
+    if not property_value.is_calculated or not property_value.formula_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Property is not formula-based"
+        )
+    
+    # Use formula engine to calculate
+    engine = FormulaEngine(db)
+    result = engine.calculate_property(property_value)
+    
+    if not result.success:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Formula calculation failed: {result.error_message}"
+        )
+    
+    # Update the property with calculated value
+    engine._update_property_value(property_value, result)
+    property_value.updated_by = current_user["email"]
+    db.commit()
+    db.refresh(property_value)
+    
+    return {
+        "status": "success",
+        "calculated_value": result.value,
+        "input_values": result.input_values,
+        "property": ComponentPropertyResponse.from_orm(property_value)
+    }
+
+
+@router.post("/components/{component_id}/properties/calculate-all")
+async def calculate_all_properties(
+    component_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Calculate all formula-based properties for a component"""
+    component = db.query(Component).filter(Component.component_id == component_id).first()
+    if not component:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Component {component_id} not found"
+        )
+    
+    # Get all formula-based properties
+    formula_properties = db.query(ComponentProperty).filter(
+        ComponentProperty.component_id == component.id,
+        ComponentProperty.is_calculated == True,
+        ComponentProperty.formula_id.isnot(None)
+    ).all()
+    
+    if not formula_properties:
+        return {"status": "success", "message": "No formula-based properties found", "calculated": 0}
+    
+    engine = FormulaEngine(db)
+    results = []
+    errors = []
+    
+    for prop in formula_properties:
+        result = engine.calculate_property(prop)
+        if result.success:
+            engine._update_property_value(prop, result)
+            prop.updated_by = current_user["email"]
+            results.append({
+                "property_id": prop.id,
+                "property_name": prop.property_definition.name,
+                "calculated_value": result.value
+            })
+        else:
+            errors.append({
+                "property_id": prop.id,
+                "property_name": prop.property_definition.name,
+                "error": result.error_message
+            })
+    
+    db.commit()
+    
+    return {
+        "status": "success",
+        "calculated": len(results),
+        "failed": len(errors),
+        "results": results,
+        "errors": errors
+    }

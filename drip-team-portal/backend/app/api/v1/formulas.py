@@ -12,7 +12,7 @@ if os.getenv("DEV_MODE") == "true":
 else:
     from app.core.security import get_current_user
 
-from app.models.formula import PropertyFormula, PropertyReference, FormulaTemplate, ReferenceType, FormulaStatus
+from app.models.formula_isolated import PropertyFormula, PropertyReference, FormulaTemplate, ReferenceType, FormulaStatus
 from app.models.property import PropertyDefinition, ComponentProperty
 from app.models.component import Component
 from app.models.resources import SystemConstant

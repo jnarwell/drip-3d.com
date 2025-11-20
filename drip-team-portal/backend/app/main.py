@@ -22,7 +22,7 @@ from app.api.v1.property_tables_enhanced import router as property_tables_enhanc
 from app.api.v1.linear import router as linear_router
 from app.api.v1.constants import router as constants_router
 from app.api.v1.variables import router as variables_router
-# from app.api.v1.formulas import router as formulas_router
+from app.api.v1.formulas import router as formulas_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -108,7 +108,7 @@ app.include_router(property_table_templates_router, prefix="/api/v1/property-tab
 app.include_router(property_tables_enhanced_router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
 app.include_router(linear_router, tags=["linear"])
 app.include_router(variables_router, tags=["variables"])
-# app.include_router(formulas_router, tags=["formulas"])
+app.include_router(formulas_router, tags=["formulas"])
 
 @app.get("/")
 async def root():
@@ -116,4 +116,4 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "version": "3B-variable-reference", "updated": "2025-11-20"}# Force deploy Thu Nov 20 12:15:00 PST 2025
+    return {"status": "healthy", "version": "3B-formula-integration", "updated": "2025-11-20 13:03"} # Enabled formula router

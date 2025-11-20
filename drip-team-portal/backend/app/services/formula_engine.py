@@ -9,7 +9,7 @@ import sympy as sp
 from sympy.parsing.sympy_parser import parse_expr
 from sympy.core.sympify import SympifyError
 
-from app.models.formula import PropertyFormula, PropertyReference, ReferenceType, FormulaStatus
+from app.models.formula_isolated import PropertyFormula, PropertyReference, ReferenceType, FormulaStatus
 from app.models.property import ComponentProperty, PropertyDefinition
 from app.models.component import Component
 from app.models.resources import SystemConstant
