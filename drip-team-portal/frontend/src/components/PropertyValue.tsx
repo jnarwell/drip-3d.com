@@ -4,7 +4,7 @@ import { useAuthenticatedApi } from '../services/api';
 import { ComponentProperty, ValueType } from '../types';
 import { useUnits } from '../contexts/UnitContext';
 import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
-import { VariablePicker } from './VariablePicker';
+import { FormulaInput } from './FormulaInput';
 import { hasVariableReferences, resolveAllVariables, replaceVariableReferences, isFormula } from '../utils/variableResolver';
 
 interface PropertyValueProps {
@@ -175,10 +175,10 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     
     if (isEditing) {
       return (
-        <VariablePicker
+        <FormulaInput
           value={inputValue}
           onChange={setInputValue}
-          placeholder={`e.g., "10 ${userUnit}" or "10-20 ${userUnit}" or "#variable"`}
+          placeholder={`e.g., "10 ${userUnit}" or "#comp_${componentId}.width * 2"`}
           componentId={componentId}
           className="w-64"
         />
