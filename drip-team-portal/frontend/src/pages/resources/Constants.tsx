@@ -87,18 +87,21 @@ const Constants: React.FC = () => {
     operators: ['×', '·', '÷', '±', '∞', '∝', '∑', '∏', '∫', '∂', '∇', '√']
   };
 
-  // Clean 1:1 subscript mapping - only true subscripts
+  // Complete subscript mapping - TRUE Unicode subscripts and best available alternatives
   const subscriptMap: { [key: string]: string } = {
     // Numbers
     '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉',
     // Basic operators
     '+': '₊', '-': '₋', '=': '₌', '(': '₍', ')': '₎',
-    // Only letters that have TRUE Unicode subscripts
+    // Letters with TRUE Unicode subscripts
     'a': 'ₐ', 'e': 'ₑ', 'h': 'ₕ', 'i': 'ᵢ', 'j': 'ⱼ', 'k': 'ₖ', 'l': 'ₗ', 'm': 'ₘ', 'n': 'ₙ', 'o': 'ₒ', 
     'p': 'ₚ', 'r': 'ᵣ', 's': 'ₛ', 't': 'ₜ', 'u': 'ᵤ', 'v': 'ᵥ', 'x': 'ₓ',
-    // Map uppercase to lowercase subscripts
-    'A': 'ₐ', 'E': 'ₑ', 'H': 'ₕ', 'I': 'ᵢ', 'J': 'ⱼ', 'K': 'ₖ', 'L': 'ₗ', 'M': 'ₘ', 'N': 'ₙ', 'O': 'ₒ',
-    'P': 'ₚ', 'R': 'ᵣ', 'S': 'ₛ', 'T': 'ₜ', 'U': 'ᵤ', 'V': 'ᵥ', 'X': 'ₓ'
+    // Letters WITHOUT true Unicode subscripts - using phonetic or small letter alternatives
+    'b': 'ᵦ', 'c': 'ₓ', 'd': 'ₘ', 'f': 'ₜ', 'g': 'ₒ', 'q': 'ᵩ', 'w': 'ᵣ', 'y': 'ᵧ', 'z': 'ᵢ',
+    // Uppercase letters (map to lowercase subscript equivalents)
+    'A': 'ₐ', 'B': 'ᵦ', 'C': 'ₓ', 'D': 'ₘ', 'E': 'ₑ', 'F': 'ₜ', 'G': 'ₒ', 'H': 'ₕ', 'I': 'ᵢ', 'J': 'ⱼ',
+    'K': 'ₖ', 'L': 'ₗ', 'M': 'ₘ', 'N': 'ₙ', 'O': 'ₒ', 'P': 'ₚ', 'Q': 'ᵩ', 'R': 'ᵣ', 'S': 'ₛ', 'T': 'ₜ',
+    'U': 'ᵤ', 'V': 'ᵥ', 'W': 'ᵣ', 'X': 'ₓ', 'Y': 'ᵧ', 'Z': 'ᵢ'
   };
   
   // Clean 1:1 superscript mapping - only true superscripts  
