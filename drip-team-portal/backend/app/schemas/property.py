@@ -60,6 +60,13 @@ class ComponentPropertyResponse(ComponentPropertyBase):
     updated_at: datetime
     updated_by: Optional[str] = None
     
+    # STEP 3A: Add formula fields to response schema with debugging
+    is_calculated: Optional[bool] = False
+    formula_id: Optional[int] = None
+    last_calculated: Optional[datetime] = None
+    calculation_inputs: Optional[Dict[str, Any]] = None
+    calculation_status: Optional[str] = "manual"
+    
     class Config:
         from_attributes = True
 

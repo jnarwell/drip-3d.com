@@ -83,7 +83,11 @@ async def get_component_properties(
     logger.info(f"📊 Found {len(properties)} properties:")
     for prop in properties:
         notes_preview = (prop.notes[:50] + "...") if prop.notes else "None"
-        logger.info(f"  - {prop.property_definition.name}: {prop.single_value} (ID: {prop.id}, inherited: {prop.inherited_from_material}, notes: '{notes_preview}')")
+        # STEP 3A: Add formula field debugging
+        is_calc = getattr(prop, 'is_calculated', 'N/A')
+        formula_id = getattr(prop, 'formula_id', 'N/A')
+        calc_status = getattr(prop, 'calculation_status', 'N/A')
+        logger.info(f"  - {prop.property_definition.name}: {prop.single_value} (ID: {prop.id}, inherited: {prop.inherited_from_material}, is_calculated: {is_calc}, formula_id: {formula_id}, calc_status: {calc_status}, notes: '{notes_preview}')")
     
     return properties
 
