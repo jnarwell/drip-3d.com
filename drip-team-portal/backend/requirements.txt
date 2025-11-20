@@ -19,4 +19,5 @@ openpyxl==3.1.2
 reportlab==4.0.8
 pytest==7.4.3
 pytest-asyncio==0.21.1
+sympy==1.12  # For mathematical expression parsing and evaluation
 # mp-api==0.37.2  # Removed - using direct REST API instead

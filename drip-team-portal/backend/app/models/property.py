@@ -55,6 +55,13 @@ class ComponentProperty(Base):
     average_value = Column(Float)
     tolerance = Column(Float)
     
+    # Formula-based calculation fields
+    is_calculated = Column(Boolean, default=False)  # True if value comes from formula
+    formula_id = Column(Integer, ForeignKey("property_formulas.id"), nullable=True)
+    last_calculated = Column(DateTime, nullable=True)
+    calculation_inputs = Column(JSON, nullable=True)  # Store input values used in calculation
+    calculation_status = Column(String, default="manual")  # "manual", "calculated", "error", "stale"
+    
     # Metadata
     notes = Column(String)
     source = Column(String)  # Where this data came from
@@ -70,6 +77,7 @@ class ComponentProperty(Base):
     component = relationship("Component", back_populates="properties")
     property_definition = relationship("PropertyDefinition", back_populates="property_values")
     source_material = relationship("Material", foreign_keys=[source_material_id])
+    formula = relationship("PropertyFormula", back_populates="calculated_properties")
 
 
 class UnitSystem(Base):
