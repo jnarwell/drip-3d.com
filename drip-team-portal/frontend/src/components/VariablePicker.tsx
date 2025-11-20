@@ -32,6 +32,8 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({
   const [variables, setVariables] = useState<Variable[]>([]);
   const [loading, setLoading] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [suggestion, setSuggestion] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
 
