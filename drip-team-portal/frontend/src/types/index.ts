@@ -141,6 +141,13 @@ export interface ComponentProperty {
   conditions?: Record<string, any>;
   updated_at: string;
   updated_by?: string;
+  
+  // Formula fields - Step 3A
+  is_calculated?: boolean;
+  formula_id?: number;
+  last_calculated?: string;
+  calculation_inputs?: Record<string, any>;
+  calculation_status?: string;
 }
 
 export interface DashboardStats {
