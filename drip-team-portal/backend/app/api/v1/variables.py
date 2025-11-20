@@ -135,12 +135,10 @@ async def search_variables(
             for mat_prop, material, prop_def in material_properties:
                 # Determine the current value
                 current_value = None
-                if mat_prop.single_value is not None:
-                    current_value = mat_prop.single_value
-                elif mat_prop.average_value is not None:
-                    current_value = mat_prop.average_value
-                elif mat_prop.min_value is not None and mat_prop.max_value is not None:
-                    current_value = f"{mat_prop.min_value}-{mat_prop.max_value}"
+                if mat_prop.value is not None:
+                    current_value = mat_prop.value
+                elif mat_prop.value_min is not None and mat_prop.value_max is not None:
+                    current_value = f"{mat_prop.value_min}-{mat_prop.value_max}"
                 
                 variable_id = f"mat_{material.name.lower().replace(' ', '_')}.{prop_def.name.lower().replace(' ', '_')}"
                 display_name = f"{material.name} → {prop_def.name}"
@@ -275,12 +273,10 @@ async def resolve_variable(
             
             # Get current value
             current_value = None
-            if mat_prop.single_value is not None:
-                current_value = mat_prop.single_value
-            elif mat_prop.average_value is not None:
-                current_value = mat_prop.average_value
-            elif mat_prop.min_value is not None and mat_prop.max_value is not None:
-                current_value = f"{mat_prop.min_value}-{mat_prop.max_value}"
+            if mat_prop.value is not None:
+                current_value = mat_prop.value
+            elif mat_prop.value_min is not None and mat_prop.value_max is not None:
+                current_value = f"{mat_prop.value_min}-{mat_prop.value_max}"
             
             return {
                 "variable_id": variable_id,
