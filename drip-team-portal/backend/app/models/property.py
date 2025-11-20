@@ -77,7 +77,7 @@ class ComponentProperty(Base):
     component = relationship("Component", back_populates="properties")
     property_definition = relationship("PropertyDefinition", back_populates="property_values")
     source_material = relationship("Material", foreign_keys=[source_material_id])
-    formula = relationship("PropertyFormula", back_populates="calculated_properties")
+    # Note: PropertyFormula relationship will be added after import resolution
 
 
 class UnitSystem(Base):

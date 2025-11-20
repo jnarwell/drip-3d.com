@@ -66,7 +66,6 @@ class PropertyFormula(Base):
     parent_formula = relationship("PropertyFormula", remote_side=[id])
     child_formulas = relationship("PropertyFormula", remote_side=[parent_formula_id])
     references = relationship("PropertyReference", back_populates="formula", cascade="all, delete-orphan")
-    calculated_properties = relationship("ComponentProperty", back_populates="formula")
 
 
 class PropertyReference(Base):
@@ -86,7 +85,7 @@ class PropertyReference(Base):
     target_property_definition_id = Column(Integer, ForeignKey("property_definitions.id"), nullable=True)
     
     # For SYSTEM_CONSTANT  
-    target_constant_symbol = Column(String, ForeignKey("system_constants.symbol"), nullable=True)
+    target_constant_symbol = Column(String, nullable=True)
     
     # For LITERAL_VALUE
     literal_value = Column(Float, nullable=True)
@@ -104,7 +103,6 @@ class PropertyReference(Base):
     formula = relationship("PropertyFormula", back_populates="references")
     target_component = relationship("Component", foreign_keys=[target_component_id])
     target_property_definition = relationship("PropertyDefinition", foreign_keys=[target_property_definition_id])
-    target_constant = relationship("SystemConstant", foreign_keys=[target_constant_symbol])
 
 
 class FormulaValidationRule(Base):
