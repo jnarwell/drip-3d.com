@@ -80,14 +80,8 @@ async def get_component_properties(
         ComponentProperty.component_id == component.id
     ).all()
     
-    logger.info(f"📊 Found {len(properties)} properties:")
-    for prop in properties:
-        notes_preview = (prop.notes[:50] + "...") if prop.notes else "None"
-        # STEP 3A: Add formula field debugging
-        is_calc = getattr(prop, 'is_calculated', 'N/A')
-        formula_id = getattr(prop, 'formula_id', 'N/A')
-        calc_status = getattr(prop, 'calculation_status', 'N/A')
-        logger.info(f"  - {prop.property_definition.name}: {prop.single_value} (ID: {prop.id}, inherited: {prop.inherited_from_material}, is_calculated: {is_calc}, formula_id: {formula_id}, calc_status: {calc_status}, notes: '{notes_preview}')")
+    logger.info(f"📊 Found {len(properties)} properties")
+    # STEP 3A DEBUG: Temporarily removed detailed logging to fix 500 error
     
     return properties
 
@@ -134,23 +128,9 @@ async def add_component_property(
         updated_by=current_user["email"]
     )
     
-    # STEP 3A DEBUG: Log what fields exist on the model
-    logger.info(f"🔍 STEP 3A DEBUG: ComponentProperty model fields:")
-    for attr in dir(db_property):
-        if not attr.startswith('_') and not callable(getattr(db_property, attr)):
-            value = getattr(db_property, attr, 'N/A')
-            logger.info(f"    {attr}: {value}")
-    
     db.add(db_property)
     db.commit()
     db.refresh(db_property)
-    
-    # STEP 3A DEBUG: Log the refreshed object
-    logger.info(f"🔍 STEP 3A DEBUG: After commit/refresh:")
-    for field in ['is_calculated', 'formula_id', 'calculation_status', 'last_calculated']:
-        value = getattr(db_property, field, 'ATTR_NOT_FOUND')
-        logger.info(f"    {field}: {value}")
-    
     return db_property
 
 
