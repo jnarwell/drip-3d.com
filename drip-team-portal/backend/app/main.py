@@ -42,7 +42,7 @@ async def startup_event():
             from app.models.user import User
             from app.models.test import Test, TestResult
             from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
-            # from app.models.formula_isolated import PropertyFormula, PropertyReference, FormulaValidationRule, CalculationHistory, FormulaTemplate
+            from app.models.formula_isolated import PropertyFormula, PropertyReference, FormulaValidationRule, CalculationHistory, FormulaTemplate
             
             # Create all tables
             logging.info("Creating database tables...")
