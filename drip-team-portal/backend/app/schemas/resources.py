@@ -225,8 +225,14 @@ class SystemConstantBase(BaseModel):
     is_editable: bool = False
 
 
-class SystemConstantCreate(SystemConstantBase):
-    pass
+class SystemConstantCreate(BaseModel):
+    symbol: str
+    name: str
+    value: float
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    category: str
+    # Don't include is_editable - it will be set by the API
 
 
 class SystemConstantUpdate(BaseModel):
