@@ -36,8 +36,13 @@ export function extractVariableReferences(input: string): string[] {
  */
 export async function resolveVariable(variableId: string): Promise<VariableReference | null> {
   try {
+    const apiUrl = import.meta.env.VITE_API_URL || 
+      (window.location.hostname.includes('railway.app') 
+        ? 'https://backend-production-aa29.up.railway.app' 
+        : 'http://localhost:8000');
+    
     const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/variables/resolve/${variableId}`,
+      `${apiUrl}/api/v1/variables/resolve/${variableId}`,
       {
         headers: {
           'Authorization': 'Bearer test',

@@ -56,8 +56,13 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({
     setLoading(true);
     
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || 
+        (window.location.hostname.includes('railway.app') 
+          ? 'https://backend-production-aa29.up.railway.app' 
+          : 'http://localhost:8000');
+      
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/variables/search`,
+        `${apiUrl}/api/v1/variables/search`,
         {
           headers: {
             'Authorization': 'Bearer test',
