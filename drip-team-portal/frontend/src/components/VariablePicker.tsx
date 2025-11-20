@@ -57,11 +57,12 @@ export const VariablePicker: React.FC<VariablePickerProps> = ({
     
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/v1/variables/search`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/variables/search`,
         {
           headers: {
             'Authorization': 'Bearer test',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-email': 'test@drip-3d.com'
           }
         }
       );

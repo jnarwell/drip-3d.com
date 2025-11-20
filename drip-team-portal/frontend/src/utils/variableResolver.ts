@@ -37,11 +37,12 @@ export function extractVariableReferences(input: string): string[] {
 export async function resolveVariable(variableId: string): Promise<VariableReference | null> {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/v1/variables/resolve/${variableId}`,
+      `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/variables/resolve/${variableId}`,
       {
         headers: {
           'Authorization': 'Bearer test',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-email': 'test@drip-3d.com'
         }
       }
     );
