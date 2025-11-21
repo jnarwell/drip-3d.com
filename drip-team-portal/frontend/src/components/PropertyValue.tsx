@@ -103,12 +103,17 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         setIsEditing(false);
         return; // Exit early - the formula creation will update the property
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error creating formula:', error);
+        console.error('Error response:', error.response?.data);
         // Fall back to storing as notes if formula creation fails
         values.is_calculated = false;
         values.calculation_status = 'manual';
         values.notes = `Formula (failed to create): ${inputValue}`;
+        // Show error detail if available
+        if (error.response?.data?.detail) {
+          alert(`Formula creation failed: ${error.response.data.detail}`);
+        }
       }
     } else {
       // Regular value - mark as manual

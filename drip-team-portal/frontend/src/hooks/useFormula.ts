@@ -18,49 +18,25 @@ export function useFormula() {
       expression: string;
       propertyDefinitionId: number;
     }) => {
-      // Extract variables from expression
-      const variablePattern = /#([a-zA-Z0-9_\-\.]+)/g;
-      const variables = [];
-      let match;
+      // Extract numeric component ID from CMP-XXX format
+      const componentNumericId = componentId ? parseInt(componentId.split('-')[1]) : null;
       
-      while ((match = variablePattern.exec(expression)) !== null) {
-        variables.push(match[1]);
-      }
+      console.log('Creating formula with:', {
+        propertyId,
+        componentId,
+        componentNumericId,
+        expression,
+        propertyDefinitionId
+      });
 
-      // Create references for each variable
-      const references = variables.map(varId => {
-        const parts = varId.split('.');
-        if (varId.startsWith('comp_')) {
-          // Extract component ID from comp_CMP-001 format
-          const compIdMatch = parts[0].match(/comp_CMP-(\d+)/);
-          const compId = compIdMatch ? parseInt(compIdMatch[1]) : null;
-          
-          return {
-            variable_name: varId.replace('#', ''),
-            reference_type: 'component_property',
-            target_component_id: compId,
-            target_property_definition_id: null, // Would need to resolve this from property name
-            description: `Reference to ${varId}`
-          };
-        } else if (varId.startsWith('const_')) {
-          return {
-            variable_name: varId.replace('#', ''),
-            reference_type: 'system_constant',
-            target_constant_symbol: parts[0].split('_')[1],
-            description: `Reference to constant ${varId}`
-          };
-        }
-        return null;
-      }).filter(Boolean);
-
-      // Create the formula
+      // Create the formula without references for now to debug
       const formula = await api.post('/api/v1/formulas/', {
         name: `Formula for property ${propertyId}`,
         description: `Auto-generated formula: ${expression}`,
         property_definition_id: propertyDefinitionId,
-        component_id: componentId ? parseInt(componentId.split('-')[1]) : null,
-        formula_expression: expression, // Keep the original expression with # symbols
-        references
+        component_id: componentNumericId,
+        formula_expression: expression,
+        references: [] // Empty references for now
       });
 
       // Update the property to use this formula
