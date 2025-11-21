@@ -31,11 +31,15 @@ export function useFormula() {
       const references = variables.map(varId => {
         const parts = varId.split('.');
         if (varId.startsWith('comp_')) {
+          // Extract component ID from comp_CMP-001 format
+          const compIdMatch = parts[0].match(/comp_CMP-(\d+)/);
+          const compId = compIdMatch ? parseInt(compIdMatch[1]) : null;
+          
           return {
             variable_name: varId.replace('#', ''),
             reference_type: 'component_property',
-            target_component_id: parseInt(parts[0].split('_')[1]),
-            target_property_definition_id: null, // Would need to resolve this
+            target_component_id: compId,
+            target_property_definition_id: null, // Would need to resolve this from property name
             description: `Reference to ${varId}`
           };
         } else if (varId.startsWith('const_')) {
@@ -55,7 +59,7 @@ export function useFormula() {
         description: `Auto-generated formula: ${expression}`,
         property_definition_id: propertyDefinitionId,
         component_id: componentId ? parseInt(componentId.split('-')[1]) : null,
-        formula_expression: expression.replace(/#/g, ''), // Remove # symbols
+        formula_expression: expression, // Keep the original expression with # symbols
         references
       });
 

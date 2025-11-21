@@ -6,6 +6,7 @@ import { useUnits } from '../contexts/UnitContext';
 import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
 import { FormulaInput } from './FormulaInput';
 import { hasVariableReferences, resolveAllVariables, replaceVariableReferences, isFormula } from '../utils/variableResolver';
+import { useFormula } from '../hooks/useFormula';
 
 interface PropertyValueProps {
   property: ComponentProperty;
@@ -19,6 +20,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const { formatWithUserUnit, formatRangeWithUserUnit, getUserUnit, getDimensionFromUnit, convertToUserUnit } = useUnits();
+  const { createFormula } = useFormula();
 
   // Get dimension from property unit
   const dimension = getDimensionFromUnit(property.property_definition.unit);
@@ -88,30 +90,25 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     
     // Check if the input contains variable references or formulas
     if (hasVariableReferences(inputValue) || isFormula(inputValue)) {
-      // This is a formula - mark it as calculated
-      values.is_calculated = true;
-      values.calculation_status = 'calculated';
-      values.calculation_inputs = { formula: inputValue };
-      
       try {
-        // Resolve variables and evaluate the expression
-        const resolvedVariables = await resolveAllVariables(inputValue);
-        valueToProcess = replaceVariableReferences(inputValue, resolvedVariables);
+        // Create a formula on the backend
+        const result = await createFormula.mutateAsync({
+          propertyId: property.id,
+          componentId: componentId,
+          expression: inputValue,
+          propertyDefinitionId: property.property_definition.id
+        });
         
-        // For now, store the formula and resolved value
-        // TODO: Implement proper formula evaluation engine
-        console.log('Formula input:', inputValue);
-        console.log('Resolved to:', valueToProcess);
-        console.log('Resolved variables:', resolvedVariables);
-        
-        // Store the original formula for future reference
-        values.notes = `Formula: ${inputValue}`;
+        console.log('Formula created:', result);
+        setIsEditing(false);
+        return; // Exit early - the formula creation will update the property
         
       } catch (error) {
-        console.error('Error resolving formula:', error);
-        values.calculation_status = 'error';
-        updateProperty.mutate(values);
-        return;
+        console.error('Error creating formula:', error);
+        // Fall back to storing as notes if formula creation fails
+        values.is_calculated = false;
+        values.calculation_status = 'manual';
+        values.notes = `Formula (failed to create): ${inputValue}`;
       }
     } else {
       // Regular value - mark as manual
@@ -257,7 +254,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           </div>
           
           {/* Formula indicator */}
-          {property.is_calculated && (
+          {(property.is_calculated || property.formula_id) && (
             <div className="flex items-center gap-1">
               <svg className="w-3 h-3 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
@@ -265,7 +262,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
               </svg>
               <span className="text-xs text-purple-600 font-medium">
                 {property.calculation_status === 'calculated' ? 'Formula' : 
-                 property.calculation_status === 'error' ? 'Error' : 'Stale'}
+                 property.calculation_status === 'error' ? 'Error' : 
+                 property.calculation_status === 'stale' ? 'Stale' : 'Formula'}
               </span>
             </div>
           )}
