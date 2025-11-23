@@ -307,12 +307,15 @@ class FormulaEngine:
                 # Determine which component to look at
                 target_component_id = reference.target_component_id or component_id
                 
+                logger.info(f"Looking for component property: component_id={target_component_id}, property_def_id={reference.target_property_definition_id}")
+                
                 component_prop = self.db.query(ComponentProperty).filter(
                     ComponentProperty.component_id == target_component_id,
                     ComponentProperty.property_definition_id == reference.target_property_definition_id
                 ).first()
                 
                 if not component_prop:
+                    logger.error(f"Component property not found for component_id={target_component_id}, property_def_id={reference.target_property_definition_id}")
                     return reference.default_value, f"Component property not found"
                 
                 # If the property is also calculated, evaluate it first
@@ -324,6 +327,7 @@ class FormulaEngine:
                 
                 # Otherwise use the stored value
                 value = self._extract_property_value(component_prop)
+                logger.info(f"Extracted property value: {value} from property {component_prop.id}")
                 if value is None:
                     return reference.default_value, "Property value is null"
                 

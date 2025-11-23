@@ -66,8 +66,27 @@ export function useFormula() {
     },
   });
 
+  const recalculateProperty = useMutation({
+    mutationFn: async ({ 
+      propertyId 
+    }: { 
+      propertyId: number; 
+    }) => {
+      const response = await api.post(
+        `/api/v1/formulas/recalculate-property/${propertyId}`
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        queryKey: ['component-properties'] 
+      });
+    },
+  });
+
   return {
     createFormula,
-    calculateProperty
+    calculateProperty,
+    recalculateProperty
   };
 }

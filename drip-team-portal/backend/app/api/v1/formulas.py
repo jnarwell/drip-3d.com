@@ -569,8 +569,10 @@ async def create_formula_from_expression(
                 component_prop.calculation_status = "pending"
                 
                 # Try to calculate immediately
+                logger.info(f"Attempting to calculate formula for property {property_id}")
                 calc_result = engine.calculate_property(component_prop)
                 if calc_result.success:
+                    logger.info(f"Formula calculated successfully: {calc_result.value}")
                     engine._update_property_value(component_prop, calc_result)
                     component_prop.calculation_status = "calculated"
                 else:
