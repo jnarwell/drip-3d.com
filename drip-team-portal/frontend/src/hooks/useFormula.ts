@@ -28,26 +28,16 @@ export function useFormula() {
         propertyDefinitionId
       });
 
-      // Create the formula without references for now to debug
-      const formula = await api.post('/api/v1/formulas/', {
-        name: `Formula for property ${propertyId}`,
-        description: `Auto-generated formula: ${expression}`,
-        property_definition_id: propertyDefinitionId,
-        component_id: componentDbId, // Use the actual database ID
-        formula_expression: expression,
-        references: [] // Empty references for now
+      // Use the new create-from-expression endpoint
+      const response = await api.post('/api/v1/formulas/create-from-expression', {
+        propertyId,
+        componentId,
+        componentDbId,
+        expression,
+        propertyDefinitionId
       });
 
-      // Update the property to use this formula
-      await api.patch(`/api/v1/components/${componentId}/properties/${propertyId}`, {
-        is_calculated: true,
-        formula_id: formula.data.id
-      });
-
-      // Calculate the formula value
-      const result = await api.post(`/api/v1/components/${componentId}/properties/${propertyId}/calculate`);
-      
-      return result.data;
+      return response.data;
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 

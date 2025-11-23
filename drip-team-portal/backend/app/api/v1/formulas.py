@@ -399,6 +399,185 @@ async def calculate_formula(
         )
 
 
+@router.post("/create-from-expression")
+async def create_formula_from_expression(
+    request: Dict[str, Any],
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a formula from a simple expression like 'cmp1.length' or '#cmp001.length'"""
+    try:
+        property_id = request.get("propertyId")
+        component_id = request.get("componentId")
+        component_db_id = request.get("componentDbId")
+        expression = request.get("expression", "").strip()
+        property_definition_id = request.get("propertyDefinitionId")
+        
+        # Remove # prefix if present
+        if expression.startswith("#"):
+            expression = expression[1:]
+        
+        logger.info(f"Creating formula from expression: {expression}")
+        logger.info(f"Property ID: {property_id}, Component ID: {component_id}, Component DB ID: {component_db_id}")
+        
+        # Parse the expression and convert variable references
+        import re
+        
+        # Pattern to match variable references like cmp1.length, cmp001.length, steel.density
+        variable_pattern = r'\b((cmp\d+|[a-zA-Z]+)\.[a-zA-Z]+)\b'
+        
+        # Find all variable references
+        variables_found = re.findall(variable_pattern, expression)
+        
+        # Map to store variable name -> actual variable mapping
+        variable_map = {}
+        references = []
+        
+        for full_match, prefix in variables_found:
+            # Generate a simple variable name for the formula
+            var_name = full_match.replace('.', '_')
+            variable_map[full_match] = var_name
+            
+            # Determine reference type and target
+            if prefix.startswith('cmp'):
+                # Component property reference
+                # Extract component number: cmp1 -> 1, cmp001 -> 1
+                comp_num_match = re.match(r'cmp(\d+)', prefix)
+                if not comp_num_match:
+                    raise ValueError(f"Invalid component reference: {prefix}")
+                
+                comp_num = int(comp_num_match.group(1))
+                target_comp_id_str = f"CMP-{comp_num:03d}"
+                
+                # Find the component
+                target_component = db.query(Component).filter(
+                    Component.component_id == target_comp_id_str
+                ).first()
+                
+                if not target_component:
+                    raise ValueError(f"Component not found: {target_comp_id_str}")
+                
+                # Extract property name
+                prop_name = full_match.split('.')[1]
+                # Convert to title case with spaces: length -> Length, youngsModulus -> Young's Modulus
+                prop_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', prop_name).title()
+                
+                # Find property definition
+                prop_def = db.query(PropertyDefinition).filter(
+                    PropertyDefinition.name.ilike(prop_name)
+                ).first()
+                
+                if not prop_def:
+                    raise ValueError(f"Property definition not found: {prop_name}")
+                
+                references.append({
+                    "variable_name": var_name,
+                    "reference_type": "component_property",
+                    "target_component_id": target_component.id,
+                    "target_property_definition_id": prop_def.id,
+                    "description": f"Reference to {target_comp_id_str}.{prop_name}"
+                })
+            else:
+                # Could be material property or constant
+                # For now, assume it's a system constant
+                const = db.query(SystemConstant).filter(
+                    SystemConstant.symbol.ilike(prefix)
+                ).first()
+                
+                if const:
+                    references.append({
+                        "variable_name": var_name,
+                        "reference_type": "system_constant", 
+                        "target_constant_symbol": const.symbol,
+                        "description": f"System constant: {const.name}"
+                    })
+                else:
+                    # Try material property
+                    raise ValueError(f"Unknown reference: {full_match}")
+        
+        # Replace variable references in expression with simple variable names
+        formula_expression = expression
+        for original, var_name in variable_map.items():
+            formula_expression = formula_expression.replace(original, var_name)
+        
+        logger.info(f"Converted expression: {expression} -> {formula_expression}")
+        logger.info(f"References: {references}")
+        
+        # Get property definition for naming
+        prop_def = db.query(PropertyDefinition).get(property_definition_id)
+        if not prop_def:
+            raise ValueError("Property definition not found")
+        
+        # Create the formula
+        formula = PropertyFormula(
+            name=f"{prop_def.name} Formula",
+            description=f"Formula for calculating {prop_def.name}: {expression}",
+            property_definition_id=property_definition_id,
+            component_id=component_db_id,
+            formula_expression=formula_expression,
+            created_by=current_user["email"]
+        )
+        
+        db.add(formula)
+        db.flush()
+        
+        # Create references
+        for ref_data in references:
+            reference = PropertyReference(
+                formula_id=formula.id,
+                variable_name=ref_data["variable_name"],
+                reference_type=ref_data["reference_type"],
+                target_component_id=ref_data.get("target_component_id"),
+                target_property_definition_id=ref_data.get("target_property_definition_id"),
+                target_constant_symbol=ref_data.get("target_constant_symbol"),
+                description=ref_data.get("description")
+            )
+            db.add(reference)
+        
+        # Validate the formula
+        engine = FormulaEngine(db)
+        validation = engine.validate_formula(formula)
+        
+        formula.validation_status = "valid" if validation.is_valid else "error"
+        formula.validation_message = validation.error_message
+        
+        if validation.is_valid:
+            # Update the component property to use this formula
+            component_prop = db.query(ComponentProperty).get(property_id)
+            if component_prop:
+                component_prop.formula_id = formula.id
+                component_prop.is_calculated = True
+                component_prop.calculation_status = "pending"
+                
+                # Try to calculate immediately
+                calc_result = engine.calculate_property(component_prop)
+                if calc_result.success:
+                    engine._update_property_value(component_prop, calc_result)
+                    component_prop.calculation_status = "calculated"
+                else:
+                    component_prop.calculation_status = "error"
+                    logger.error(f"Calculation failed: {calc_result.error_message}")
+        
+        db.commit()
+        
+        return {
+            "id": formula.id,
+            "name": formula.name,
+            "expression": expression,
+            "formula_expression": formula.formula_expression,
+            "validation_status": formula.validation_status,
+            "validation_message": formula.validation_message
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating formula from expression: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error creating formula: {str(e)}"
+        )
+
+
 @router.get("/references/available", response_model=Dict[str, List[Dict]])
 async def get_available_references(
     db: Session = Depends(get_db),
