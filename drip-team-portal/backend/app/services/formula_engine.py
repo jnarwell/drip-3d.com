@@ -116,9 +116,21 @@ class FormulaParser:
         # Get all function calls
         functions_used = set()
         
-        for atom in parsed_expr.atoms():
-            if hasattr(atom, 'func') and hasattr(atom.func, '__name__'):
-                func_name = atom.func.__name__
+        # Walk through the expression tree to find function applications
+        for expr in sp.preorder_traversal(parsed_expr):
+            # Skip symbols and numbers - they're not functions
+            if isinstance(expr, (sp.Symbol, sp.Number)):
+                continue
+                
+            # Check if this is a function application
+            if hasattr(expr, 'func') and hasattr(expr.func, '__name__'):
+                func_name = expr.func.__name__
+                # Skip built-in sympy types that aren't actual function calls
+                if func_name in ['Add', 'Mul', 'Pow', 'Symbol', 'Integer', 'Float', 'Rational', 
+                                 'Div', 'Sub', 'Neg', 'Abs', 'Sign', 'Mod']:
+                    continue
+                    
+                # Check if it's an allowed function
                 if func_name not in cls.ALLOWED_FUNCTIONS and func_name not in cls.CONSTANTS:
                     functions_used.add(func_name)
         
