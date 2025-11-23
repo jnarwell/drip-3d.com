@@ -290,10 +290,10 @@ class FormulaEngine:
     def _resolve_single_variable(self, reference: PropertyReference, component_id: int) -> Tuple[Optional[float], Optional[str]]:
         """Resolve a single variable reference to a numeric value"""
         try:
-            if reference.reference_type == ReferenceType.LITERAL_VALUE:
+            if reference.reference_type == ReferenceType.LITERAL_VALUE.value:
                 return reference.literal_value, None
                 
-            elif reference.reference_type == ReferenceType.SYSTEM_CONSTANT:
+            elif reference.reference_type == ReferenceType.SYSTEM_CONSTANT.value:
                 constant = self.db.query(SystemConstant).filter(
                     SystemConstant.symbol == reference.target_constant_symbol
                 ).first()
@@ -303,7 +303,7 @@ class FormulaEngine:
                 
                 return constant.value, None
                 
-            elif reference.reference_type == ReferenceType.COMPONENT_PROPERTY:
+            elif reference.reference_type == ReferenceType.COMPONENT_PROPERTY.value:
                 # Determine which component to look at
                 target_component_id = reference.target_component_id or component_id
                 
@@ -329,7 +329,7 @@ class FormulaEngine:
                 
                 return value, None
                 
-            elif reference.reference_type == ReferenceType.FUNCTION_CALL:
+            elif reference.reference_type == ReferenceType.FUNCTION_CALL.value:
                 # Handle built-in function calls
                 return self._evaluate_function(reference), None
                 
@@ -390,7 +390,7 @@ class FormulaEngine:
         # Get all component property references for this formula
         references = self.db.query(PropertyReference).filter(
             PropertyReference.formula_id == formula_id,
-            PropertyReference.reference_type == ReferenceType.COMPONENT_PROPERTY
+            PropertyReference.reference_type == ReferenceType.COMPONENT_PROPERTY.value
         ).all()
         
         for ref in references:
@@ -435,7 +435,7 @@ class FormulaEngine:
             return updated_properties
         
         dependent_refs = self.db.query(PropertyReference).filter(
-            PropertyReference.reference_type == ReferenceType.COMPONENT_PROPERTY,
+            PropertyReference.reference_type == ReferenceType.COMPONENT_PROPERTY.value,
             PropertyReference.target_property_definition_id == prop.property_definition_id
         ).all()
         
