@@ -104,7 +104,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         
         // Check if formula was successfully created and applied
         if (result.validation_status === 'error') {
-          alert(`Formula validation failed: ${result.validation_message || 'Unknown error'}`);
+          console.error('Formula validation failed:', result.validation_message || 'Unknown error');
+          console.error('Full formula result:', result);
           // Don't exit - continue to save as manual value
         } else {
           setIsEditing(false);
@@ -118,9 +119,9 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         values.is_calculated = false;
         values.calculation_status = 'manual';
         values.notes = `Formula (failed to create): ${inputValue}`;
-        // Show error detail if available
+        // Log error detail if available
         if (error.response?.data?.detail) {
-          alert(`Formula creation failed: ${error.response.data.detail}`);
+          console.error('Formula creation failed with detail:', error.response.data.detail);
         }
       }
     } else {
