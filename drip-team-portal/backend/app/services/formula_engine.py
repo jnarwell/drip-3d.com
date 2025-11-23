@@ -149,6 +149,9 @@ class FormulaEngine:
             
             # Check that all variables have references
             missing_refs = []
+            logger.info(f"Checking references for formula {formula.id}")
+            logger.info(f"Variables found in expression: {validation.variables_found}")
+            
             for var in validation.variables_found:
                 ref = self.db.query(PropertyReference).filter(
                     PropertyReference.formula_id == formula.id,
@@ -157,6 +160,13 @@ class FormulaEngine:
                 
                 if not ref:
                     missing_refs.append(var)
+                    # Log what references we do have
+                    all_refs = self.db.query(PropertyReference).filter(
+                        PropertyReference.formula_id == formula.id
+                    ).all()
+                    ref_names = [r.variable_name for r in all_refs]
+                    logger.error(f"Missing reference for variable '{var}'")
+                    logger.error(f"Available references: {ref_names}")
             
             if missing_refs:
                 return ValidationResult(

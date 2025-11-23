@@ -468,6 +468,18 @@ async def create_formula_from_expression(
                 ).first()
                 
                 if not prop_def:
+                    # Try exact match without case conversion
+                    prop_def = db.query(PropertyDefinition).filter(
+                        PropertyDefinition.name.ilike(full_match.split('.')[1])
+                    ).first()
+                    
+                if not prop_def:
+                    # Log available property definitions for debugging
+                    all_props = db.query(PropertyDefinition).all()
+                    prop_names = [p.name for p in all_props]
+                    logger.error(f"Property definition not found: {prop_name}")
+                    logger.error(f"Tried: {prop_name} and {full_match.split('.')[1]}")
+                    logger.error(f"Available properties: {prop_names}")
                     raise ValueError(f"Property definition not found: {prop_name}")
                 
                 references.append({
@@ -534,12 +546,19 @@ async def create_formula_from_expression(
             )
             db.add(reference)
         
+        # Flush to ensure references are available for validation
+        db.flush()
+        
         # Validate the formula
         engine = FormulaEngine(db)
         validation = engine.validate_formula(formula)
         
         formula.validation_status = "valid" if validation.is_valid else "error"
         formula.validation_message = validation.error_message
+        
+        logger.info(f"Formula validation result: {validation.is_valid}")
+        logger.info(f"Formula validation message: {validation.error_message}")
+        logger.info(f"Formula references created: {len(references)}")
         
         if validation.is_valid:
             # Update the component property to use this formula
