@@ -484,7 +484,7 @@ async def create_formula_from_expression(
                 
                 references.append({
                     "variable_name": var_name,
-                    "reference_type": "component_property",
+                    "reference_type": ReferenceType.COMPONENT_PROPERTY.value,
                     "target_component_id": target_component.id,
                     "target_property_definition_id": prop_def.id,
                     "description": f"Reference to {target_comp_id_str}.{prop_name}"
@@ -499,7 +499,7 @@ async def create_formula_from_expression(
                 if const:
                     references.append({
                         "variable_name": var_name,
-                        "reference_type": "system_constant", 
+                        "reference_type": ReferenceType.SYSTEM_CONSTANT.value, 
                         "target_constant_symbol": const.symbol,
                         "description": f"System constant: {const.name}"
                     })
