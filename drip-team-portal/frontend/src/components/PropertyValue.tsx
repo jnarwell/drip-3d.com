@@ -101,8 +101,15 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         });
         
         console.log('Formula created:', result);
-        setIsEditing(false);
-        return; // Exit early - the formula creation will update the property
+        
+        // Check if formula was successfully created and applied
+        if (result.validation_status === 'error') {
+          alert(`Formula validation failed: ${result.validation_message || 'Unknown error'}`);
+          // Don't exit - continue to save as manual value
+        } else {
+          setIsEditing(false);
+          return; // Exit early - the formula creation will update the property
+        }
         
       } catch (error: any) {
         console.error('Error creating formula:', error);
