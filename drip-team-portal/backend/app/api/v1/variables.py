@@ -278,41 +278,39 @@ async def resolve_variable(
                 # Convert camelCase to spaces
                 property_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', property_name)
                 property_name = property_name.capitalize()
+                
+                # Find the material property
+                material_property = (
+                    db.query(MaterialProperty, Material, PropertyDefinition)
+                    .join(Material, MaterialProperty.material_id == Material.id)
+                    .join(PropertyDefinition, MaterialProperty.property_definition_id == PropertyDefinition.id)
+                    .filter(Material.name.ilike(material_name))
+                    .filter(PropertyDefinition.name.ilike(property_name))
+                    .first()
+                )
+                
+                if not material_property:
+                    raise HTTPException(status_code=404, detail=f"Material property not found: {variable_id}")
+                    
+                mat_prop, material, prop_def = material_property
+                
+                # Get current value
+                current_value = None
+                if mat_prop.value is not None:
+                    current_value = mat_prop.value
+                elif mat_prop.value_min is not None and mat_prop.value_max is not None:
+                    current_value = f"{mat_prop.value_min}-{mat_prop.value_max}"
+                
+                return {
+                    "variable_id": variable_id,
+                    "value": current_value,
+                    "unit": prop_def.unit,
+                    "type": "material_property",
+                    "source": f"materials.{material.name}.properties.{prop_def.name}",
+                    "last_updated": mat_prop.updated_at.isoformat() if mat_prop.updated_at else None
+                }
             else:
                 raise HTTPException(status_code=400, detail=f"Unknown variable format: {variable_id}")
-            
-            # Find the material property
-            material_property = (
-                db.query(MaterialProperty, Material, PropertyDefinition)
-                .join(Material, MaterialProperty.material_id == Material.id)
-                .join(PropertyDefinition, MaterialProperty.property_definition_id == PropertyDefinition.id)
-                .filter(Material.name.ilike(material_name))
-                .filter(PropertyDefinition.name.ilike(property_name))
-                .first()
-            )
-            
-            if not material_property:
-                raise HTTPException(status_code=404, detail=f"Material property not found: {variable_id}")
-                
-            mat_prop, material, prop_def = material_property
-            
-            # Get current value
-            current_value = None
-            if mat_prop.value is not None:
-                current_value = mat_prop.value
-            elif mat_prop.value_min is not None and mat_prop.value_max is not None:
-                current_value = f"{mat_prop.value_min}-{mat_prop.value_max}"
-            
-            return {
-                "variable_id": variable_id,
-                "value": current_value,
-                "unit": prop_def.unit,
-                "type": "material_property",
-                "source": f"materials.{material.name}.properties.{prop_def.name}",
-                "last_updated": mat_prop.updated_at.isoformat() if mat_prop.updated_at else None
-            }
-        else:
-            raise HTTPException(status_code=400, detail=f"Unknown variable format: {variable_id}")
             
     except HTTPException:
         raise
