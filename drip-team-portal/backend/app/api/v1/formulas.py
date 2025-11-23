@@ -650,3 +650,52 @@ async def get_available_references(
         "functions": list(FormulaEngine(db).parser.ALLOWED_FUNCTIONS),
         "math_constants": list(FormulaEngine(db).parser.CONSTANTS.keys())
     }
+
+
+@router.post("/recalculate-property/{property_id}")
+async def recalculate_property_formula(
+    property_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Manually recalculate a property's formula value"""
+    try:
+        component_prop = db.query(ComponentProperty).get(property_id)
+        if not component_prop:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Property not found"
+            )
+        
+        if not component_prop.is_calculated or not component_prop.formula_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Property is not formula-based"
+            )
+        
+        engine = FormulaEngine(db)
+        calc_result = engine.calculate_property(component_prop)
+        
+        if calc_result.success:
+            engine._update_property_value(component_prop, calc_result)
+            db.commit()
+            
+            return {
+                "success": True,
+                "value": calc_result.value,
+                "calculation_time_ms": calc_result.calculation_time_ms
+            }
+        else:
+            return {
+                "success": False,
+                "error": calc_result.error_message
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error recalculating property: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error recalculating property: {str(e)}"
+        )
