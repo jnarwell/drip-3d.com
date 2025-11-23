@@ -14,7 +14,7 @@ interface VariableSuggestion {
   display: string;
 }
 
-const VARIABLE_PREFIXES = ['comp_', 'const_', 'mat_'];
+const VARIABLE_PREFIXES = ['cmp', 'const', 'mat', 'steel', 'aluminum'];
 
 export const SimpleVariableInput: React.FC<SimpleVariableInputProps> = ({
   value,

@@ -9,22 +9,21 @@ export function useFormula() {
   const createFormula = useMutation({
     mutationFn: async ({ 
       propertyId, 
-      componentId, 
+      componentId,
+      componentDbId,
       expression,
       propertyDefinitionId 
     }: { 
       propertyId: number;
-      componentId: string; 
+      componentId: string;
+      componentDbId: number;
       expression: string;
       propertyDefinitionId: number;
     }) => {
-      // Extract numeric component ID from CMP-XXX format
-      const componentNumericId = componentId ? parseInt(componentId.split('-')[1]) : null;
-      
       console.log('Creating formula with:', {
         propertyId,
         componentId,
-        componentNumericId,
+        componentDbId,
         expression,
         propertyDefinitionId
       });
@@ -34,7 +33,7 @@ export function useFormula() {
         name: `Formula for property ${propertyId}`,
         description: `Auto-generated formula: ${expression}`,
         property_definition_id: propertyDefinitionId,
-        component_id: componentNumericId,
+        component_id: componentDbId, // Use the actual database ID
         formula_expression: expression,
         references: [] // Empty references for now
       });

@@ -95,6 +95,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         const result = await createFormula.mutateAsync({
           propertyId: property.id,
           componentId: componentId,
+          componentDbId: property.component_id, // Use the property's component_id which is the DB ID
           expression: inputValue,
           propertyDefinitionId: property.property_definition.id
         });
@@ -180,7 +181,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         <FormulaInput
           value={inputValue}
           onChange={setInputValue}
-          placeholder={`e.g., "10 ${userUnit}" or "#comp_${componentId}.width * 2"`}
+          placeholder={`e.g., "10 ${userUnit}" or "cmp1.width * 2"`}
           componentId={componentId}
           className="w-64"
         />

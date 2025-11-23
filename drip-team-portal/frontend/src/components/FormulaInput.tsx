@@ -15,7 +15,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   value,
   onChange,
   onFormulaDetected,
-  placeholder = "Enter value or formula (e.g., #comp_1.width * #comp_1.height)",
+  placeholder = "Enter value or formula (e.g., cmp1.width * cmp1.height)",
   componentId,
   className = "",
   disabled = false
@@ -45,30 +45,30 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
 
   // Detect if input is a formula
   useEffect(() => {
-    const isFormula = value.includes('#') || 
+    const isFormula = /\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || 
                      /[\+\-\*\/\(\)]/.test(value) ||
                      /^[0-9\.\s]+[\+\-\*\/]/.test(value);
     onFormulaDetected?.(isFormula);
   }, [value, onFormulaDetected]);
 
   const findSuggestion = (input: string, cursorPos: number): string => {
-    // Extract the current word being typed after #
     const beforeCursor = input.substring(0, cursorPos);
-    const hashIndex = beforeCursor.lastIndexOf('#');
     
-    if (hashIndex === -1) return '';
+    // Find the current word/variable being typed
+    const matches = beforeCursor.match(/([a-zA-Z0-9]+\.?[a-zA-Z0-9]*)$/); 
+    if (!matches) return '';
     
-    const partial = beforeCursor.substring(hashIndex + 1);
+    const partial = matches[1];
     if (!partial) return '';
 
     // Find matching variables
-    const matches = variables.filter(v => 
+    const varMatches = variables.filter(v => 
       v.toLowerCase().startsWith(partial.toLowerCase())
     );
 
-    if (matches.length > 0) {
+    if (varMatches.length > 0) {
       // Return the completion part only
-      return matches[0].substring(partial.length);
+      return varMatches[0].substring(partial.length);
     }
 
     return '';
@@ -155,7 +155,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         </div>
       )}
       
-      {value.includes('#') && (
+      {(/\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || /[\+\-\*\/\(\)]/.test(value)) && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">
           Formula detected
         </div>

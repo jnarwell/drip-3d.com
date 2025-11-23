@@ -10,22 +10,22 @@ export interface VariableReference {
 }
 
 /**
- * Check if a string contains variable references (starts with #)
+ * Check if a string contains variable references (e.g., cmp1.width, steel.density)
  */
 export function hasVariableReferences(input: string): boolean {
-  return input.includes('#');
+  return /\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(input);
 }
 
 /**
  * Extract all variable references from a string
  */
 export function extractVariableReferences(input: string): string[] {
-  const variablePattern = /#([a-zA-Z0-9_\-\.]+)/g;
+  const variablePattern = /\b((cmp\d+|[a-z]+)\.[a-zA-Z]+)/g;
   const matches = [];
   let match;
   
   while ((match = variablePattern.exec(input)) !== null) {
-    matches.push(match[1]); // The captured group without the #
+    matches.push(match[1]); // The full variable reference
   }
   
   return matches;
@@ -93,7 +93,7 @@ export function replaceVariableReferences(
   let result = input;
   
   for (const [variableId, variable] of resolvedVariables) {
-    const pattern = new RegExp(`#${variableId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
+    const pattern = new RegExp(`\\b${variableId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
     const value = variable.value !== null ? String(variable.value) : '0';
     result = result.replace(pattern, value);
   }

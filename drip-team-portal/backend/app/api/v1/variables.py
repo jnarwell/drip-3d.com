@@ -6,6 +6,7 @@ from datetime import datetime
 
 from app.db.database import get_db
 import os
+import re
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
 else:
@@ -88,8 +89,13 @@ async def search_variables(
                 elif prop.min_value is not None and prop.max_value is not None:
                     current_value = f"{prop.min_value}-{prop.max_value}"
                 
-                variable_id = f"comp_{component.component_id}.{prop_def.name.lower().replace(' ', '_')}"
-                display_name = f"{component.component_id} → {prop_def.name}"
+                # Simplify component ID: CMP-001 -> cmp1
+                comp_id = component.component_id.lower().replace('cmp-', 'cmp')
+                # Convert property name to camelCase: "Young's Modulus" -> "youngsModulus"
+                prop_name = ''.join(word.capitalize() if i > 0 else word.lower() 
+                                   for i, word in enumerate(prop_def.name.split()))
+                variable_id = f"{comp_id}.{prop_name}"
+                display_name = f"{component.name} → {prop_def.name}"
                 
                 # Apply search filter
                 if not query or query.lower() in display_name.lower() or query.lower() in variable_id.lower():
@@ -108,7 +114,8 @@ async def search_variables(
             constants = db.query(SystemConstant).all()
             
             for constant in constants:
-                variable_id = f"const_{constant.symbol.lower()}"
+                # Simplify constant: const_G -> g
+                variable_id = constant.symbol.lower()
                 display_name = f"{constant.symbol} ({constant.name})"
                 
                 # Apply search filter  
@@ -140,7 +147,11 @@ async def search_variables(
                 elif mat_prop.value_min is not None and mat_prop.value_max is not None:
                     current_value = f"{mat_prop.value_min}-{mat_prop.value_max}"
                 
-                variable_id = f"mat_{material.name.lower().replace(' ', '_')}.{prop_def.name.lower().replace(' ', '_')}"
+                # Simplify material name and property: mat_steel -> steel, Young's Modulus -> youngsModulus
+                mat_name = material.name.lower().replace(' ', '')
+                prop_name = ''.join(word.capitalize() if i > 0 else word.lower() 
+                                   for i, word in enumerate(prop_def.name.split()))
+                variable_id = f"{mat_name}.{prop_name}"
                 display_name = f"{material.name} → {prop_def.name}"
                 
                 # Apply search filter
@@ -184,14 +195,25 @@ async def resolve_variable(
     """
     try:
         # Parse the variable ID format
-        if variable_id.startswith("comp_"):
-            # Component property format: comp_{component_id}.{property_name}
-            parts = variable_id[5:].split(".", 1)  # Remove "comp_" prefix
+        if variable_id.startswith("cmp"):
+            # Component property format: cmp1.length or cmp10.width
+            parts = variable_id.split(".", 1)
             if len(parts) != 2:
                 raise HTTPException(status_code=400, detail="Invalid component property variable format")
             
-            component_id, property_name = parts
-            property_name = property_name.replace("_", " ")  # Convert back from underscore format
+            # Extract component number: cmp1 -> CMP-001
+            comp_match = re.match(r'cmp(\d+)', parts[0])
+            if not comp_match:
+                raise HTTPException(status_code=400, detail="Invalid component ID format")
+            
+            comp_num = comp_match.group(1).zfill(3)
+            component_id = f"CMP-{comp_num}"
+            
+            # Convert camelCase to spaces: youngsModulus -> Young's Modulus
+            property_name = parts[1]
+            # Add space before capital letters
+            property_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', property_name)
+            property_name = property_name.capitalize()
             
             # Find the component property
             component_property = (
@@ -228,9 +250,9 @@ async def resolve_variable(
                 "calculation_status": prop.calculation_status
             }
             
-        elif variable_id.startswith("const_"):
-            # System constant format: const_{symbol}
-            symbol = variable_id[6:].upper()  # Remove "const_" prefix and convert to uppercase
+        elif variable_id in [const.symbol.lower() for const in db.query(SystemConstant).all()]:
+            # System constant format: just the symbol in lowercase (e.g., "g", "pi")
+            symbol = variable_id.upper()
             
             constant = db.query(SystemConstant).filter(SystemConstant.symbol == symbol).first()
             if not constant:
@@ -246,15 +268,18 @@ async def resolve_variable(
                 "category": constant.category
             }
             
-        elif variable_id.startswith("mat_"):
-            # Material property format: mat_{material_name}.{property_name}
-            parts = variable_id[4:].split(".", 1)  # Remove "mat_" prefix
-            if len(parts) != 2:
-                raise HTTPException(status_code=400, detail="Invalid material property variable format")
-            
-            material_name, property_name = parts
-            material_name = material_name.replace("_", " ")  # Convert back from underscore format
-            property_name = property_name.replace("_", " ")
+        else:
+            # Try material property format: materialName.propertyName
+            parts = variable_id.split(".", 1)
+            if len(parts) == 2:
+                material_name = parts[0]
+                property_name = parts[1]
+                
+                # Convert camelCase to spaces
+                property_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', property_name)
+                property_name = property_name.capitalize()
+            else:
+                raise HTTPException(status_code=400, detail=f"Unknown variable format: {variable_id}")
             
             # Find the material property
             material_property = (
@@ -329,7 +354,12 @@ async def get_component_variables(
             elif prop.average_value is not None:
                 current_value = prop.average_value
                 
-            variable_id = f"comp_{component.component_id}.{prop_def.name.lower().replace(' ', '_')}"
+            # Simplify component ID: CMP-001 -> cmp1
+            comp_id = component.component_id.lower().replace('cmp-', 'cmp')
+            # Convert property name to camelCase: "Young's Modulus" -> "youngsModulus"
+            prop_name = ''.join(word.capitalize() if i > 0 else word.lower() 
+                               for i, word in enumerate(prop_def.name.split()))
+            variable_id = f"{comp_id}.{prop_name}"
             variables.append({
                 "id": variable_id,
                 "display_name": prop_def.name,
