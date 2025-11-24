@@ -146,6 +146,12 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         if (result.validation_status === 'error') {
           console.error('Formula validation failed:', result.validation_message || 'Unknown error');
           console.error('Full formula result:', result);
+          
+          // Show user-friendly error for self-referencing
+          if (result.validation_message?.includes('cannot reference itself')) {
+            alert('Error: A formula cannot reference its own property. Please use a different variable.');
+          }
+          
           // Don't exit - continue to save as manual value
         } else {
           setIsEditing(false);

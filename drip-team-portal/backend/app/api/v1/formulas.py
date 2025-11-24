@@ -549,6 +549,24 @@ async def create_formula_from_expression(
         # Flush to ensure references are available for validation
         db.flush()
         
+        # Check for self-referencing before validation
+        if references:
+            for ref in references:
+                if (ref.get("reference_type") == ReferenceType.COMPONENT_PROPERTY.value and
+                    ref.get("target_component_id") == component_db_id and
+                    ref.get("target_property_definition_id") == property_definition_id):
+                    formula.validation_status = "error"
+                    formula.validation_message = "Formula cannot reference itself"
+                    db.commit()
+                    return {
+                        "id": formula.id,
+                        "name": formula.name,
+                        "expression": expression,
+                        "formula_expression": formula.formula_expression,
+                        "validation_status": formula.validation_status,
+                        "validation_message": formula.validation_message
+                    }
+        
         # Validate the formula
         engine = FormulaEngine(db)
         validation = engine.validate_formula(formula)
