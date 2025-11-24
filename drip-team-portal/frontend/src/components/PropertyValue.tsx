@@ -31,69 +31,87 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     if (isEditing) {
       // Check if property has a formula - fetch the expression from backend
       if (property.is_calculated && property.formula_id) {
-        api.get(`/api/v1/formulas/property/${property.id}/formula`)
-          .then(response => {
-            if (response.data.has_formula && response.data.expression) {
-              setInputValue(response.data.expression);
-            }
-          })
-          .catch(error => {
-            console.error('Error fetching formula:', error);
-            // Fall back to checking notes
-            if (property.notes?.includes('Formula')) {
-              const formulaMatch = property.notes.match(/Formula for calculating [^:]+: (.+)$/);
-              if (formulaMatch) {
-                setInputValue(formulaMatch[1]);
-                return;
+        // Add a small delay to ensure backend is ready
+        const timer = setTimeout(() => {
+          api.get(`/api/v1/formulas/property/${property.id}/formula`)
+            .then(response => {
+              if (response.data.has_formula && response.data.expression) {
+                setInputValue(response.data.expression);
               }
-            }
-          });
-        return;
+            })
+            .catch(error => {
+              console.error('Error fetching formula:', error);
+              // Fall back to stored formula expression if available
+              // First try notes, then try the formula description pattern
+              if (property.notes) {
+                // Check for the standard formula pattern in notes
+                const formulaMatch = property.notes.match(/Formula.*?: (.+?)(?:\s*$|\s*-)/);
+                if (formulaMatch) {
+                  setInputValue(formulaMatch[1]);
+                  return;
+                }
+                // Also check if the entire note might be a formula
+                if (property.notes.includes('.') && (property.notes.includes('cmp') || /[+\-*/()]/.test(property.notes))) {
+                  setInputValue(property.notes);
+                  return;
+                }
+              }
+              // If all else fails, show the calculated value
+              setInputValueFromProperty();
+            });
+        }, 100);
+        
+        return () => clearTimeout(timer);
       }
       
-      const def = property.property_definition;
-      let initialValue = '';
-      
-      switch (def.value_type) {
-        case ValueType.SINGLE:
-          if (property.single_value !== null && property.single_value !== undefined) {
-            if (dimension) {
-              const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
-              initialValue = `${convertedValue} ${userUnit}`;
-            } else {
-              initialValue = `${property.single_value} ${def.unit}`;
-            }
-          }
-          break;
-        case ValueType.RANGE:
-          if (property.min_value !== null && property.min_value !== undefined && 
-              property.max_value !== null && property.max_value !== undefined) {
-            if (dimension) {
-              const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
-              const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
-              initialValue = `${convertedMin} - ${convertedMax} ${userUnit}`;
-            } else {
-              initialValue = `${property.min_value} - ${property.max_value} ${def.unit}`;
-            }
-          }
-          break;
-        case ValueType.AVERAGE:
-          if (property.average_value !== null && property.average_value !== undefined) {
-            if (dimension) {
-              const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
-              const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, def.unit, dimension) : 0;
-              initialValue = convertedTol ? `${convertedAvg} ± ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
-            } else {
-              const tol = property.tolerance || 0;
-              initialValue = tol ? `${property.average_value} ± ${tol} ${def.unit}` : `${property.average_value} ${def.unit}`;
-            }
-          }
-          break;
-      }
-      
-      setInputValue(initialValue);
+      // No formula - show the current value
+      setInputValueFromProperty();
     }
-  }, [isEditing]);
+  }, [isEditing, property.formula_id, property.is_calculated]);
+
+  const setInputValueFromProperty = () => {
+    const def = property.property_definition;
+    let initialValue = '';
+    
+    switch (def.value_type) {
+      case ValueType.SINGLE:
+        if (property.single_value !== null && property.single_value !== undefined) {
+          if (dimension) {
+            const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
+            initialValue = `${convertedValue} ${userUnit}`;
+          } else {
+            initialValue = `${property.single_value} ${def.unit}`;
+          }
+        }
+        break;
+      case ValueType.RANGE:
+        if (property.min_value !== null && property.min_value !== undefined && 
+            property.max_value !== null && property.max_value !== undefined) {
+          if (dimension) {
+            const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
+            const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
+            initialValue = `${convertedMin} - ${convertedMax} ${userUnit}`;
+          } else {
+            initialValue = `${property.min_value} - ${property.max_value} ${def.unit}`;
+          }
+        }
+        break;
+      case ValueType.AVERAGE:
+        if (property.average_value !== null && property.average_value !== undefined) {
+          if (dimension) {
+            const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
+            const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, def.unit, dimension) : 0;
+            initialValue = convertedTol ? `${convertedAvg} ± ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
+          } else {
+            const tol = property.tolerance || 0;
+            initialValue = tol ? `${property.average_value} ± ${tol} ${def.unit}` : `${property.average_value} ${def.unit}`;
+          }
+        }
+        break;
+    }
+    
+    setInputValue(initialValue);
+  };
 
   const updateProperty = useMutation({
     mutationFn: async (values: any) => {

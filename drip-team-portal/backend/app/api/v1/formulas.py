@@ -606,28 +606,36 @@ async def get_property_formula(
     current_user: dict = Depends(get_current_user)
 ):
     """Get the formula expression for a property if it has one"""
-    property = db.query(ComponentProperty).get(property_id)
-    if not property or not property.formula_id:
-        return {"has_formula": False}
-    
-    formula = db.query(PropertyFormula).get(property.formula_id)
-    if not formula:
-        return {"has_formula": False}
-    
-    # Try to get the original expression from description
-    expression = formula.formula_expression
-    if formula.description:
-        match = re.search(r"Formula for calculating [^:]+: (.+)$", formula.description)
-        if match:
-            expression = match.group(1)
-    
-    return {
-        "has_formula": True,
-        "formula_id": formula.id,
-        "expression": expression,
-        "name": formula.name,
-        "validation_status": formula.validation_status
-    }
+    try:
+        property = db.query(ComponentProperty).get(property_id)
+        if not property or not property.formula_id:
+            return {"has_formula": False}
+        
+        formula = db.query(PropertyFormula).get(property.formula_id)
+        if not formula:
+            return {"has_formula": False}
+        
+        # Try to get the original expression from description
+        import re
+        expression = formula.formula_expression
+        if formula.description:
+            match = re.search(r"Formula for calculating [^:]+: (.+)$", formula.description)
+            if match:
+                expression = match.group(1)
+        
+        return {
+            "has_formula": True,
+            "formula_id": formula.id,
+            "expression": expression,
+            "name": formula.name,
+            "validation_status": formula.validation_status
+        }
+    except Exception as e:
+        logger.error(f"Error fetching formula for property {property_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching formula: {str(e)}"
+        )
 
 
 @router.get("/references/available", response_model=Dict[str, List[Dict]])
