@@ -701,3 +701,30 @@ async def recalculate_property_formula(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error recalculating property: {str(e)}"
         )
+
+
+@router.post("/recalculate-dependents/{property_id}")
+async def recalculate_dependent_formulas(
+    property_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Recalculate all formulas that depend on this property"""
+    try:
+        engine = FormulaEngine(db)
+        updated_properties = engine.update_dependent_properties(property_id)
+        
+        logger.info(f"Updated {len(updated_properties)} dependent properties after change to property {property_id}")
+        
+        return {
+            "success": True,
+            "updated_count": len(updated_properties),
+            "updated_property_ids": updated_properties
+        }
+        
+    except Exception as e:
+        logger.error(f"Error updating dependent properties: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating dependent properties: {str(e)}"
+        )

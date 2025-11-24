@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+import logging
 
 from app.db.database import get_db
 import os
@@ -22,6 +23,7 @@ from app.schemas.property import (
 )
 
 router = APIRouter(prefix="/api/v1")
+logger = logging.getLogger(__name__)
 
 # Property Definitions endpoints
 @router.get("/property-definitions", response_model=List[PropertyDefinitionResponse])
@@ -169,6 +171,18 @@ async def update_component_property(
     
     db.commit()
     db.refresh(property_value)
+    
+    # Recalculate any dependent formulas
+    try:
+        from app.services.formula_engine import FormulaEngine
+        engine = FormulaEngine(db)
+        updated_properties = engine.update_dependent_properties(property_id)
+        if updated_properties:
+            logger.info(f"Updated {len(updated_properties)} dependent formulas after property {property_id} change")
+    except Exception as e:
+        logger.error(f"Error updating dependent formulas: {e}")
+        # Don't fail the property update if formula recalculation fails
+    
     return property_value
 
 

@@ -20,7 +20,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const { formatWithUserUnit, formatRangeWithUserUnit, getUserUnit, getDimensionFromUnit, convertToUserUnit } = useUnits();
-  const { createFormula, recalculateProperty } = useFormula();
+  const { createFormula } = useFormula();
 
   // Get dimension from property unit
   const dimension = getDimensionFromUnit(property.property_definition.unit);
@@ -279,16 +279,6 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
                  property.calculation_status === 'error' ? 'Error' : 
                  property.calculation_status === 'stale' ? 'Stale' : 'Formula'}
               </span>
-              {/* Debug recalculation button */}
-              <button
-                onClick={() => {
-                  console.log('Recalculating property', property.id);
-                  recalculateProperty.mutate({ propertyId: property.id });
-                }}
-                className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
-              >
-                Recalc
-              </button>
             </div>
           )}
         </div>
