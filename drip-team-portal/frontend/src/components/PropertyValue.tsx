@@ -29,6 +29,28 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   // Initialize input value when entering edit mode
   useEffect(() => {
     if (isEditing) {
+      // Check if property has a formula - fetch the expression from backend
+      if (property.is_calculated && property.formula_id) {
+        api.get(`/api/v1/formulas/property/${property.id}/formula`)
+          .then(response => {
+            if (response.data.has_formula && response.data.expression) {
+              setInputValue(response.data.expression);
+            }
+          })
+          .catch(error => {
+            console.error('Error fetching formula:', error);
+            // Fall back to checking notes
+            if (property.notes?.includes('Formula')) {
+              const formulaMatch = property.notes.match(/Formula for calculating [^:]+: (.+)$/);
+              if (formulaMatch) {
+                setInputValue(formulaMatch[1]);
+                return;
+              }
+            }
+          });
+        return;
+      }
+      
       const def = property.property_definition;
       let initialValue = '';
       

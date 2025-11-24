@@ -23,6 +23,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   const [suggestion, setSuggestion] = useState('');
   const [variables, setVariables] = useState<string[]>([]);
   const [isLoadingVariables, setIsLoadingVariables] = useState(false);
+  const [hasUserTyped, setHasUserTyped] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const api = useAuthenticatedApi();
 
@@ -79,6 +80,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     const cursorPos = e.target.selectionStart || 0;
     
     onChange(newValue);
+    setHasUserTyped(true);
     
     // Update suggestion
     const newSuggestion = findSuggestion(newValue, cursorPos);
@@ -155,7 +157,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         </div>
       )}
       
-      {(/\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || /[\+\-\*\/\(\)]/.test(value)) && (
+      {!hasUserTyped && (/\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || /[\+\-\*\/\(\)]/.test(value)) && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">
           Formula detected
         </div>

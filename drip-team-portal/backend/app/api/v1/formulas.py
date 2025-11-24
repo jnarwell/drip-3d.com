@@ -599,6 +599,37 @@ async def create_formula_from_expression(
         )
 
 
+@router.get("/property/{property_id}/formula")
+async def get_property_formula(
+    property_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get the formula expression for a property if it has one"""
+    property = db.query(ComponentProperty).get(property_id)
+    if not property or not property.formula_id:
+        return {"has_formula": False}
+    
+    formula = db.query(PropertyFormula).get(property.formula_id)
+    if not formula:
+        return {"has_formula": False}
+    
+    # Try to get the original expression from description
+    expression = formula.formula_expression
+    if formula.description:
+        match = re.search(r"Formula for calculating [^:]+: (.+)$", formula.description)
+        if match:
+            expression = match.group(1)
+    
+    return {
+        "has_formula": True,
+        "formula_id": formula.id,
+        "expression": expression,
+        "name": formula.name,
+        "validation_status": formula.validation_status
+    }
+
+
 @router.get("/references/available", response_model=Dict[str, List[Dict]])
 async def get_available_references(
     db: Session = Depends(get_db),
