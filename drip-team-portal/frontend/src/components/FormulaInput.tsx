@@ -34,8 +34,11 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
       try {
         // Exclude current component from suggestions
         const params = componentId ? { exclude_component: componentId } : {};
+        console.log('FormulaInput: Fetching variables with params:', params);
         const response = await api.get('/api/v1/variables/search', { params });
+        console.log('FormulaInput: Received variables:', response.data.variables?.length || 0, 'total');
         const varList = response.data.variables?.map((v: any) => v.id) || [];
+        console.log('FormulaInput: Variable IDs:', varList);
         setVariables(varList);
       } catch (error) {
         console.error('Failed to fetch variables:', error);
@@ -57,21 +60,29 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   const findSuggestion = (input: string, cursorPos: number): string => {
     const beforeCursor = input.substring(0, cursorPos);
     
-    // Find the current word/variable being typed
-    const matches = beforeCursor.match(/([a-zA-Z0-9]+\.?[a-zA-Z0-9]*)$/); 
-    if (!matches) return '';
+    // Find the current word/variable being typed (including # prefix)
+    const matches = beforeCursor.match(/#?([a-zA-Z0-9]+\.?[a-zA-Z0-9]*)$/); 
+    if (!matches) {
+      console.log('FormulaInput: No matches for pattern in:', beforeCursor);
+      return '';
+    }
     
     const partial = matches[1];
+    console.log('FormulaInput: Looking for suggestions for partial:', partial);
     if (!partial) return '';
 
     // Find matching variables
     const varMatches = variables.filter(v => 
       v.toLowerCase().startsWith(partial.toLowerCase())
     );
+    
+    console.log('FormulaInput: Found', varMatches.length, 'matches:', varMatches);
 
     if (varMatches.length > 0) {
       // Return the completion part only
-      return varMatches[0].substring(partial.length);
+      const suggestion = varMatches[0].substring(partial.length);
+      console.log('FormulaInput: Suggesting:', suggestion);
+      return suggestion;
     }
 
     return '';

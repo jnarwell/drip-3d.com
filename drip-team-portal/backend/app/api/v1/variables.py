@@ -80,6 +80,7 @@ async def search_variables(
             
             # Exclude properties from a specific component if requested
             if exclude_component:
+                logger.info(f"Excluding component: {exclude_component}")
                 component_properties_query = component_properties_query.filter(
                     Component.component_id != exclude_component
                 )
