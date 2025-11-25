@@ -556,7 +556,7 @@ async def create_formula_from_expression(
                     ref.get("target_component_id") == component_db_id and
                     ref.get("target_property_definition_id") == property_definition_id):
                     formula.validation_status = "error"
-                    formula.validation_message = "Formula cannot reference itself"
+                    formula.validation_message = "Formula cannot reference its own property (would create infinite loop)"
                     db.commit()
                     return {
                         "id": formula.id,

@@ -32,10 +32,9 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     const fetchVariables = async () => {
       setIsLoadingVariables(true);
       try {
-        // Exclude current component from suggestions
-        const params = componentId ? { exclude_component: componentId } : {};
-        console.log('FormulaInput: Fetching variables with params:', params);
-        const response = await api.get('/api/v1/variables/search', { params });
+        // Fetch all available variables (we'll handle self-reference prevention on save)
+        console.log('FormulaInput: Fetching all available variables');
+        const response = await api.get('/api/v1/variables/search');
         console.log('FormulaInput: Received variables:', response.data.variables?.length || 0, 'total');
         const varList = response.data.variables?.map((v: any) => v.id) || [];
         console.log('FormulaInput: Variable IDs:', varList);

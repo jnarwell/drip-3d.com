@@ -3,10 +3,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 from typing import List, Optional, Dict, Any
 from datetime import datetime
+import logging
 
 from app.db.database import get_db
 import os
 import re
+
+logger = logging.getLogger(__name__)
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
 else:
@@ -54,7 +57,6 @@ async def search_variables(
     query: Optional[str] = Query(None, description="Search term for filtering variables"),
     type_filter: Optional[str] = Query(None, description="Filter by variable type: component_property, system_constant, material_property"),
     component_id: Optional[str] = Query(None, description="Filter by specific component"),
-    exclude_component: Optional[str] = Query(None, description="Exclude properties from this component"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
@@ -76,13 +78,6 @@ async def search_variables(
             if component_id:
                 component_properties_query = component_properties_query.filter(
                     Component.component_id == component_id
-                )
-            
-            # Exclude properties from a specific component if requested
-            if exclude_component:
-                logger.info(f"Excluding component: {exclude_component}")
-                component_properties_query = component_properties_query.filter(
-                    Component.component_id != exclude_component
                 )
                 
             component_properties = component_properties_query.all()
