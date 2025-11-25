@@ -7,6 +7,7 @@ interface FormulaInputProps {
   onFormulaDetected?: (isFormula: boolean) => void;
   placeholder?: string;
   componentId?: string;
+  excludeVariableId?: string;
   className?: string;
   disabled?: boolean;
 }
@@ -17,6 +18,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   onFormulaDetected,
   placeholder = "Enter value or formula (e.g., cmp1.width * cmp1.height)",
   componentId,
+  excludeVariableId,
   className = "",
   disabled = false
 }) => {
@@ -36,8 +38,17 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         console.log('FormulaInput: Fetching all available variables');
         const response = await api.get('/api/v1/variables/search');
         console.log('FormulaInput: Received variables:', response.data.variables?.length || 0, 'total');
-        const varList = response.data.variables?.map((v: any) => v.id) || [];
-        console.log('FormulaInput: Variable IDs:', varList);
+        let varList = response.data.variables?.map((v: any) => v.id) || [];
+        
+        // Filter out the current property to prevent self-reference suggestions
+        if (excludeVariableId) {
+          console.log('FormulaInput: Excluding variable ID:', excludeVariableId);
+          console.log('FormulaInput: Variables before exclusion:', varList);
+          varList = varList.filter((v: string) => v !== excludeVariableId);
+          console.log('FormulaInput: Variables after exclusion:', varList);
+        }
+        
+        console.log('FormulaInput: Variable IDs after filtering:', varList);
         setVariables(varList);
       } catch (error) {
         console.error('Failed to fetch variables:', error);
@@ -46,7 +57,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     };
 
     fetchVariables();
-  }, [componentId]);
+  }, [componentId, excludeVariableId]);
 
   // Detect if input is a formula
   useEffect(() => {

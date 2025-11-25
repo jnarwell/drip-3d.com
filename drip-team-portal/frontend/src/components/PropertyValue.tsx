@@ -238,6 +238,18 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           onChange={setInputValue}
           placeholder={`e.g., "10 ${userUnit}" or "cmp1.width * 2"`}
           componentId={componentId}
+          excludeVariableId={(() => {
+            // Match the exact naming convention from backend variables.py
+            // CMP-001 -> cmp1
+            const comp_id = componentId.toLowerCase().replace('cmp-', 'cmp');
+            // Convert property name to camelCase: "Young's Modulus" -> "youngsModulus"
+            const prop_name = property.property_definition.name
+              .split(' ')
+              .map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join('')
+              .replace(/[^a-zA-Z0-9]/g, '');
+            return `${comp_id}.${prop_name}`;
+          })()}
           className="w-64"
         />
       );
