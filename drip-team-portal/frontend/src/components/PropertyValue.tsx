@@ -171,9 +171,10 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         }
       }
     } else {
-      // Regular value - mark as manual
+      // Regular value - mark as manual and clear formula association
       values.is_calculated = false;
       values.calculation_status = 'manual';
+      values.formula_id = null; // Clear the formula association
     }
     
     const parsed = parseValueWithUnit(valueToProcess, userUnit);

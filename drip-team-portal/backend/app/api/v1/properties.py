@@ -163,6 +163,14 @@ async def update_component_property(
         )
     
     update_data = property_update.dict(exclude_unset=True)
+    
+    # If formula_id is being set to null, also update calculation fields
+    if 'formula_id' in update_data and update_data['formula_id'] is None:
+        # Store the old formula_id before clearing
+        old_formula_id = property_value.formula_id
+        update_data['is_calculated'] = False
+        update_data['calculation_status'] = 'manual'
+    
     for field, value in update_data.items():
         setattr(property_value, field, value)
     
@@ -170,6 +178,19 @@ async def update_component_property(
     property_value.updated_by = current_user["email"]
     
     db.commit()
+    
+    # If we removed a formula, optionally delete it from the database
+    if 'formula_id' in update_data and update_data['formula_id'] is None and 'old_formula_id' in locals() and old_formula_id:
+        try:
+            # Delete the old formula as it's no longer referenced
+            old_formula = db.query(PropertyFormula).get(old_formula_id)
+            if old_formula:
+                db.delete(old_formula)
+                db.commit()
+                logger.info(f"Deleted orphaned formula {old_formula_id}")
+        except Exception as e:
+            logger.error(f"Error deleting orphaned formula: {e}")
+    
     db.refresh(property_value)
     
     # Recalculate any dependent formulas
