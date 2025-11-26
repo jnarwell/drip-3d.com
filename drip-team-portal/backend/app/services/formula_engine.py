@@ -248,11 +248,16 @@ class FormulaEngine:
                     input_values=variable_values
                 )
             
+            logger.info(f"Formula expression: {formula.formula_expression}")
+            logger.info(f"Variable values: {variable_values}")
+            
             # Substitute values into expression
             substituted = parsed_expr.subs(variable_values)
+            logger.info(f"Substituted expression: {substituted}")
             
             # Evaluate the result
             result = float(substituted.evalf())
+            logger.info(f"Calculated result: {result}")
             
             # Calculate the resulting unit
             calculated_unit = self._calculate_result_unit(formula, variable_values)
@@ -415,15 +420,20 @@ class FormulaEngine:
                 if unit:
                     variable_units[ref.variable_name] = unit
             
+            logger.info(f"Unit calculation - Expression: {formula.formula_expression}, Variable units: {variable_units}")
+            
             # Use UnitCalculator to derive the result unit
             calculated_unit = UnitCalculator.calculate_formula_units(
                 formula.formula_expression,
                 variable_units
             )
             
+            logger.info(f"Calculated unit: {calculated_unit}")
+            
             if calculated_unit:
                 # Simplify the unit
                 calculated_unit = UnitCalculator.simplify_unit(calculated_unit)
+                logger.info(f"Simplified unit: {calculated_unit}")
             
             return calculated_unit
             
