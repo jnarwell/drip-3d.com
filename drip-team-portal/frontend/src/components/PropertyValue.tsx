@@ -141,6 +141,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         });
         
         console.log('Formula created:', result);
+        console.log('Property before formula creation:', property);
         
         // Check if formula was successfully created and applied
         if (result.validation_status === 'error') {
@@ -154,7 +155,12 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           
           // Don't exit - continue to save as manual value
         } else {
-          setIsEditing(false);
+          // Wait a moment for backend to finish
+          setTimeout(() => {
+            setIsEditing(false);
+            // Force refresh by refetching
+            queryClient.refetchQueries({ queryKey: ['component-properties', componentId] });
+          }, 1000);
           return; // Exit early - the formula creation will update the property
         }
         

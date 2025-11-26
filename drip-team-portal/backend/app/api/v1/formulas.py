@@ -634,13 +634,17 @@ async def get_property_formula(
         if not formula:
             return {"has_formula": False}
         
-        # Try to get the original expression from description
+        # Always try to get the original expression from description first
         import re
-        expression = formula.formula_expression
+        expression = None
         if formula.description:
             match = re.search(r"Formula for calculating [^:]+: (.+)$", formula.description)
             if match:
                 expression = match.group(1)
+        
+        # Fall back to formula expression if not found in description
+        if not expression:
+            expression = formula.formula_expression
         
         return {
             "has_formula": True,
