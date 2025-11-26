@@ -413,9 +413,8 @@ async def create_formula_from_expression(
         expression = request.get("expression", "").strip()
         property_definition_id = request.get("propertyDefinitionId")
         
-        # Remove # prefix if present
-        if expression.startswith("#"):
-            expression = expression[1:]
+        # Keep the original expression with # prefixes for display
+        original_expression = expression
         
         logger.info(f"Creating formula from expression: {expression}")
         logger.info(f"Property ID: {property_id}, Component ID: {component_id}, Component DB ID: {component_db_id}")
@@ -423,8 +422,9 @@ async def create_formula_from_expression(
         # Parse the expression and convert variable references
         import re
         
-        # Pattern to match variable references like cmp1.length, cmp001.length, steel.density
-        variable_pattern = r'\b((cmp\d+|[a-zA-Z]+)\.[a-zA-Z]+)\b'
+        # Pattern to match variable references like #cmp1.length, #cmp001.length, #steel.density
+        # Each variable MUST have a # prefix
+        variable_pattern = r'#((cmp\d+|[a-zA-Z]+)\.[a-zA-Z]+)\b'
         
         # Find all variable references
         variables_found = re.findall(variable_pattern, expression)
@@ -508,9 +508,10 @@ async def create_formula_from_expression(
                     raise ValueError(f"Unknown reference: {full_match}")
         
         # Replace variable references in expression with simple variable names
+        # Need to include the # prefix when replacing
         formula_expression = expression
         for original, var_name in variable_map.items():
-            formula_expression = formula_expression.replace(original, var_name)
+            formula_expression = formula_expression.replace('#' + original, var_name)
         
         logger.info(f"Converted expression: {expression} -> {formula_expression}")
         logger.info(f"References: {references}")
@@ -523,7 +524,7 @@ async def create_formula_from_expression(
         # Create the formula
         formula = PropertyFormula(
             name=f"{prop_def.name} Formula",
-            description=f"Formula for calculating {prop_def.name}: {expression}",
+            description=f"Formula for calculating {prop_def.name}: {original_expression}",
             property_definition_id=property_definition_id,
             component_id=component_db_id,
             formula_expression=formula_expression,

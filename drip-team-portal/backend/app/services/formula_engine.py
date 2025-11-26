@@ -103,6 +103,7 @@ class FormulaParser:
             '×': '*',
             '÷': '/',
             'π': 'pi',
+            '^': '**',  # Convert ^ to Python exponent operator
         }
         
         for old, new in replacements.items():
@@ -383,6 +384,48 @@ class FormulaEngine:
             return func_map[func_name](*args)
         
         raise ValueError(f"Unknown function: {func_name}")
+    
+    def _calculate_result_unit(self, formula: PropertyFormula, variable_values: Dict[str, float]) -> Optional[str]:
+        """Calculate the resulting unit from the formula and variable units"""
+        try:
+            # Get units for all variables
+            variable_units = {}
+            references = self.db.query(PropertyReference).filter(
+                PropertyReference.formula_id == formula.id
+            ).all()
+            
+            for ref in references:
+                unit = None
+                
+                if ref.reference_type == ReferenceType.COMPONENT_PROPERTY.value:
+                    prop_def = self.db.query(PropertyDefinition).get(ref.target_property_definition_id)
+                    if prop_def:
+                        unit = prop_def.unit
+                elif ref.reference_type == ReferenceType.SYSTEM_CONSTANT.value:
+                    const = self.db.query(SystemConstant).filter(
+                        SystemConstant.symbol == ref.target_constant_symbol
+                    ).first()
+                    if const:
+                        unit = const.unit
+                
+                if unit:
+                    variable_units[ref.variable_name] = unit
+            
+            # Use UnitCalculator to derive the result unit
+            calculated_unit = UnitCalculator.calculate_formula_units(
+                formula.formula_expression,
+                variable_units
+            )
+            
+            if calculated_unit:
+                # Simplify the unit
+                calculated_unit = UnitCalculator.simplify_unit(calculated_unit)
+            
+            return calculated_unit
+            
+        except Exception as e:
+            logger.error(f"Error calculating unit for formula {formula.id}: {e}")
+            return None
     
     def _get_formula_dependencies(self, formula_id: int) -> List[int]:
         """Get list of formula IDs that this formula depends on"""

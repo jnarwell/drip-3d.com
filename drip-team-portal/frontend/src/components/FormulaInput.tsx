@@ -16,7 +16,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
   value,
   onChange,
   onFormulaDetected,
-  placeholder = "Enter value or formula (e.g., cmp1.width * cmp1.height)",
+  placeholder = "Enter value or formula (e.g., #cmp1.width * 2)",
   componentId,
   excludeVariableId,
   className = "",
@@ -61,9 +61,9 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
 
   // Detect if input is a formula
   useEffect(() => {
-    const isFormula = /\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || 
-                     /[\+\-\*\/\(\)]/.test(value) ||
-                     /^[0-9\.\s]+[\+\-\*\/]/.test(value);
+    const isFormula = /#(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || 
+                     /[\+\-\*\/\^\(\)]/.test(value) ||
+                     /^[0-9\.\s]+[\+\-\*\/\^]/.test(value);
     onFormulaDetected?.(isFormula);
   }, [value, onFormulaDetected]);
 
@@ -119,13 +119,17 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
       const afterCursor = value.substring(cursorPos);
       
       // Insert the suggestion
-      const newValue = beforeCursor + suggestion + afterCursor;
+      // Add # prefix if not already present
+      const needsPrefix = !beforeCursor.endsWith('#');
+      const prefix = needsPrefix ? '#' : '';
+      const newValue = beforeCursor + prefix + suggestion + afterCursor;
       onChange(newValue);
       setSuggestion('');
       
       // Move cursor after the completed text
       setTimeout(() => {
-        const newPos = cursorPos + suggestion.length;
+        const prefixLength = needsPrefix ? 1 : 0;
+        const newPos = cursorPos + prefixLength + suggestion.length;
         inputRef.current?.setSelectionRange(newPos, newPos);
         inputRef.current?.focus();
       }, 0);
@@ -180,7 +184,7 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
         </div>
       )}
       
-      {!hasUserTyped && (/\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || /[\+\-\*\/\(\)]/.test(value)) && (
+      {!hasUserTyped && (/#(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(value) || /[\+\-\*\/\^\(\)]/.test(value)) && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500">
           Formula detected
         </div>

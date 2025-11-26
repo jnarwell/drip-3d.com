@@ -10,22 +10,24 @@ export interface VariableReference {
 }
 
 /**
- * Check if a string contains variable references (e.g., cmp1.width, steel.density)
+ * Check if a string contains variable references (e.g., #cmp1.width, #steel.density)
+ * All variables MUST have a # prefix
  */
 export function hasVariableReferences(input: string): boolean {
-  return /\b(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(input);
+  return /#(cmp\d+|[a-z]+)\.[a-zA-Z]+/.test(input);
 }
 
 /**
  * Extract all variable references from a string
+ * Each variable must have a # prefix
  */
 export function extractVariableReferences(input: string): string[] {
-  const variablePattern = /\b((cmp\d+|[a-z]+)\.[a-zA-Z]+)/g;
+  const variablePattern = /#((cmp\d+|[a-z]+)\.[a-zA-Z]+)/g;
   const matches = [];
   let match;
   
   while ((match = variablePattern.exec(input)) !== null) {
-    matches.push(match[1]); // The full variable reference
+    matches.push(match[1]); // The variable reference without #
   }
   
   return matches;
@@ -85,6 +87,7 @@ export async function resolveAllVariables(input: string): Promise<Map<string, Va
 
 /**
  * Replace variable references in a string with their resolved values
+ * Variables with # prefix are replaced with numeric values
  */
 export function replaceVariableReferences(
   input: string, 
@@ -93,7 +96,8 @@ export function replaceVariableReferences(
   let result = input;
   
   for (const [variableId, variable] of resolvedVariables) {
-    const pattern = new RegExp(`\\b${variableId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+    // Replace #variableId with the numeric value
+    const pattern = new RegExp(`#${variableId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'g');
     const value = variable.value !== null ? String(variable.value) : '0';
     result = result.replace(pattern, value);
   }
