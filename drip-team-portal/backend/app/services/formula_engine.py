@@ -254,13 +254,17 @@ class FormulaEngine:
             # Evaluate the result
             result = float(substituted.evalf())
             
+            # Calculate the resulting unit
+            calculated_unit = self._calculate_result_unit(formula, variable_values)
+            
             calculation_time = (time.time() - start_time) * 1000  # ms
             
             return CalculationResult(
                 success=True,
                 value=result,
                 input_values=variable_values,
-                calculation_time_ms=calculation_time
+                calculation_time_ms=calculation_time,
+                calculated_unit=calculated_unit
             )
             
         except Exception as e:
@@ -532,3 +536,12 @@ class FormulaEngine:
         component_prop.calculation_inputs = calc_result.input_values
         component_prop.calculation_status = "calculated"
         component_prop.source = "Formula calculation"
+        
+        # Store calculated unit in notes if different from base unit
+        if calc_result.calculated_unit and calc_result.calculated_unit != prop_def.unit:
+            unit_note = f"Calculated unit: {calc_result.calculated_unit}"
+            if component_prop.notes and "Calculated unit:" not in component_prop.notes:
+                component_prop.notes += f" [{unit_note}]"
+            elif not component_prop.notes:
+                component_prop.notes = unit_note
+            # If notes already contain calculated unit, don't add it again

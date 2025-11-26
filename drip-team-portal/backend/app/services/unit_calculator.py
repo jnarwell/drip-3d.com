@@ -178,21 +178,50 @@ class UnitCalculator:
             The calculated unit string, or None if unable to calculate
         """
         try:
-            # This is a simplified version that handles basic operations
-            # For full support, we'd need to parse the AST
+            # For addition/subtraction, all terms must have same unit
+            # Constants are assumed to have the unit of the variable they're with
+            if "+" in expression or "-" in expression:
+                # Find the first variable in the expression to get the unit
+                for var_name, unit in variable_units.items():
+                    if var_name in expression:
+                        return unit
+                return None
             
-            # For now, detect simple patterns
-            if "*" in expression and "/" not in expression and "+" not in expression and "-" not in expression:
-                # Simple multiplication
+            # Simple multiplication (no other operators)
+            if "*" in expression and "/" not in expression and "^" not in expression:
+                # Handle var * const or const * var
                 parts = expression.split("*")
                 if len(parts) == 2:
                     var1 = parts[0].strip()
                     var2 = parts[1].strip()
                     
+                    # Both are variables
                     if var1 in variable_units and var2 in variable_units:
                         unit1 = cls.parse_unit(variable_units[var1])
                         unit2 = cls.parse_unit(variable_units[var2])
                         result = unit1.multiply(unit2)
+                        return str(result)
+                    
+                    # One is a variable, one is a constant - unit stays the same
+                    elif var1 in variable_units or var2 in variable_units:
+                        return variable_units.get(var1, variable_units.get(var2))
+            
+            # Simple division
+            if "/" in expression and "*" not in expression and "^" not in expression:
+                parts = expression.split("/")
+                if len(parts) == 2:
+                    var1 = parts[0].strip()
+                    var2 = parts[1].strip()
+                    
+                    # Variable / constant - unit stays the same
+                    if var1 in variable_units and var2 not in variable_units:
+                        return variable_units[var1]
+                    
+                    # Variable / variable
+                    elif var1 in variable_units and var2 in variable_units:
+                        unit1 = cls.parse_unit(variable_units[var1])
+                        unit2 = cls.parse_unit(variable_units[var2])
+                        result = unit1.divide(unit2)
                         return str(result)
             
             # For exponents like length^2
