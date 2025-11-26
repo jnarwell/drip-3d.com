@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000",
+        "https://drip-3d.com",
+        "https://www.drip-3d.com",
         "https://team.drip-3d.com",
         "https://frontend-production-31b1.up.railway.app"
     ]
