@@ -39,7 +39,10 @@ export function useFormula() {
 
       return response.data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
+      // Add a small delay to ensure backend has fully committed the changes
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       queryClient.invalidateQueries({ 
         queryKey: ['component-properties', variables.componentId] 
       });
