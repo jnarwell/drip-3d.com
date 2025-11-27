@@ -362,24 +362,6 @@
   resize: vertical;
 }
 
-/* Hide required field indicators */
-.contact-form input:required,
-.contact-form textarea:required {
-  box-shadow: none;
-}
-
-.contact-form input:required::placeholder,
-.contact-form textarea:required::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Override any browser default required styling */
-.contact-form input:invalid,
-.contact-form textarea:invalid {
-  box-shadow: none;
-  border-color: transparent;
-}
-
 /* Team Placeholder */
 .team-placeholder {
   width: 100%;

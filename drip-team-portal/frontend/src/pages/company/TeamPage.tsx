@@ -229,8 +229,10 @@ const TeamPage: React.FC = () => {
       {/* Join Section */}
       <section className="section join-section" id="contact">
         <div className="container container--content">
-          <p className="text-lg mb-xl" style={{textAlign: 'center'}}>
-            Interested in learning more about DRIP or collaborating with our team? We'd love to hear from you.
+          <h2>Contact DRIP</h2>
+          <p className="text-lg mb-xl">
+            Interested in learning more about DRIP or collaborating with our team? 
+            We'd love to hear from you.
           </p>
           
           <form 
@@ -245,7 +247,6 @@ const TeamPage: React.FC = () => {
               placeholder="Your Name" 
               required 
               disabled={formStatus === 'loading'}
-              aria-required="true"
             />
             <input 
               type="email" 
@@ -279,6 +280,27 @@ const TeamPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Footer */}
+      <footer className="site-footer">
+        <div className="container">
+          <div className="footer__content">
+            <div className="footer__section">
+              <h4>Project</h4>
+              <a href="/">Home</a>
+              <a href="/progress">Development Progress</a>
+              <a href="/team">Team</a>
+            </div>
+            <div className="footer__section">
+              <h4>Contact</h4>
+              <p className="text-sm">Email: <a href="mailto:jamie@drip-3d.com" style={{display: 'inline'}}>jamie@drip-3d.com</a><br/>
+              Primary Contact: Jamie Marwell</p>
+            </div>
+          </div>
+          <div className="footer__bottom">
+            <p>&copy; 2025 Drip 3D Inc. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
 
       {/* Team Modal */}
       <div 

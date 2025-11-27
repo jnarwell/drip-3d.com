@@ -20,10 +20,6 @@
   padding: var(--space-md) 0;
 }
 
-.site-header .container {
-  max-width: var(--container-max);
-}
-
 .logo a {
   font-size: var(--text-xl);
   font-weight: 700;
@@ -233,13 +229,12 @@
   bottom: var(--space-sm);
   left: var(--space-sm);
   right: var(--space-sm);
-  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay */
+  background-color: var(--bg-overlay);
   color: white;
   padding: var(--space-xs) var(--space-sm);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   text-align: center;
-  font-weight: 600;
 }
 
 .team-card__content {
@@ -248,15 +243,13 @@
 
 .team-card__name {
   font-size: var(--text-lg);
-  font-weight: 700; /* Bolder like static site */
+  font-weight: 600;
   margin-bottom: var(--space-xs);
-  color: #1a1a1a; /* Darker text */
 }
 
 .team-card__title {
-  color: #666; /* Darker gray for better contrast */
+  color: var(--aluminum-silver);
   font-size: var(--text-sm);
-  font-weight: 500;
 }
 
 /* Modal Component */
