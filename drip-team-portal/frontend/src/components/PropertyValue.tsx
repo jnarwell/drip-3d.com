@@ -142,6 +142,13 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         
         console.log('Formula created:', result);
         console.log('Property before formula creation:', property);
+        console.log('Current property state:', {
+          id: property.id,
+          is_calculated: property.is_calculated,
+          formula_id: property.formula_id,
+          value: property.single_value || property.average_value,
+          calculation_status: property.calculation_status
+        });
         
         // Check if formula was successfully created and applied
         if (result.validation_status === 'error') {
@@ -156,11 +163,13 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           // Don't exit - continue to save as manual value
         } else {
           // Wait a moment for backend to finish
-          setTimeout(() => {
-            setIsEditing(false);
+          setTimeout(async () => {
+            console.log('Refetching component properties after formula creation');
             // Force refresh by refetching
-            queryClient.refetchQueries({ queryKey: ['component-properties', componentId] });
-          }, 1000);
+            await queryClient.refetchQueries({ queryKey: ['component-properties', componentId] });
+            console.log('Refetch complete, setting editing to false');
+            setIsEditing(false);
+          }, 2000); // Increased to 2 seconds
           return; // Exit early - the formula creation will update the property
         }
         

@@ -85,6 +85,11 @@ async def get_component_properties(
     logger.info(f"📊 Found {len(properties)} properties")
     # STEP 3A DEBUG: Temporarily removed detailed logging to fix 500 error
     
+    # Debug logging for formula properties
+    for prop in properties:
+        if prop.is_calculated or prop.formula_id:
+            logger.info(f"Formula property: {prop.property_definition.name} - is_calculated: {prop.is_calculated}, formula_id: {prop.formula_id}, value: {prop.single_value or prop.average_value}, status: {prop.calculation_status}")
+    
     return properties
 
 
