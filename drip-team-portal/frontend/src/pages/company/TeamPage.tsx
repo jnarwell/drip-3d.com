@@ -33,21 +33,27 @@ const TeamPage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [formMessage, setFormMessage] = useState('');
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Initialize scroll animations
   useScrollAnimation();
 
-  // Load team data
+  // Load team data with debugging
   useEffect(() => {
     loadData<TeamData>('team.json')
       .then(data => {
         if (data) {
           setTeamData(data);
+        } else {
+          setLoadingError('No team data available');
         }
       })
-      .catch(err => console.error('Error loading team data:', err));
+      .catch(err => {
+        setLoadingError(err.message || 'Failed to load team data');
+      });
   }, []);
+
 
   // Handle escape key for modal
   useEffect(() => {
@@ -127,36 +133,53 @@ const TeamPage: React.FC = () => {
       <section className="section" style={{paddingTop: '100px'}}>
         <div className="container">
           <h2 className="text-center mb-xl">Current Team Members</h2>
+          
+          {/* Loading/Error State */}
+          {!teamData && !loadingError && (
+            <div className="text-center">
+              <p>Loading team members...</p>
+            </div>
+          )}
+          
+          {loadingError && (
+            <div className="text-center" style={{color: 'red'}}>
+              <p>Error loading team data: {loadingError}</p>
+            </div>
+          )}
+          
+          
           <div className="grid grid--3" id="team-grid">
             {teamData?.current.map((member, index) => (
-              <div 
-                key={member.id}
-                className={`team-card reveal stagger-${Math.min(index + 1, 6)}`} 
-                data-member-id={member.id}
-                onClick={() => openModal(member.id)}
-                style={{cursor: 'pointer'}}
-              >
-                <div className="team-card__photo">
-                  {member.photo ? (
-                    <img src={`/${member.photo}`} alt={member.name} onError={(e) => {
-                      console.error(`Failed to load image: ${member.photo}`);
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }} />
-                  ) : (
-                    <div className="team-placeholder">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                      </svg>
-                    </div>
-                  )}
-                  <div className="role-badge">{member.badge || member.role}</div>
+                <div 
+                  key={member.id}
+                  className={`team-card reveal stagger-${Math.min(index + 1, 6)}`} 
+                  data-member-id={member.id}
+                  onClick={() => openModal(member.id)}
+                >
+                  <div className="team-card__photo">
+                    {member.photo ? (
+                      <img 
+                        src={`/${member.photo}`} 
+                        alt={member.name} 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }} 
+                      />
+                    ) : (
+                      <div className="team-placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="60" height="60">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                          <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                      </div>
+                    )}
+                    <div className="role-badge">{member.badge || member.role}</div>
+                  </div>
+                  <div className="team-card__content">
+                    <h3 className="team-card__name">{member.name}</h3>
+                    <p className="team-card__title">{member.title || member.role}</p>
+                  </div>
                 </div>
-                <div className="team-card__content">
-                  <h3 className="team-card__name">{member.name}</h3>
-                  <p className="team-card__title">{member.title || member.role}</p>
-                </div>
-              </div>
             ))}
           </div>
         </div>
