@@ -11,7 +11,7 @@ body {
   font-size: var(--text-base);
   line-height: 1.6;
   color: var(--text-dark);
-  background-color: var(--ceramic-white);
+  background-color: #f5f5f5; /* Light gray background like static site */
 }
 
 /* Container System */
@@ -92,17 +92,19 @@ section {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
+  font-weight: 800; /* Extra bold like static site */
   line-height: 1.2;
   margin-bottom: var(--space-lg);
-  color: var(--steel-dark);
+  color: #1a1a1a; /* Darker color for better contrast */
 }
 
 /* Section headers - Extra large for better visibility */
 .section h2 {
   margin-bottom: var(--space-2xl);
   text-align: center;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  font-weight: 900; /* Black weight for main headers */
+  color: #000;
 }
 
 h1 { font-size: var(--text-4xl); }
