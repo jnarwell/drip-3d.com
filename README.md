@@ -1,6 +1,6 @@
 # DRIP-3D.com Website
 
-Professional showcase website for the DRIP (Droplet Refractory In-flight Printing) acoustic levitation manufacturing system.
+Professional showcase website for the DRIP acoustic manufacturing system.
 
 ## Overview
 

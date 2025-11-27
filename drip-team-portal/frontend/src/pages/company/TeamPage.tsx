@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import Navigation from '../../components/company/Navigation';
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import { loadData } from '../../utils/drip';
 
 interface TeamMember {
   id: string;
@@ -28,44 +31,36 @@ const TeamPage: React.FC = () => {
   const [teamData, setTeamData] = useState<TeamData | null>(null);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [formMessage, setFormMessage] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
 
+  // Initialize scroll animations
+  useScrollAnimation();
+
+  // Load team data
   useEffect(() => {
-    // Initialize animations
-    const initScrollAnimations = () => {
-      const observerOptions = {
-        threshold: 0.2,
-        rootMargin: '0px 0px -100px 0px'
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      }, observerOptions);
-
-      const animatedElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-      animatedElements.forEach(el => observer.observe(el));
-    };
-
-    initScrollAnimations();
-
-    // Load team data
-    fetch('/data/team.json')
-      .then(res => res.json())
-      .then(data => setTeamData(data))
+    loadData<TeamData>('team.json')
+      .then(data => {
+        if (data) {
+          setTeamData(data);
+        }
+      })
       .catch(err => console.error('Error loading team data:', err));
+  }, []);
 
-    // Handle escape key for modal
+  // Handle escape key for modal
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && modalOpen) {
         closeModal();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    if (modalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
   }, [modalOpen]);
 
   const openModal = (memberId: string) => {
@@ -83,42 +78,50 @@ const TeamPage: React.FC = () => {
     document.body.style.overflow = '';
   };
 
-  const handleContactSubmit = (e: React.FormEvent) => {
+  const handleModalClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).classList.contains('modal')) {
+      closeModal();
+    }
+  };
+
+  const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
+    setFormStatus('loading');
+    
+    const form = e.currentTarget;
     const formData = new FormData(form);
-    const name = formData.get('name');
-    const email = formData.get('email');
-    const message = formData.get('message');
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+    const message = formData.get('message') as string;
     
     // Create mailto link
     const subject = `DRIP Contact from ${name}`;
     const body = `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
     const mailtoLink = `mailto:jamie@drip-3d.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    window.location.href = mailtoLink;
+    // Small delay to show loading state
+    setTimeout(() => {
+      window.location.href = mailtoLink;
+      setFormStatus('success');
+      setFormMessage('Message sent! Your email client should open shortly.');
+      
+      // Reset form
+      if (formRef.current) {
+        formRef.current.reset();
+      }
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setFormStatus('idle');
+        setFormMessage('');
+      }, 5000);
+    }, 500);
   };
 
   return (
     <>
-      {/* Header */}
-      <header className="site-header">
-        <div className="container">
-          <div className="site-header__inner">
-            <div className="logo">
-              <a href="/">DRIP</a>
-            </div>
-            <nav className="main-nav">
-              <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/progress">Progress</a></li>
-                <li><a href="/team" className="active">Team</a></li>
-              </ul>
-            </nav>
-            <button className="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
-          </div>
-        </div>
-      </header>
+      {/* Navigation */}
+      <Navigation activePage="team" />
 
       {/* Current Team */}
       <section className="section" style={{paddingTop: '100px'}}>
@@ -128,7 +131,7 @@ const TeamPage: React.FC = () => {
             {teamData?.current.map((member, index) => (
               <div 
                 key={member.id}
-                className={`team-card reveal stagger-${index + 1}`} 
+                className={`team-card reveal stagger-${Math.min(index + 1, 6)}`} 
                 data-member-id={member.id}
                 onClick={() => openModal(member.id)}
                 style={{cursor: 'pointer'}}
@@ -165,12 +168,48 @@ const TeamPage: React.FC = () => {
             We'd love to hear from you.
           </p>
           
-          <form id="contact-form" className="contact-form" onSubmit={handleContactSubmit}>
-            <input type="text" name="name" placeholder="Your Name" required />
-            <input type="email" name="email" placeholder="Your Email" required />
-            <textarea name="message" placeholder="Tell us about yourself and your interest in DRIP" rows={5} required></textarea>
-            <button type="submit" className="btn btn--primary btn--large">Send Message</button>
+          <form 
+            ref={formRef}
+            id="contact-form" 
+            className="contact-form" 
+            onSubmit={handleContactSubmit}
+          >
+            <input 
+              type="text" 
+              name="name" 
+              placeholder="Your Name" 
+              required 
+              disabled={formStatus === 'loading'}
+            />
+            <input 
+              type="email" 
+              name="email" 
+              placeholder="Your Email" 
+              required 
+              disabled={formStatus === 'loading'}
+            />
+            <textarea 
+              name="message" 
+              placeholder="Tell us about yourself and your interest in DRIP" 
+              rows={5} 
+              required
+              disabled={formStatus === 'loading'}
+            ></textarea>
+            <button 
+              type="submit" 
+              className={`btn btn--primary btn--large ${formStatus === 'loading' ? 'loading' : ''}`}
+              disabled={formStatus === 'loading'}
+            >
+              {formStatus === 'loading' ? 'Sending...' : 'Send Message'}
+            </button>
           </form>
+
+          {/* Form Status Message */}
+          {formMessage && (
+            <div className={`form-message form-message--${formStatus}`}>
+              {formMessage}
+            </div>
+          )}
         </div>
       </section>
 
@@ -197,13 +236,19 @@ const TeamPage: React.FC = () => {
       </footer>
 
       {/* Team Modal */}
-      <div className={`modal${modalOpen ? ' modal--open' : ''}`} id="team-modal" onClick={(e) => {
-        if ((e.target as HTMLElement).classList.contains('modal')) {
-          closeModal();
-        }
-      }}>
+      <div 
+        className={`modal${modalOpen ? ' modal--open' : ''}`} 
+        id="team-modal" 
+        onClick={handleModalClick}
+      >
         <div className="modal__content">
-          <button className="modal__close" aria-label="Close modal" onClick={closeModal}>&times;</button>
+          <button 
+            className="modal__close" 
+            aria-label="Close modal" 
+            onClick={closeModal}
+          >
+            &times;
+          </button>
           {selectedMember && (
             <>
               <div className="modal__header">
@@ -220,7 +265,7 @@ const TeamPage: React.FC = () => {
                   <h3>Background</h3>
                   <p className="modal__bio">{selectedMember.bio?.full || 'No biography available.'}</p>
                 </section>
-                {selectedMember.bio?.responsibilities && (
+                {selectedMember.bio?.responsibilities && selectedMember.bio.responsibilities.length > 0 && (
                   <section className="responsibilities">
                     <h3>Responsibilities</h3>
                     <ul className="modal__responsibilities">
@@ -230,7 +275,7 @@ const TeamPage: React.FC = () => {
                     </ul>
                   </section>
                 )}
-                {selectedMember.bio?.expertise && (
+                {selectedMember.bio?.expertise && selectedMember.bio.expertise.length > 0 && (
                   <section className="expertise">
                     <h3>Expertise</h3>
                     <ul className="modal__expertise">
@@ -243,7 +288,16 @@ const TeamPage: React.FC = () => {
               </div>
               {selectedMember.social?.email && (
                 <div className="modal__footer">
-                  <a href={`mailto:${selectedMember.social.email}`} className="btn btn--primary modal__contact">Contact</a>
+                  <a 
+                    href={`mailto:${selectedMember.social.email}`} 
+                    className="btn btn--primary modal__contact"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = `mailto:${selectedMember.social.email}`;
+                    }}
+                  >
+                    Contact
+                  </a>
                 </div>
               )}
             </>

@@ -1,27 +1,13 @@
 import React, { useEffect } from 'react';
+import Navigation from '../../components/company/Navigation';
+import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import '../../utils/drip'; // Initialize global DRIP object
 
 const HomePage: React.FC = () => {
+  // Initialize scroll animations
+  useScrollAnimation();
+
   useEffect(() => {
-    // Initialize animations
-    const initScrollAnimations = () => {
-      const observerOptions = {
-        threshold: 0.2,
-        rootMargin: '0px 0px -100px 0px'
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      }, observerOptions);
-
-      const animatedElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-      animatedElements.forEach(el => observer.observe(el));
-    };
-
-    initScrollAnimations();
 
     // Initialize carousel
     const initCarousel = () => {
@@ -74,24 +60,8 @@ const HomePage: React.FC = () => {
 
   return (
     <>
-      {/* Header */}
-      <header className="site-header">
-        <div className="container">
-          <div className="site-header__inner">
-            <div className="logo">
-              <a href="/">DRIP</a>
-            </div>
-            <nav className="main-nav">
-              <ul>
-                <li><a href="/" className="active">Home</a></li>
-                <li><a href="/progress">Progress</a></li>
-                <li><a href="/team">Team</a></li>
-              </ul>
-            </nav>
-            <button className="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
-          </div>
-        </div>
-      </header>
+      {/* Navigation */}
+      <Navigation activePage="home" />
 
       {/* Hero Section */}
       <section className="section--hero hero">
