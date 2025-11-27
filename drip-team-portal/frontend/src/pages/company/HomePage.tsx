@@ -38,7 +38,8 @@ const HomePage: React.FC = () => {
 
       const updateCarousel = () => {
         if (!track) return;
-        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        const trackElement = track as HTMLElement;
+        trackElement.style.transform = `translateX(-${currentIndex * 100}%)`;
         
         dots.forEach((dot, index) => {
           dot.classList.toggle('carousel__dot--active', index === currentIndex);
