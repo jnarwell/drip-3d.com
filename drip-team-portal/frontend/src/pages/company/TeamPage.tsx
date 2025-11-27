@@ -37,8 +37,51 @@ const TeamPage: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Initialize scroll animations
-  useScrollAnimation();
+  // Initialize scroll animations after team data loads
+  useEffect(() => {
+    if (!teamData) return;
+    
+    // Small delay to ensure DOM is updated
+    const timer = setTimeout(() => {
+      const observerOptions: IntersectionObserverInit = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
+        });
+      }, observerOptions);
+
+      // Observe all elements with reveal classes
+      const animatedElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
+      console.log('[DEBUG] Found animated elements:', animatedElements.length);
+      
+      // Check if elements are already in view (above the fold)
+      animatedElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        
+        if (inView) {
+          console.log('[DEBUG] Element already in view, adding active class');
+          el.classList.add('active');
+        } else {
+          observer.observe(el);
+        }
+      });
+
+      // Cleanup
+      return () => {
+        animatedElements.forEach(el => observer.unobserve(el));
+        observer.disconnect();
+      };
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [teamData]);
 
   // Load team data with debugging
   useEffect(() => {
@@ -318,11 +361,6 @@ const TeamPage: React.FC = () => {
                   data-member-id={member.id}
                   data-debug={`card-${index}`}
                   onClick={() => openModal(member.id)}
-                  style={{
-                    // Temporary debug styles
-                    border: '2px solid red',
-                    minHeight: '300px'
-                  }}
                 >
                   <div className="team-card__photo">
                     {member.photo ? (
