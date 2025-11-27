@@ -138,7 +138,10 @@ const TeamPage: React.FC = () => {
               >
                 <div className="team-card__photo">
                   {member.photo ? (
-                    <img src={member.photo} alt={member.name} />
+                    <img src={`/${member.photo}`} alt={member.name} onError={(e) => {
+                      console.error(`Failed to load image: ${member.photo}`);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }} />
                   ) : (
                     <div className="team-placeholder">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -253,7 +256,7 @@ const TeamPage: React.FC = () => {
             <>
               <div className="modal__header">
                 {selectedMember.photo && (
-                  <img src={selectedMember.photo} alt={selectedMember.name} className="modal__photo" />
+                  <img src={`/${selectedMember.photo}`} alt={selectedMember.name} className="modal__photo" />
                 )}
                 <div>
                   <h2 className="modal__name">{selectedMember.name}</h2>
