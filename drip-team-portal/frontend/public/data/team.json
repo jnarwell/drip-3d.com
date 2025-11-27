@@ -1,0 +1,154 @@
+{
+  "current": [
+    {
+      "id": "lead",
+      "name": "Jamie Marwell",
+      "role": "Lead Engineer",
+      "title": "Mechanical/Systems Engineering",
+      "badge": "Lead Engineer",
+      "photo": "assets/images/team/jamie-marwell.jpg",
+      "bio": {
+        "full": "Jamie is a Mechanical Engineering student with industry experience from internships at Mytra Inc. (warehouse robotics), Navier Boat (electric hydrofoiling), and BETA Technologies (eVTOL aerospace). He brings expertise in mechanical design, verification & validation, and systems integration from designing cyclic loading fixtures, high voltage power distribution units, and aerospace demonstration systems. Jamie originally conceived the DRIP acoustic deposition concept and leads its technical development.",
+        "responsibilities": [
+          "Overall system architecture and integration",
+          "Mechanical design and CAD modeling",
+          "Testing fixture design and validation",
+          "Project management and team coordination"
+        ],
+        "expertise": [
+          "Mechanical design (SolidWorks, Onshape, Fusion 360)",
+          "Test engineering and fixture design",
+          "Systems integration",
+          "Additive and subtractive manufacturing"
+        ]
+      },
+      "social": {
+        "email": "jamie@drip-3d.com"
+      }
+    },
+    {
+      "id": "chemical",
+      "name": "Emma Blemaster",
+      "role": "Chemical Engineering",
+      "badge": "Chemical",
+      "photo": "assets/images/team/emma-blemaster.jpg",
+      "bio": {
+        "full": "Emma specializes in materials science and chemical processes for the DRIP system. She focuses on optimizing material properties and understanding the chemical interactions during the high-temperature deposition process.",
+        "responsibilities": [
+          "Material selection and characterization",
+          "Chemical process optimization",
+          "Safety protocol development",
+          "Materials testing and analysis"
+        ],
+        "expertise": [
+          "Chemical engineering principles",
+          "Materials science",
+          "High-temperature chemistry",
+          "Process safety"
+        ]
+      },
+      "social": {
+        "email": "emma@drip-3d.com"
+      }
+    },
+    {
+      "id": "software",
+      "name": "Addison Prarie",
+      "role": "Software/Simulation Engineering",
+      "badge": "Software/Simulation",
+      "photo": "assets/images/team/addison-prarie.jpg",
+      "bio": {
+        "full": "Addy is a junior majoring in mathematics, with a focus on theoretical computer science. He has extensive experience in computer graphics and simulation through working on various projects in his free time.",
+        "responsibilities": [
+          "Build simulation for testing and verification",
+          "Program system control"
+        ],
+        "expertise": [
+          "Simulation and visualization",
+          "GPU and parallel programming"
+        ]
+      },
+      "social": {
+        "email": "addison@drip-3d.com"
+      }
+    },
+    {
+      "id": "acoustics",
+      "name": "Ryota Sato",
+      "role": "Acoustics/Electrical Engineering",
+      "badge": "Acoustics/Electrical",
+      "photo": "assets/images/team/ryota-sato.jpg",
+      "bio": {
+        "full": "Ryota Sato is pursuing a B.S. in Electrical Engineering with a focus on audio signal processing and an M.S. in Computer Science specializing in artificial intelligence. He has worked across industry-leading audio and engineering teams, including Yamaha's Research & Development division in Japan and Tesla's Audio DSP team, where he contributed to cutting-edge audio technology. His current research integrates his passion for guitar, focusing on reducing aliasing artifacts in temporal convolutional neural networks used to emulate vintage analog tube amplifiers. He also works on embedded edge audio systems, specializing in model pruning and quantization techniques to deploy low-latency neural audio models on constrained embedded architectures.",
+        "responsibilities": [
+          "Develops advanced beamforming algorithms for acoustic object manipulation",
+          "Designs and implements acoustic hardware stack",
+          "Develops custom audio boards and embedded firmware",
+          "Controls high-density transducer arrays with precision and in real-time"
+        ],
+        "expertise": [
+          "Audio signal processing",
+          "Audio machine learning",
+          "Digital signal processing",
+          "System/Embedded Systems",
+          "Optimization"
+        ]
+      },
+      "social": {
+        "email": "ryota@drip-3d.com"
+      }
+    },
+    {
+      "id": "electrical",
+      "name": "Weston Keller",
+      "role": "Electrical Engineering",
+      "badge": "Electrical",
+      "photo": "assets/images/team/weston-keller.jpg",
+      "bio": {
+        "full": "Weston is studying Electrical Engineering and Music with a focus in DSP, analog circuits, and information theory. He works with fMRI neural imaging techniques and functional analysis with the CLiMB Lab at Stanford Bio-X. Recent side projects include (RV)iolin - Logistic Regression and RV Filtering for Realistic Violin Timbre FM Synthesis, and Tone Death - Sound Stem Separation and Neuroplasticity Aids in VR Space at Stanford's Center for Computer Research In Music and Acoustics (CCRMA). In his free time, Weston plays violin and works on documentary short films.",
+        "responsibilities": [
+          "Manage AC/DC power distribution and controls",
+          "PCB design"
+        ],
+        "expertise": [
+          "Hardware Rapid Prototyping",
+          "Digital Signal Processing",
+          "Embedded Systems Design"
+        ]
+      },
+      "social": {
+        "email": "weston@drip-3d.com"
+      }
+    },
+    {
+      "id": "mechanical",
+      "name": "Pierce Thompson",
+      "role": "Mechanical Engineering",
+      "title": "Mechanical Engineering",
+      "badge": "Mechanical",
+      "photo": "assets/images/team/pierce-thompson.jpg",
+      "bio": {
+        "full": "Pierce is a freshman at Stanford University studying Aeronautics & Astronautics and Mechanical Engineering. He brings extensive experience in test engineering, control systems, and rocketry from his internships at Anduril Industries, Caltech ARCL, and Benchmark Space Systems. Pierce has designed and launched thrust-vector-controlled rockets, developed ruggedized UAV payloads for volcanic sampling, and validated propulsion systems now operating in orbit. His current research at Stanford's Morphing Space Structures Lab focuses on developing lightweight interfaces for NASA JPL's Lunar Crater Radio Telescope.",
+        "responsibilities": [
+          "Control system design",
+          "Mechanical team member",
+          "Physical system modeling",
+          "System test engineering"
+        ],
+        "expertise": [
+          "Test engineering and validation",
+          "Control systems (MATLAB/Simulink, PID)",
+          "Mechanical design (SolidWorks, Rhino3D, Onshape)",
+          "PCB design and embedded systems",
+          "3D printing and rapid prototyping"
+        ]
+      },
+      "social": {
+        "email": "pierce@drip-3d.com"
+      }
+    }
+  ],
+  "openPositions": [],
+  "advisors": [],
+  "alumniSupport": []
+}

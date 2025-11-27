@@ -1,0 +1,78 @@
+/* Design Tokens and CSS Variables */
+:root {
+  /* Primary Colors */
+  --steel-dark: #2C3E50;      /* Headers, nav, footer */
+  --steel-mid: #34495E;       /* Secondary elements */
+  --ceramic-white: #ECF0F1;   /* Backgrounds */
+  --text-dark: #2C3E50;       /* Body text */
+  
+  /* Accent Colors */
+  --thermal-orange: #E67E22;  /* Heat/thermal processes */
+  --acoustic-blue: #3498DB;   /* Acoustic waves, CTAs */
+  --success-green: #27AE60;   /* Completed milestones */
+  --aluminum-silver: #95A5A6; /* Subtle accents */
+  
+  /* Functional Colors */
+  --error-red: #E74C3C;
+  --warning-yellow: #F39C12;
+  --bg-overlay: rgba(44, 62, 80, 0.95);
+  
+  /* Typography */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  
+  /* Type Scale (1.25 ratio) */
+  --text-xs: 0.8rem;
+  --text-sm: 0.9rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.563rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+  --text-4xl: 3.052rem;
+  
+  /* Spacing Scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  
+  /* Container Widths */
+  --container-max: 1200px;
+  --container-wide: 1440px;
+  --container-content: 800px;
+  
+  /* Breakpoints */
+  --mobile: 0px;
+  --tablet: 768px;
+  --desktop: 1024px;
+  --wide: 1440px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+  
+  /* Transitions */
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* Z-index Scale */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
