@@ -34,7 +34,6 @@ const TeamPage: React.FC = () => {
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [formMessage, setFormMessage] = useState('');
   const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>({});
   const formRef = useRef<HTMLFormElement>(null);
 
   // Initialize scroll animations after team data loads
@@ -58,7 +57,6 @@ const TeamPage: React.FC = () => {
 
       // Observe all elements with reveal classes
       const animatedElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-      console.log('[DEBUG] Found animated elements:', animatedElements.length);
       
       // Check if elements are already in view (above the fold)
       animatedElements.forEach(el => {
@@ -66,7 +64,6 @@ const TeamPage: React.FC = () => {
         const inView = rect.top < window.innerHeight && rect.bottom > 0;
         
         if (inView) {
-          console.log('[DEBUG] Element already in view, adding active class');
           el.classList.add('active');
         } else {
           observer.observe(el);
@@ -89,10 +86,6 @@ const TeamPage: React.FC = () => {
       .then(data => {
         if (data) {
           setTeamData(data);
-          console.log('[DEBUG] Team data loaded:', {
-            memberCount: data.current?.length,
-            firstMember: data.current?.[0]
-          });
         } else {
           setLoadingError('No team data available');
         }
@@ -101,92 +94,6 @@ const TeamPage: React.FC = () => {
         setLoadingError(err.message || 'Failed to load team data');
       });
   }, []);
-
-  // Debug CSS and rendering
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const debug: any = {};
-      
-      // Check if styles are loaded
-      const stylesheets = Array.from(document.styleSheets);
-      debug.stylesheetCount = stylesheets.length;
-      debug.stylesheetUrls = stylesheets.map(s => s.href).filter(Boolean);
-      
-      // Check team-card styles
-      const testCard = document.createElement('div');
-      testCard.className = 'team-card';
-      document.body.appendChild(testCard);
-      const cardStyles = window.getComputedStyle(testCard);
-      debug.teamCardStyles = {
-        display: cardStyles.display,
-        visibility: cardStyles.visibility,
-        backgroundColor: cardStyles.backgroundColor,
-        borderRadius: cardStyles.borderRadius,
-        boxShadow: cardStyles.boxShadow,
-        width: cardStyles.width,
-        height: cardStyles.height,
-        opacity: cardStyles.opacity,
-        position: cardStyles.position,
-        zIndex: cardStyles.zIndex
-      };
-      document.body.removeChild(testCard);
-      
-      // Check grid styles
-      const grid = document.querySelector('.grid.grid--3');
-      if (grid) {
-        const gridStyles = window.getComputedStyle(grid);
-        debug.gridStyles = {
-          display: gridStyles.display,
-          gridTemplateColumns: gridStyles.gridTemplateColumns,
-          gap: gridStyles.gap,
-          width: gridStyles.width
-        };
-      }
-      
-      // Check actual rendered cards
-      const renderedCards = document.querySelectorAll('.team-card');
-      debug.renderedCardCount = renderedCards.length;
-      if (renderedCards.length > 0) {
-        const firstCard = renderedCards[0];
-        const firstCardRect = firstCard.getBoundingClientRect();
-        const firstCardStyles = window.getComputedStyle(firstCard);
-        debug.firstCardInfo = {
-          dimensions: {
-            width: firstCardRect.width,
-            height: firstCardRect.height,
-            top: firstCardRect.top,
-            left: firstCardRect.left
-          },
-          computedStyles: {
-            display: firstCardStyles.display,
-            visibility: firstCardStyles.visibility,
-            opacity: firstCardStyles.opacity,
-            backgroundColor: firstCardStyles.backgroundColor,
-            position: firstCardStyles.position,
-            zIndex: firstCardStyles.zIndex
-          },
-          hasContent: firstCard.innerHTML.length > 0,
-          childElements: firstCard.children.length
-        };
-      }
-      
-      // Check images
-      const images = document.querySelectorAll('.team-card__photo img');
-      debug.imageCount = images.length;
-      debug.imageInfo = Array.from(images).map((img: any) => ({
-        src: img.src,
-        loaded: img.complete,
-        width: img.width,
-        height: img.height,
-        display: window.getComputedStyle(img).display
-      }));
-      
-      setDebugInfo(debug);
-      console.log('[DEBUG] Full debug info:', debug);
-    }, 1000); // Wait for styles to load
-    
-    return () => clearTimeout(timer);
-  }, [teamData]);
 
 
   // Handle escape key for modal
@@ -281,77 +188,6 @@ const TeamPage: React.FC = () => {
             </div>
           )}
           
-          {/* Debug Panel */}
-          {Object.keys(debugInfo).length > 0 && (
-            <div style={{
-              backgroundColor: '#f0f0f0',
-              border: '2px solid #333',
-              borderRadius: '8px',
-              padding: '20px',
-              marginBottom: '20px',
-              fontFamily: 'monospace',
-              fontSize: '12px',
-              maxHeight: '400px',
-              overflow: 'auto'
-            }}>
-              <h3 style={{marginTop: 0}}>Debug Information</h3>
-              <details open>
-                <summary style={{cursor: 'pointer', fontWeight: 'bold'}}>Stylesheet Info</summary>
-                <div style={{marginLeft: '20px', marginTop: '10px'}}>
-                  <div>Total stylesheets: {debugInfo.stylesheetCount}</div>
-                  <div>URLs: {JSON.stringify(debugInfo.stylesheetUrls, null, 2)}</div>
-                </div>
-              </details>
-              <details open>
-                <summary style={{cursor: 'pointer', fontWeight: 'bold', marginTop: '10px'}}>Team Card Styles</summary>
-                <pre style={{marginLeft: '20px', marginTop: '10px'}}>
-                  {JSON.stringify(debugInfo.teamCardStyles, null, 2)}
-                </pre>
-              </details>
-              <details open>
-                <summary style={{cursor: 'pointer', fontWeight: 'bold', marginTop: '10px'}}>Grid Info</summary>
-                <pre style={{marginLeft: '20px', marginTop: '10px'}}>
-                  {JSON.stringify(debugInfo.gridStyles, null, 2)}
-                </pre>
-              </details>
-              <details open>
-                <summary style={{cursor: 'pointer', fontWeight: 'bold', marginTop: '10px'}}>Rendered Cards</summary>
-                <div style={{marginLeft: '20px', marginTop: '10px'}}>
-                  <div>Card count: {debugInfo.renderedCardCount}</div>
-                  {debugInfo.firstCardInfo && (
-                    <pre>{JSON.stringify(debugInfo.firstCardInfo, null, 2)}</pre>
-                  )}
-                </div>
-              </details>
-              <details open>
-                <summary style={{cursor: 'pointer', fontWeight: 'bold', marginTop: '10px'}}>Images</summary>
-                <div style={{marginLeft: '20px', marginTop: '10px'}}>
-                  <div>Image count: {debugInfo.imageCount}</div>
-                  <pre>{JSON.stringify(debugInfo.imageInfo, null, 2)}</pre>
-                </div>
-              </details>
-            </div>
-          )}
-          
-          {/* Test Card with inline styles */}
-          <div style={{marginBottom: '20px'}}>
-            <h3>Test Card (should be visible):</h3>
-            <div style={{
-              backgroundColor: 'white',
-              border: '2px solid blue',
-              borderRadius: '8px',
-              padding: '20px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-              cursor: 'pointer',
-              width: '300px'
-            }}>
-              <div style={{height: '200px', backgroundColor: '#e0e0e0', marginBottom: '10px'}}>
-                Image placeholder
-              </div>
-              <h4>Test Member</h4>
-              <p>Test Role</p>
-            </div>
-          </div>
 
           <div className="grid grid--3" id="team-grid">
             {teamData?.current.map((member, index) => (
@@ -359,7 +195,6 @@ const TeamPage: React.FC = () => {
                   key={member.id}
                   className={`team-card reveal stagger-${Math.min(index + 1, 6)}`} 
                   data-member-id={member.id}
-                  data-debug={`card-${index}`}
                   onClick={() => openModal(member.id)}
                 >
                   <div className="team-card__photo">
