@@ -293,7 +293,7 @@ const TeamPage: React.FC = () => {
                     className="btn btn--primary modal__contact"
                     onClick={(e) => {
                       e.preventDefault();
-                      window.location.href = `mailto:${selectedMember.social.email}`;
+                      window.location.href = `mailto:${selectedMember.social?.email}`;
                     }}
                   >
                     Contact
