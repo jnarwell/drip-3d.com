@@ -8,10 +8,10 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    // Ensure assets are copied properly
-    assetsInclude: ['**/*.jpg', '**/*.jpeg', '**/*.png', '**/*.svg'],
     // Copy public folder contents
     copyPublicDir: true
   },
-  publicDir: 'public'
+  publicDir: 'public',
+  // Ensure assets are treated as static files
+  assetsInclude: ['**/*.jpg', '**/*.jpeg', '**/*.png', '**/*.svg']
 })
