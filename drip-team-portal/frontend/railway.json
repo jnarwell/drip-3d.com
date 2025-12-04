@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npx serve dist -s -p ${PORT:-3000}"
+    "startCommand": "npm start"
   }
 }
