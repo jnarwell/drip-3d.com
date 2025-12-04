@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Navigation from '../../components/company/Navigation';
 import Footer from '../../components/company/Footer';
 import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
@@ -13,7 +13,7 @@ const TeamPage: React.FC = () => {
   useBodyBackground('#354857');
   
   // Easter egg hook
-  const { isRevealed, scrollAttempts } = useScrollEasterEgg(7);
+  const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
   
   const section2 = useFadeInWhenVisible();
   const section3 = useFadeInWhenVisible();
