@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 interface NavigationProps {
   activePage?: 'home' | 'progress' | 'team';
@@ -64,9 +65,9 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
   return (
     <div style={navStyle}>
       {/* DRIP Logo */}
-      <a href="/" style={{ ...logoStyle, textDecoration: 'none' }}>
+      <Link to="/" style={{ ...logoStyle, textDecoration: 'none' }}>
         DRIP
-      </a>
+      </Link>
       
       {/* Desktop Navigation Links */}
       {!isMobile && (
@@ -75,33 +76,36 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
           gap: '40px',
           alignItems: 'center'
         }}>
-          <a 
-            href="/" 
+          <Link 
+            to="/" 
             style={{
               ...linkStyle,
               fontWeight: activePage === 'home' ? '700' : '500'
             }}
+            onClick={() => console.log('[Navigation] Home clicked')}
           >
             Home
-          </a>
-          <a 
-            href="/progress" 
+          </Link>
+          <Link 
+            to="/progress" 
             style={{
               ...linkStyle,
               fontWeight: activePage === 'progress' ? '700' : '500'
             }}
+            onClick={() => console.log('[Navigation] Progress clicked')}
           >
             Progress
-          </a>
-          <a 
-            href="/team" 
+          </Link>
+          <Link 
+            to="/team" 
             style={{
               ...linkStyle,
               fontWeight: activePage === 'team' ? '700' : '500'
             }}
+            onClick={() => console.log('[Navigation] Team clicked')}
           >
             Team
-          </a>
+          </Link>
         </div>
       )}
 
@@ -135,33 +139,45 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
           backgroundColor: '#354857',
           boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
         }}>
-          <a 
-            href="/" 
+          <Link 
+            to="/" 
             style={{
               ...mobileLinkStyle,
               fontWeight: activePage === 'home' ? '700' : '500'
             }}
+            onClick={() => {
+              console.log('[Navigation Mobile] Home clicked');
+              setMobileMenuOpen(false);
+            }}
           >
             Home
-          </a>
-          <a 
-            href="/progress" 
+          </Link>
+          <Link 
+            to="/progress" 
             style={{
               ...mobileLinkStyle,
               fontWeight: activePage === 'progress' ? '700' : '500'
             }}
+            onClick={() => {
+              console.log('[Navigation Mobile] Progress clicked');
+              setMobileMenuOpen(false);
+            }}
           >
             Progress
-          </a>
-          <a 
-            href="/team" 
+          </Link>
+          <Link 
+            to="/team" 
             style={{
               ...mobileLinkStyle,
               fontWeight: activePage === 'team' ? '700' : '500'
             }}
+            onClick={() => {
+              console.log('[Navigation Mobile] Team clicked');
+              setMobileMenuOpen(false);
+            }}
           >
             Team
-          </a>
+          </Link>
         </div>
       )}
     </div>

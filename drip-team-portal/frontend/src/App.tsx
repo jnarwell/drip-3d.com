@@ -20,6 +20,7 @@ import Templates from './pages/resources/Templates';
 import HomePage from './pages/company/HomePage';
 import ProgressPage from './pages/company/ProgressPage';
 import TeamPage from './pages/company/TeamPage';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import './App.css';
 
@@ -35,13 +36,19 @@ const queryClient = new QueryClient({
 function AppRoutes() {
   const isTeamDomain = useIsTeamDomain();
   
+  // Debug logging
+  console.log('[AppRoutes] Current pathname:', window.location.pathname);
+  console.log('[AppRoutes] Is team domain:', isTeamDomain);
+  console.log('[AppRoutes] Hostname:', window.location.hostname);
+  
   // Company site routes (www.drip-3d.com)
   if (!isTeamDomain) {
+    console.log('[AppRoutes] Rendering company routes');
     return (
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/progress" element={<ProgressPage />} />
-        <Route path="/team" element={<TeamPage />} />
+        <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
+        <Route path="/progress" element={<ErrorBoundary><ProgressPage /></ErrorBoundary>} />
+        <Route path="/team" element={<ErrorBoundary><TeamPage /></ErrorBoundary>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     );

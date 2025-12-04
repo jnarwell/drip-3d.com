@@ -9,11 +9,18 @@ import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
 
 const TeamPage: React.FC = () => {
+  // Debug logging
+  console.log('[TeamPage] Component mounting');
+  console.log('[TeamPage] Team members:', teamMembers);
+  
   // Set body background color to match page edges
   useBodyBackground('#354857');
   
   // Easter egg hook
   const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
+  
+  // Log after hooks
+  console.log('[TeamPage] Hooks initialized');
   
   const section2 = useFadeInWhenVisible();
   const section3 = useFadeInWhenVisible();
