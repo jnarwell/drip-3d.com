@@ -44,19 +44,19 @@ Comprehensive data management for engineering constants, property tables, and re
 
 ### 3. [Frontend CSS Architecture](./03_FRONTEND_CSS_ARCHITECTURE.md) 🎨
 
-Documentation of the hybrid CSS system managing the company website styling.
+Documentation of the frontend styling architecture, now using inline styles for company pages.
 
-**Current State:**
-- Legacy modular CSS (1,665 lines)
-- Tailwind CSS integration
-- React component styles
-- "CSS Nightmare" - three parallel systems
+**Current State (v2.0):**
+- Company pages: React inline styles
+- Team portal: Tailwind CSS utilities  
+- Legacy CSS archived but not in use
+- Clean separation between domains
 
 **Key Components:**
-- Design tokens in CSS variables
-- Animation system with reveal effects
-- Responsive grid layouts
-- Component-based BEM naming
+- Design tokens as JavaScript constants
+- Fade-in animations with Intersection Observer
+- Responsive design with hooks
+- Component-based styling patterns
 
 ---
 
@@ -82,11 +82,12 @@ Dual-source material property system integrating local engineering data with Mat
 
 Project management integration for progress tracking and test result synchronization.
 
-**Two-Way Integration:**
-1. **Website Progress** (Read-only)
-   - Initiative/project display
-   - 5-minute caching
-   - Public milestone tracking
+**Current Implementation:**
+1. **Company Pages** (Active - Read-only)
+   - Real-time initiative/project display
+   - Progress page with expandable phases
+   - 5-minute caching for performance
+   - GraphQL API with live key
 
 2. **Team Portal Sync** (Read/Write)
    - Test result → Linear issues
@@ -206,9 +207,18 @@ When working with these systems:
 
 ---
 
-*Last Updated: December 2, 2025*
-*Documentation Version: 1.0.0*
+*Last Updated: December 4, 2025*
+*Documentation Version: 1.1.0*
 *Platform: DRIP Acoustic Manufacturing System*
+
+## Recent Updates
+
+### December 4, 2025 (v1.1.0)
+- **Company Pages Rebuilt**: Migrated from hybrid CSS to inline styles
+- **Linear Integration Active**: Real-time data on Progress page
+- **Design System Established**: Colors (#354857, #ebf0f1, #ffffff)
+- **Easter Egg Added**: Team page FGM roadmap (15 scrolls)
+- **Legacy Code Archived**: Old static site moved to /legacy/
 
 ## Documentation Requirements
 
