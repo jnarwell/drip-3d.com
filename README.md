@@ -1,50 +1,44 @@
-# DRIP-3D.com Website
+# DRIP-3D.com
 
-Professional showcase website for the DRIP acoustic manufacturing system.
+Unified web platform for DRIP (Drop Resonance Induction Printing) acoustic manufacturing system at Stanford University.
 
 ## Overview
 
-This is a static website built for the DRIP project at Stanford University. The site serves as a professional showcase for the acoustic levitation manufacturing system, targeting Stanford students/faculty and potential investors.
+This repository contains a unified React application that serves both:
+- **Public website** (www.drip-3d.com) - Marketing and information site
+- **Team portal** (team.drip-3d.com) - Internal validation tracking system
 
-## Tech Stack
+Both sites are served from a single Railway deployment with domain-based routing.
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Design System**: Custom CSS with industrial/metal aesthetic
-- **Fonts**: Inter, JetBrains Mono
-- **Icons**: Custom SVG icons
-- **Data**: JSON files for dynamic content
-- **Hosting**: GitHub Pages / Vercel (ready for deployment)
+## Architecture
 
-## Project Structure
+### Frontend (React + TypeScript)
+- Single React application with domain-aware routing
+- Vite build system with TypeScript
+- TailwindCSS for styling
+- Deployed on Railway with custom domains
 
-```
-drip-3d.com/
-├── index.html              # Home page
-├── progress.html           # Development progress
-├── team.html              # Team & recruitment
-├── assets/
-│   ├── css/               # Stylesheets
-│   │   ├── reset.css      # CSS reset
-│   │   ├── variables.css  # Design tokens
-│   │   ├── layout.css     # Grid system
-│   │   ├── components.css # UI components
-│   │   ├── pages.css      # Page styles
-│   │   └── animations.css # Animations
-│   ├── js/                # JavaScript
-│   │   ├── main.js        # Core utilities
-│   │   ├── navigation.js  # Header/nav
-│   │   ├── progress.js    # Progress page
-│   │   ├── team.js        # Team modals
-│   │   └── forms.js       # Form handling
-│   └── images/            # Image assets
-├── data/                  # JSON data
-│   ├── specs.json         # System specs
-│   ├── milestones.json    # Progress data
-│   └── team.json          # Team info
-└── README.md              # This file
-```
+### Backend (FastAPI + Python)
+- RESTful API for team portal functionality
+- PostgreSQL database
+- Authentication via Auth0 (dev mode available)
+- Deployed on Railway
 
-## Local Development
+### Infrastructure
+- **Railway**: 3 services (Frontend, Backend, PostgreSQL)
+- **Custom domains**: 
+  - www.drip-3d.com → Company site
+  - team.drip-3d.com → Team portal
+- **CORS**: Configured for cross-origin requests
+
+## Quick Start
+
+### Prerequisites
+- Node.js 20+
+- Python 3.11+
+- Docker & Docker Compose (optional)
+
+### Development Setup
 
 1. Clone the repository:
 ```bash
@@ -52,96 +46,83 @@ git clone https://github.com/jnarwell/drip-3d.com.git
 cd drip-3d.com
 ```
 
-2. Install live server (optional):
+2. Frontend setup:
 ```bash
-npm install -g live-server
+cd drip-team-portal/frontend
+npm install
+npm run dev
 ```
 
-3. Start local server:
+3. Backend setup:
 ```bash
-live-server --port=3000
+cd drip-team-portal/backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
 ```
 
-4. Open browser to `http://localhost:3000`
+4. Access locally:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000/docs
 
 ## Deployment
 
-### GitHub Pages
+Deployment is automated via Railway with GitHub integration. Pushing to the `main` branch triggers automatic deployment of all services.
 
-1. Push to GitHub repository
-2. Go to Settings > Pages
-3. Select source branch (main)
-4. Site will be available at `https://[username].github.io/drip-3d.com/`
+### Environment Variables
 
-### Vercel
+See `drip-team-portal/.env.example` for required environment variables.
 
-1. Import project to Vercel
-2. No build configuration needed (static site)
-3. Deploy
+Key variables:
+- `VITE_API_URL`: Backend API URL
+- `DATABASE_URL`: PostgreSQL connection (auto-provided by Railway)
+- `DEV_MODE`: Set to `false` for production
 
-## Content Management
+## Project Structure
 
-### Updating Progress
+```
+drip-3d.com/
+├── drip-team-portal/          # Main application
+│   ├── frontend/              # React frontend
+│   │   ├── src/
+│   │   │   ├── pages/        # Page components
+│   │   │   │   └── company/  # Public site pages
+│   │   │   ├── components/   # Shared components
+│   │   │   ├── services/     # API services
+│   │   │   └── hooks/        # Custom React hooks
+│   │   └── public/           # Static assets
+│   ├── backend/              # FastAPI backend
+│   │   └── app/
+│   │       ├── api/          # API endpoints
+│   │       ├── models/       # Database models
+│   │       └── services/     # Business logic
+│   └── railway.json          # Railway configuration
+├── legacy/                   # Archived static site files
+└── README.md                # This file
+```
 
-Edit `data/milestones.json`:
-- Update phase progress percentages
-- Add new milestones
-- Mark milestones as complete
-- Update subsystem progress
+## Features
 
-### Adding Team Members
+### Public Website (www.drip-3d.com)
+- Project overview and specifications
+- Team information and recruitment
+- Progress tracking and milestones
+- Interactive animations and responsive design
 
-Edit `data/team.json`:
-- Add member objects to `current` array
-- Include photo path, bio, and social links
-- Update open positions as needed
-
-### Modifying System Specs
-
-Edit `data/specs.json`:
-- Update system specifications
-- Add new capability data
-- Modify level comparisons
-
-## Design System
-
-### Colors
-- Primary: Steel Dark (#2C3E50)
-- Accent: Acoustic Blue (#3498DB)
-- Alert: Thermal Orange (#E67E22)
-- Background: Ceramic White (#ECF0F1)
-
-### Typography
-- Headers: Inter 600
-- Body: Inter 400
-- Code: JetBrains Mono
-
-### Breakpoints
-- Mobile: < 768px
-- Tablet: 768px - 1023px
-- Desktop: ≥ 1024px
-
-## Performance
-
-- All images optimized (< 200KB)
-- CSS/JS minified for production
-- Lazy loading for images
-- Smooth scroll animations
-- Responsive design
-
-## Browser Support
-
-- Chrome/Edge: Last 2 versions
-- Firefox: Last 2 versions  
-- Safari: Last 2 versions
-- Mobile: iOS 13+, Android 10+
+### Team Portal (team.drip-3d.com)
+- Component registry with material selection
+- Test campaign management
+- Property calculations with formulas
+- Reports and data export
+- Linear integration for project management
 
 ## Contributing
 
-1. Create feature branch
-2. Make changes
-3. Test responsiveness
-4. Submit pull request
+1. Create a feature branch
+2. Make your changes
+3. Test locally
+4. Submit a pull request
 
 ## License
 
@@ -149,6 +130,6 @@ Edit `data/specs.json`:
 
 ## Contact
 
-- Project Documentation: https://jnarwell.github.io/drip
-- GitHub: https://github.com/jnarwell/drip
-- Email: drip-team@stanford.edu
+- Project Lead: Jamie Marwell (jamie@drip-3d.com)
+- GitHub: https://github.com/jnarwell/drip-3d.com
+- Documentation: See `/drip-team-portal/README.md` for detailed portal documentation

@@ -1,8 +1,8 @@
-# Railway Integration Documentation for DRIP Team Portal
+# Railway Integration Documentation for DRIP-3D.com
 
 ## 🚀 **Overview**
 
-The DRIP Team Portal is deployed on Railway using a 3-service architecture: Frontend (React), Backend (FastAPI), and PostgreSQL database. This document captures our integration experience, challenges, solutions, and current state.
+DRIP-3D.com is deployed on Railway using a 3-service architecture: Frontend (React), Backend (FastAPI), and PostgreSQL database. The frontend serves both the public website (www.drip-3d.com) and team portal (team.drip-3d.com) through domain-based routing. This document captures our integration experience, challenges, solutions, and current state.
 
 ## 🏗️ **Architecture**
 
@@ -11,8 +11,11 @@ The DRIP Team Portal is deployed on Railway using a 3-service architecture: Fron
 Railway Project: drip-3d.com
 ├── 📱 Frontend (React + TypeScript)
 │   ├── Service: frontend-production-31b1.up.railway.app
+│   ├── Custom domains:
+│   │   ├── www.drip-3d.com (public website)
+│   │   └── team.drip-3d.com (team portal)
 │   ├── Build: Vite production build
-│   └── Static hosting with SPA routing
+│   └── Domain-aware routing with SPA support
 ├── 🔧 Backend (FastAPI + Python)
 │   ├── Service: backend-production-aa29.up.railway.app
 │   ├── SQLAlchemy ORM + Pydantic schemas
@@ -135,14 +138,15 @@ class SystemConstantCreate(BaseModel):
 - **Manual trigger**: Use Railway dashboard to manually redeploy
 - **Verify deployment**: Check health endpoint for version/timestamp changes
 
-## 📊 **Current State (November 2025)**
+## 📊 **Current State (December 2025)**
 
 ### **✅ Working Systems**
-- **Authentication**: Dev mode bypass + JWT ready
+- **Domain-based routing**: Single frontend serving both public site and team portal
+- **Authentication**: Dev mode bypass + JWT ready (portal only)
 - **CORS**: Full cross-origin support with HTTPS fixes
 - **API Endpoints**: All CRUD operations for components, properties, materials, constants
 - **Database**: PostgreSQL with auto-schema creation
-- **File Structure**: Modular FastAPI with proper separation of concerns
+- **Static site migration**: Successfully migrated to React with all functionality preserved
 
 ### **🔧 In Progress**
 - **Formula System**: Database models created, API integration pending
@@ -246,9 +250,10 @@ curl https://backend-production-aa29.up.railway.app/api/v1/components/
 
 ---
 
-**Last Updated**: November 20, 2025  
+**Last Updated**: December 2, 2025  
 **Railway Services**: 3 (Frontend + Backend + PostgreSQL)  
-**Deployment Status**: Active with formula system integration in progress  
+**Custom Domains**: 2 (www.drip-3d.com, team.drip-3d.com) → Single frontend service
+**Deployment Status**: Active with unified frontend serving both sites  
 **Next Priority**: Complete variable reference backbone system with `#prefix` UI pattern
 
 **For Future Claude Instances**: This document should be consulted before making any Railway deployment changes. Pay special attention to the Common Pitfalls section and always test schema changes with a database wipe in the test environment first.

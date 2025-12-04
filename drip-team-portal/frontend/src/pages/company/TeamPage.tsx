@@ -1,354 +1,407 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import Navigation from '../../components/company/Navigation';
-import { useScrollAnimation } from '../../hooks/useScrollAnimation';
-import { loadData } from '../../utils/drip';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  title?: string;
-  badge?: string;
-  photo?: string;
-  bio?: {
-    full: string;
-    responsibilities?: string[];
-    expertise?: string[];
-  };
-  social?: {
-    email?: string;
-  };
-}
-
-interface TeamData {
-  current: TeamMember[];
-  openPositions: any[];
-  advisors: any[];
-  alumniSupport: any[];
-}
+import Footer from '../../components/company/Footer';
+import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
+import { useBodyBackground } from './useBodyBackground';
+import { useScrollEasterEgg } from '../../hooks/useScrollEasterEgg';
+import { teamMembers } from '../../data/teamMembers';
+import { TeamMember } from '../../types/TeamMember';
+import TeamMemberCard from '../../components/company/TeamMemberCard';
 
 const TeamPage: React.FC = () => {
-  const [teamData, setTeamData] = useState<TeamData | null>(null);
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [formMessage, setFormMessage] = useState('');
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  // Initialize scroll animations after team data loads
-  useEffect(() => {
-    if (!teamData) return;
-    
-    // Small delay to ensure DOM is updated
-    const timer = setTimeout(() => {
-      const observerOptions: IntersectionObserverInit = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('active');
-          }
-        });
-      }, observerOptions);
-
-      // Observe all elements with reveal classes
-      const animatedElements = document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale');
-      
-      // Check if elements are already in view (above the fold)
-      animatedElements.forEach(el => {
-        const rect = el.getBoundingClientRect();
-        const inView = rect.top < window.innerHeight && rect.bottom > 0;
-        
-        if (inView) {
-          el.classList.add('active');
-        } else {
-          observer.observe(el);
-        }
-      });
-
-      // Cleanup
-      return () => {
-        animatedElements.forEach(el => observer.unobserve(el));
-        observer.disconnect();
-      };
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [teamData]);
-
-  // Load team data with debugging
-  useEffect(() => {
-    loadData<TeamData>('team.json')
-      .then(data => {
-        if (data) {
-          setTeamData(data);
-        } else {
-          setLoadingError('No team data available');
-        }
-      })
-      .catch(err => {
-        setLoadingError(err.message || 'Failed to load team data');
-      });
-  }, []);
-
-
-  // Handle escape key for modal
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && modalOpen) {
-        closeModal();
-      }
-    };
-
-    if (modalOpen) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
-  }, [modalOpen]);
-
-  const openModal = (memberId: string) => {
-    const member = teamData?.current.find(m => m.id === memberId);
-    if (member) {
-      setSelectedMember(member);
-      setModalOpen(true);
-      document.body.style.overflow = 'hidden';
-    }
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setSelectedMember(null);
-    document.body.style.overflow = '';
-  };
-
-  const handleModalClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).classList.contains('modal')) {
-      closeModal();
-    }
-  };
-
-  const handleContactSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setFormStatus('loading');
-    
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const message = formData.get('message') as string;
-    
-    // Create mailto link
-    const subject = `DRIP Contact from ${name}`;
-    const body = `From: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-    const mailtoLink = `mailto:jamie@drip-3d.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Small delay to show loading state
-    setTimeout(() => {
-      window.location.href = mailtoLink;
-      setFormStatus('success');
-      setFormMessage('Message sent! Your email client should open shortly.');
-      
-      // Reset form
-      if (formRef.current) {
-        formRef.current.reset();
-      }
-      
-      // Auto-hide success message after 5 seconds
-      setTimeout(() => {
-        setFormStatus('idle');
-        setFormMessage('');
-      }, 5000);
-    }, 500);
+  // Set body background color to match page edges
+  useBodyBackground('#354857');
+  
+  // Easter egg hook
+  const { isRevealed, scrollAttempts } = useScrollEasterEgg(7);
+  
+  const section2 = useFadeInWhenVisible();
+  const section3 = useFadeInWhenVisible();
+  const easterEgg = useFadeInWhenVisible();
+  
+  // Future: This will open a modal with more details from Linear
+  const handleTeamMemberClick = (member: TeamMember) => {
+    console.log('Team member clicked:', member.name);
+    // TODO: Open modal with member details, projects from Linear, etc.
   };
 
   return (
-    <>
+    <div style={{ 
+      minHeight: '100vh',
+      backgroundColor: '#354857'
+    }}>
       {/* Navigation */}
       <Navigation activePage="team" />
-
-      {/* Current Team */}
-      <section className="section" style={{paddingTop: '100px'}}>
-        <div className="container">
-          <h2 className="text-center mb-xl">Current Team Members</h2>
+      
+      {/* Section 1 - Gray Background (Team Members) */}
+      <section style={{ 
+        backgroundColor: '#ebf0f1',
+        padding: '60px 42px'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h1 style={{ 
+            color: '#354857',
+            marginBottom: '40px',
+            fontSize: '48px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            Team Members
+          </h1>
           
-          {/* Loading/Error State */}
-          {!teamData && !loadingError && (
-            <div className="text-center">
-              <p>Loading team members...</p>
-            </div>
-          )}
-          
-          {loadingError && (
-            <div className="text-center" style={{color: 'red'}}>
-              <p>Error loading team data: {loadingError}</p>
-            </div>
-          )}
-          
-
-          <div className="grid grid--3" id="team-grid">
-            {teamData?.current.map((member, index) => (
-                <div 
-                  key={member.id}
-                  className={`team-card reveal stagger-${Math.min(index + 1, 6)}`} 
-                  data-member-id={member.id}
-                  onClick={() => openModal(member.id)}
-                >
-                  <div className="team-card__photo">
-                    {member.photo ? (
-                      <img 
-                        src={`/${member.photo}`} 
-                        alt={member.name} 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }} 
-                      />
-                    ) : (
-                      <div className="team-placeholder">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="60" height="60">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                          <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                      </div>
-                    )}
-                    <div className="role-badge">{member.badge || member.role}</div>
-                  </div>
-                  <div className="team-card__content">
-                    <h3 className="team-card__name">{member.name}</h3>
-                    <p className="team-card__title">{member.title || member.role}</p>
-                  </div>
-                </div>
+          {/* Team member cards container - max 3 per row */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '30px',
+            marginTop: '40px',
+            maxWidth: '1200px',
+            margin: '40px auto 0'
+          }}>
+            {teamMembers.map((member) => (
+              <TeamMemberCard
+                key={member.id}
+                member={member}
+                onClick={() => handleTeamMemberClick(member)}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Join Section */}
-      <section className="section join-section" id="contact">
-        <div className="container container--content">
-          <p className="text-lg mb-xl" style={{textAlign: 'center'}}>
+      {/* Section 2 - Blue Background (Placeholder) */}
+      <section style={{ 
+        backgroundColor: '#354857',
+        padding: '60px 42px'
+      }}>
+        <div 
+          ref={section2.ref}
+          style={{ 
+            maxWidth: '1200px', 
+            margin: '0 auto',
+            opacity: section2.isVisible ? 1 : 0,
+            transition: 'opacity 0.4s ease-in-out'
+          }}>
+          <p style={{
+            color: '#ffffff',
+            fontSize: '18px',
+            textAlign: 'center',
+            maxWidth: '600px',
+            margin: '0 auto 40px',
+            lineHeight: '1.6'
+          }}>
             Interested in learning more about DRIP or collaborating with our team? We'd love to hear from you.
           </p>
           
+          {/* Contact Form */}
           <form 
-            ref={formRef}
-            id="contact-form" 
-            className="contact-form" 
-            onSubmit={handleContactSubmit}
-          >
-            <input 
-              type="text" 
-              name="name" 
-              placeholder="Your Name" 
-              required 
-              disabled={formStatus === 'loading'}
-            />
-            <input 
-              type="email" 
-              name="email" 
-              placeholder="Your Email" 
-              required 
-              disabled={formStatus === 'loading'}
-            />
-            <textarea 
-              name="message" 
-              placeholder="Tell us about yourself and your interest in DRIP" 
-              rows={5} 
-              required
-              disabled={formStatus === 'loading'}
-            ></textarea>
+            id="contact-form"
+            style={{
+            width: '60%',
+            margin: '0 auto'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <input 
+                type="text"
+                placeholder="Name"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <input 
+                type="email"
+                placeholder="Email"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <textarea 
+                placeholder="Message"
+                rows={5}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857',
+                  resize: 'vertical',
+                  minHeight: '120px'
+                }}
+              />
+            </div>
+            
             <button 
-              type="submit" 
-              className={`btn btn--primary btn--large ${formStatus === 'loading' ? 'loading' : ''}`}
-              disabled={formStatus === 'loading'}
+              type="submit"
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '4px',
+                backgroundColor: '#ebf0f1',
+                color: '#354857',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
             >
-              {formStatus === 'loading' ? 'Sending...' : 'Send Message'}
+              Send Message
             </button>
           </form>
-
-          {/* Form Status Message */}
-          {formMessage && (
-            <div className={`form-message form-message--${formStatus}`}>
-              {formMessage}
-            </div>
-          )}
         </div>
       </section>
 
+      {/* Footer */}
+      <footer style={{ 
+        backgroundColor: '#354857',
+        padding: '20px 42px',
+        textAlign: 'center'
+      }}>
+        <p style={{
+          color: '#ffffff',
+          fontSize: '14px',
+          margin: 0
+        }}>
+          © 2025 Drip 3D Inc. All rights reserved.
+        </p>
+      </footer>
 
-      {/* Team Modal */}
-      <div 
-        className={`modal${modalOpen ? ' modal--open' : ''}`} 
-        id="team-modal" 
-        onClick={handleModalClick}
-      >
-        <div className="modal__content">
-          <button 
-            className="modal__close" 
-            aria-label="Close modal" 
-            onClick={closeModal}
-          >
-            &times;
-          </button>
-          {selectedMember && (
-            <>
-              <div className="modal__header">
-                {selectedMember.photo && (
-                  <img src={`/${selectedMember.photo}`} alt={selectedMember.name} className="modal__photo" />
-                )}
-                <div>
-                  <h2 className="modal__name">{selectedMember.name}</h2>
-                  <p className="modal__role">{selectedMember.role}</p>
-                </div>
+      {/* Easter Egg Section - Hidden until triggered */}
+      {isRevealed && (
+        <section 
+          id="easter-egg-section"
+          style={{ 
+            minHeight: '100vh',
+            backgroundColor: '#ebf0f1',
+            padding: '60px 42px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+          <div style={{ 
+              maxWidth: '800px', 
+              margin: '0 auto',
+              textAlign: 'center'
+            }}>
+            <h1 style={{ 
+              color: '#354857',
+              fontSize: '48px',
+              fontWeight: 'bold',
+              marginBottom: '10px'
+            }}>
+              The Real DRIP Roadmap
+            </h1>
+            <p style={{
+              color: '#666666',
+              fontSize: '20px',
+              marginBottom: '40px',
+              fontStyle: 'italic'
+            }}>
+              Beyond Aluminum: Our Journey to Functionally Graded Materials
+            </p>
+            
+            {/* Current - Aluminum */}
+            <div style={{
+              backgroundColor: '#354857',
+              color: '#ffffff',
+              padding: '30px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              border: '3px solid #354857'
+            }}>
+              <h3 style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                NOW: Aluminum (Al)
+              </h3>
+              <p style={{ fontSize: '16px', marginBottom: '10px' }}>
+                <strong>Status:</strong> In Production
+              </p>
+              <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
+                <strong>Enables:</strong> Basic acoustic metamaterials, proof of concept designs, 
+                lightweight structures with 2.7 g/cm³ density
+              </p>
+            </div>
+
+            {/* Q1 2025 - Al-Mg */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              padding: '30px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              border: '2px solid #354857'
+            }}>
+              <h3 style={{
+                color: '#354857',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                Q1 2025: Aluminum-Magnesium (Al-Mg)
+              </h3>
+              <p style={{ color: '#666666', fontSize: '16px', marginBottom: '10px' }}>
+                <strong>Status:</strong> Testing Phase
+              </p>
+              <p style={{ color: '#666666', fontSize: '16px', lineHeight: '1.6' }}>
+                <strong>Enables:</strong> 30% weight reduction, improved damping characteristics, 
+                marine/underwater acoustic applications, enhanced corrosion resistance
+              </p>
+            </div>
+
+            {/* Q3 2025 - Al-Mg-Cu */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              padding: '30px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              border: '2px dashed #354857'
+            }}>
+              <h3 style={{
+                color: '#354857',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                Q3 2025: Aluminum-Magnesium-Copper (Al-Mg-Cu)
+              </h3>
+              <p style={{ color: '#666666', fontSize: '16px', marginBottom: '10px' }}>
+                <strong>Status:</strong> R&D Phase
+              </p>
+              <p style={{ color: '#666666', fontSize: '16px', lineHeight: '1.6' }}>
+                <strong>Enables:</strong> Aerospace-grade metamaterials, high-temperature acoustic stability, 
+                precision frequency targeting, 2x strength improvement
+              </p>
+            </div>
+
+            {/* 2026 - Metal-Metal FGM */}
+            <div style={{
+              backgroundColor: '#ebf0f1',
+              padding: '30px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              textAlign: 'left',
+              border: '2px dashed #999'
+            }}>
+              <h3 style={{
+                color: '#354857',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                2026: Metal-Metal FGMs
+              </h3>
+              <p style={{ color: '#666666', fontSize: '16px', marginBottom: '10px' }}>
+                <strong>Status:</strong> Planning
+              </p>
+              <p style={{ color: '#666666', fontSize: '16px', lineHeight: '1.6' }}>
+                <strong>Enables:</strong> Gradient acoustic impedance within single print, 
+                seamless titanium-aluminum transitions, impossible geometries, 
+                frequency-selective absorption layers
+              </p>
+            </div>
+
+            {/* 2027 - Ultimate FGM */}
+            <div style={{
+              backgroundColor: '#ebf0f1',
+              padding: '30px',
+              borderRadius: '8px',
+              marginBottom: '30px',
+              textAlign: 'left',
+              border: '2px dashed #999',
+              position: 'relative' as const,
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                backgroundColor: '#354857',
+                color: '#ffffff',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                ULTIMATE GOAL
               </div>
-              <div className="modal__body">
-                <section className="bio">
-                  <h3>Background</h3>
-                  <p className="modal__bio">{selectedMember.bio?.full || 'No biography available.'}</p>
-                </section>
-                {selectedMember.bio?.responsibilities && selectedMember.bio.responsibilities.length > 0 && (
-                  <section className="responsibilities">
-                    <h3>Responsibilities</h3>
-                    <ul className="modal__responsibilities">
-                      {selectedMember.bio.responsibilities.map((resp, i) => (
-                        <li key={i}>{resp}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-                {selectedMember.bio?.expertise && selectedMember.bio.expertise.length > 0 && (
-                  <section className="expertise">
-                    <h3>Expertise</h3>
-                    <ul className="modal__expertise">
-                      {selectedMember.bio.expertise.map((exp, i) => (
-                        <li key={i}>{exp}</li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-              {selectedMember.social?.email && (
-                <div className="modal__footer">
-                  <a 
-                    href={`mailto:${selectedMember.social.email}`} 
-                    className="btn btn--primary modal__contact"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.location.href = `mailto:${selectedMember.social?.email}`;
-                    }}
-                  >
-                    Contact
-                  </a>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </>
+              <h3 style={{
+                color: '#354857',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                marginBottom: '10px'
+              }}>
+                2027: Metal-Ceramic-Diamond-Bio FGMs
+              </h3>
+              <p style={{ color: '#666666', fontSize: '16px', marginBottom: '10px' }}>
+                <strong>Status:</strong> Concept
+              </p>
+              <p style={{ color: '#666666', fontSize: '16px', lineHeight: '1.6' }}>
+                <strong>Enables:</strong> Living acoustic materials, self-healing structures, 
+                diamond-hard wear surfaces with metal cores, bio-integrated sensors, 
+                active acoustic response, the impossible becomes possible
+              </p>
+            </div>
+
+            <div style={{
+              backgroundColor: '#ffffff',
+              padding: '20px',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              textAlign: 'center'
+            }}>
+              <p style={{
+                color: '#354857',
+                fontSize: '18px',
+                fontWeight: '600'
+              }}>
+                You're seeing what others won't know for years.
+              </p>
+              <p style={{
+                color: '#666666',
+                fontSize: '16px',
+                marginTop: '10px'
+              }}>
+                Interested in the future of materials?
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Footer - Always visible */}
+      <Footer />
+    </div>
   );
 };
 

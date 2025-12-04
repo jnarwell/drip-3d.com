@@ -20,6 +20,7 @@ from app.api.v1.property_tables import router as property_tables_router
 from app.api.v1.property_table_templates import router as property_table_templates_router
 from app.api.v1.property_tables_enhanced import router as property_tables_enhanced_router
 from app.api.v1.linear import router as linear_router
+from app.api.v1.linear_enhanced import router as linear_enhanced_router
 from app.api.v1.constants import router as constants_router
 from app.api.v1.variables import router as variables_router
 from app.api.v1.formulas import router as formulas_router
@@ -107,6 +108,7 @@ app.include_router(property_tables_router, tags=["property-tables"])
 app.include_router(property_table_templates_router, prefix="/api/v1/property-table-templates", tags=["property-table-templates"])
 app.include_router(property_tables_enhanced_router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
 app.include_router(linear_router, tags=["linear"])
+app.include_router(linear_enhanced_router, tags=["linear-enhanced"])
 app.include_router(variables_router, tags=["variables"])
 app.include_router(formulas_router, tags=["formulas"])
 

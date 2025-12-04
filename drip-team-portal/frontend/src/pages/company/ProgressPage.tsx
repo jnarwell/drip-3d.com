@@ -1,224 +1,335 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navigation from '../../components/company/Navigation';
-import { useScrollAnimation } from '../../hooks/useScrollAnimation';
+import Footer from '../../components/company/Footer';
+import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
+import { useBodyBackground } from './useBodyBackground';
+import { useLinearProgress } from '../../hooks/useLinearData';
 
 const ProgressPage: React.FC = () => {
-  // Initialize scroll animations
-  useScrollAnimation();
+  // Set body background to match top section
+  useBodyBackground('#354857');
+  
+  const section1Content = useFadeInWhenVisible();
+  const section2 = useFadeInWhenVisible();
+  const section3 = useFadeInWhenVisible();
+  
+  const { phases, loading, error } = useLinearProgress();
+  const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set());
+
+  const togglePhase = (phaseNumber: number) => {
+    setExpandedPhases(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(phaseNumber)) {
+        newSet.delete(phaseNumber);
+      } else {
+        newSet.add(phaseNumber);
+      }
+      return newSet;
+    });
+  };
+
+  const formatPhaseName = (fullName: string) => {
+    // Remove "Phase X - " from the beginning
+    return fullName.replace(/^Phase \d+ - /, '');
+  };
+
+  const calculatePhaseProgress = (phase: any) => {
+    if (!phase.projects || phase.projects.length === 0) {
+      return 0;
+    }
+    
+    const totalProgress = phase.projects.reduce((sum: number, project: any) => {
+      // Convert decimal progress to percentage
+      const projectProgress = project.progress * 100;
+      return sum + projectProgress;
+    }, 0);
+    
+    return Math.round(totalProgress / phase.projects.length);
+  };
 
   return (
-    <>
+    <div style={{ 
+      minHeight: '100vh'
+    }}>
       {/* Navigation */}
       <Navigation activePage="progress" />
-
-      {/* Progress Hero */}
-      <section className="progress-hero">
-        <div className="container container--content text-center">
-          <h1 className="animate-fade-in-down">Development Progress</h1>
-          <p className="text-lg mt-lg animate-fade-in-up">Building the future of acoustic deposition manufacturing</p>
-        </div>
-      </section>
-
-      {/* Phase Checklist */}
-      <section className="section">
-        <div className="container">
-          <div className="phase-checklist">
-            <h2 className="text-center mb-xl">Project Phases</h2>
-            
-            {/* Phase 1 */}
-            <div className="phase reveal" data-phase="1">
-              <div className="phase__header">
-                <div className="phase__title">
-                  <span className="phase__icon">1</span>
-                  <span>Phase 1: Design & Planning</span>
-                </div>
-                <div className="phase__date">Aug 27, 2025 - Jan 30, 2026</div>
-              </div>
-              <div className="phase__content">
-                <div className="phase__milestones">
-                  <div className="milestone milestone--complete">
-                    <h4>Requirements Definition</h4>
-                    <p>Completed SR001-SR015 system requirements documentation</p>
-                  </div>
-                  <div className="milestone milestone--complete">
-                    <h4>System Architecture</h4>
-                    <p>Finalized modular architecture with 9 subsystems</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Component Selection</h4>
-                    <p>Select ultrasonic transducers, power systems, and control hardware</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>CAD Design</h4>
-                    <p>Complete preliminary CAD models for all subsystems</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 2 */}
-            <div className="phase reveal" data-phase="2">
-              <div className="phase__header">
-                <div className="phase__title">
-                  <span className="phase__icon">2</span>
-                  <span>Phase 2: Validation</span>
-                </div>
-                <div className="phase__date">Oct 12, 2025 - Feb 28, 2026</div>
-              </div>
-              <div className="phase__content">
-                <div className="phase__milestones">
-                  <div className="milestone">
-                    <h4>Particle Steering</h4>
-                    <p>Demonstrate acoustic steering with styrofoam particles</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Liquid Metal Steering</h4>
-                    <p>Control gallium-indium droplets using acoustic field</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Aluminum Testing</h4>
-                    <p>Initial tests with molten aluminum droplets</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 3 */}
-            <div className="phase reveal" data-phase="3">
-              <div className="phase__header">
-                <div className="phase__title">
-                  <span className="phase__icon">3</span>
-                  <span>Phase 3: Procurement</span>
-                </div>
-                <div className="phase__date">Mar 1 - Apr 26, 2026</div>
-              </div>
-              <div className="phase__content">
-                <div className="phase__milestones">
-                  <div className="milestone">
-                    <h4>Ultrasonic Components</h4>
-                    <p>Order ultrasonic transducers for acoustic array</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Power Electronics</h4>
-                    <p>Acquire MESA induction heater and DC power supplies</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Control Systems</h4>
-                    <p>Purchase NI DAQ, Arduino controllers, and interface boards</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 4 */}
-            <div className="phase reveal" data-phase="4">
-              <div className="phase__header">
-                <div className="phase__title">
-                  <span className="phase__icon">4</span>
-                  <span>Phase 4: Integration</span>
-                </div>
-                <div className="phase__date">Mar 1 - May 10, 2026</div>
-              </div>
-              <div className="phase__content">
-                <div className="phase__milestones">
-                  <div className="milestone">
-                    <h4>Subsystem Assembly</h4>
-                    <p>Assemble and test individual subsystems</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>System Integration</h4>
-                    <p>Integrate all subsystems per ICDs</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Software Development</h4>
-                    <p>Implement control algorithms and user interface</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Phase 5 */}
-            <div className="phase reveal" data-phase="5">
-              <div className="phase__header">
-                <div className="phase__title">
-                  <span className="phase__icon">5</span>
-                  <span>Phase 5: Verification</span>
-                </div>
-                <div className="phase__date">May 11 - Jun 7, 2026</div>
-              </div>
-              <div className="phase__content">
-                <div className="phase__milestones">
-                  <div className="milestone">
-                    <h4>Performance Testing</h4>
-                    <p>Validate all system requirements</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Material Studies</h4>
-                    <p>Test with aluminum, steel, and exotic alloys</p>
-                  </div>
-                  <div className="milestone">
-                    <h4>Optimization</h4>
-                    <p>Refine control algorithms and improve performance</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Upcoming Milestones */}
-      <section className="section">
-        <div className="container container--content">
-          <h2 className="text-center mb-xl">Upcoming Milestones</h2>
-          <div className="grid grid--1">
-            <div className="milestone-card reveal">
-              <div className="milestone-card__date">December 1, 2025</div>
-              <h3>Particle Steering Demonstration</h3>
-              <p>Demonstrate acoustic control of styrofoam particles</p>
-            </div>
-            
-            <div className="milestone-card reveal">
-              <div className="milestone-card__date">January 15, 2026</div>
-              <h3>Liquid Metal Testing</h3>
-              <p>Control gallium-indium droplets using acoustic field</p>
-            </div>
-            
-            <div className="milestone-card reveal">
-              <div className="milestone-card__date">February 28, 2026</div>
-              <h3>Aluminum Testing</h3>
-              <p>Initial tests with molten aluminum droplets</p>
-            </div>
-          </div>
+      
+      {/* Section 1 - Gray Background */}
+      <section style={{ 
+        backgroundColor: '#ebf0f1',
+        padding: '60px 42px'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <h1 style={{ 
+            color: '#354857',
+            marginBottom: '40px',
+            fontSize: '48px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            Development Progress
+          </h1>
           
-          <div className="text-center mt-xl">
-            <p className="text-sm text-muted">Last updated: August 27, 2025</p>
+          {/* Progress content */}
+          <div 
+            ref={section1Content.ref}
+            style={{ 
+              marginTop: '40px',
+              opacity: section1Content.isVisible ? 1 : 0,
+              transition: 'opacity 0.4s ease-in-out'
+            }}>
+            {loading && (
+              <p style={{ color: '#666666', fontSize: '18px', textAlign: 'center' }}>
+                Loading progress data...
+              </p>
+            )}
+            
+            {error && (
+              <p style={{ color: '#666666', fontSize: '18px', textAlign: 'center' }}>
+                Error loading progress data
+              </p>
+            )}
+            
+            {!loading && !error && phases.length === 0 && (
+              <p style={{ color: '#666666', fontSize: '18px', textAlign: 'center' }}>
+                No phases found
+              </p>
+            )}
+            
+            {!loading && !error && phases.map(phase => (
+              <div
+                key={phase.phase}
+                style={{
+                  marginBottom: '12px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                {/* Phase Header */}
+                <button
+                  onClick={() => togglePhase(phase.phase)}
+                  style={{
+                    width: '100%',
+                    padding: '20px 24px',
+                    backgroundColor: '#ffffff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'background-color 0.2s ease',
+                    fontFamily: 'inherit'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8f9fa';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{
+                      width: '35px',
+                      height: '35px',
+                      borderRadius: '50%',
+                      backgroundColor: '#354857',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      fontWeight: 'bold'
+                    }}>
+                      {phase.phase}
+                    </div>
+                    <span style={{
+                      fontSize: '20px',
+                      color: '#354857'
+                    }}>
+                      {formatPhaseName(phase.title)}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span style={{
+                      fontSize: '16px',
+                      color: '#666666'
+                    }}>
+                      {phase.targetDate}
+                    </span>
+                    <svg
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        transform: expandedPhases.has(phase.phase) ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.3s ease',
+                        fill: '#666666'
+                      }}
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                  </div>
+                </button>
+                
+                {/* Expandable Content */}
+                {expandedPhases.has(phase.phase) && (
+                  <div style={{
+                    padding: '24px',
+                    backgroundColor: '#f8f9fa',
+                    borderTop: '1px solid #e9ecef'
+                  }}>
+                    {phase.description && (
+                      <p style={{ 
+                        color: '#666666', 
+                        fontSize: '16px',
+                        fontStyle: 'italic',
+                        textAlign: 'center',
+                        margin: '0 0 24px 0',
+                        lineHeight: '1.6'
+                      }}>
+                        {phase.description}
+                      </p>
+                    )}
+                    
+                    {phase.projects && phase.projects.length > 0 && (
+                      <>
+                        {/* Progress bar */}
+                        <div style={{
+                          marginBottom: '24px'
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            marginBottom: '8px',
+                            fontSize: '14px',
+                            color: '#666666'
+                          }}>
+                            <span>Overall Progress</span>
+                            <span>{calculatePhaseProgress(phase)}%</span>
+                          </div>
+                          <div style={{
+                            width: '100%',
+                            height: '12px',
+                            backgroundColor: '#e9ecef',
+                            borderRadius: '6px',
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${calculatePhaseProgress(phase)}%`,
+                              height: '100%',
+                              backgroundColor: '#354857',
+                              borderRadius: '6px',
+                              transition: 'width 0.3s ease'
+                            }} />
+                          </div>
+                        </div>
+                        
+                        {/* Projects section */}
+                        <div>
+                          <h3 style={{
+                            color: '#354857',
+                            fontSize: '18px',
+                            fontWeight: 'bold',
+                            marginBottom: '16px'
+                          }}>
+                            Projects:
+                          </h3>
+                          
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px'
+                          }}>
+                            {phase.projects
+                              .sort((a: any, b: any) => {
+                                // Sort by targetDate, handling "TBD" and missing dates
+                                if (!a.targetDate || a.targetDate === "TBD") return 1;
+                                if (!b.targetDate || b.targetDate === "TBD") return -1;
+                                
+                                // Parse dates for comparison
+                                const dateA = new Date(a.targetDate);
+                                const dateB = new Date(b.targetDate);
+                                
+                                return dateA.getTime() - dateB.getTime();
+                              })
+                              .map((project: any) => (
+                              <div
+                                key={project.id}
+                                style={{
+                                  backgroundColor: '#ffffff',
+                                  borderRadius: '8px',
+                                  padding: '20px',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                }}
+                              >
+                                <h4 style={{
+                                  color: '#354857',
+                                  fontSize: '16px',
+                                  fontWeight: '600',
+                                  marginBottom: '8px'
+                                }}>
+                                  {project.name}
+                                </h4>
+                                
+                                {project.description && (
+                                  <p style={{
+                                    color: '#666666',
+                                    fontSize: '14px',
+                                    marginBottom: '16px',
+                                    lineHeight: '1.5'
+                                  }}>
+                                    {project.description}
+                                  </p>
+                                )}
+                                
+                                {/* Project progress bar */}
+                                <div>
+                                  <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    marginBottom: '6px',
+                                    fontSize: '13px',
+                                    color: '#666666'
+                                  }}>
+                                    <span>Progress</span>
+                                    <span>{Math.round(project.progress * 100)}%</span>
+                                  </div>
+                                  <div style={{
+                                    width: '100%',
+                                    height: '8px',
+                                    backgroundColor: '#e9ecef',
+                                    borderRadius: '4px',
+                                    overflow: 'hidden'
+                                  }}>
+                                    <div style={{
+                                      width: `${Math.round(project.progress * 100)}%`,
+                                      height: '100%',
+                                      backgroundColor: '#354857',
+                                      borderRadius: '4px',
+                                      transition: 'width 0.3s ease'
+                                    }} />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="site-footer">
-        <div className="container">
-          <div className="footer__content">
-            <div className="footer__section">
-              <h4>Project</h4>
-              <a href="/">Home</a>
-              <a href="/progress">Development Progress</a>
-              <a href="/team">Team</a>
-            </div>
-            <div className="footer__section">
-              <h4>Contact</h4>
-              <p className="text-sm">Email: <a href="mailto:jamie@drip-3d.com" style={{display: 'inline'}}>jamie@drip-3d.com</a><br/>
-              Primary Contact: Jamie Marwell</p>
-            </div>
-          </div>
-          <div className="footer__bottom">
-            <p>&copy; 2025 Drip 3D Inc. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
-    </>
+      <Footer />
+    </div>
   );
 };
 
