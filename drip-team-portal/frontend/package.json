@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server.js"
+    "start": "node simple-server.js"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.8.0",
@@ -23,7 +23,6 @@
     "react-hook-form": "^7.66.0",
     "react-router-dom": "^7.9.5",
     "recharts": "^3.3.0",
-    "serve": "^14.2.5",
     "zod": "^4.1.12",
     "zustand": "^5.0.8"
   },
