@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node simple-server.js"
+    "startCommand": "node simple-server.cjs"
   }
 }
