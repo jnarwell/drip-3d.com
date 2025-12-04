@@ -82,7 +82,6 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...linkStyle,
               fontWeight: activePage === 'home' ? '700' : '500'
             }}
-            onClick={() => console.log('[Navigation] Home clicked')}
           >
             Home
           </Link>
@@ -92,7 +91,6 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...linkStyle,
               fontWeight: activePage === 'progress' ? '700' : '500'
             }}
-            onClick={() => console.log('[Navigation] Progress clicked')}
           >
             Progress
           </Link>
@@ -102,7 +100,6 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...linkStyle,
               fontWeight: activePage === 'team' ? '700' : '500'
             }}
-            onClick={() => console.log('[Navigation] Team clicked')}
           >
             Team
           </Link>
@@ -145,10 +142,7 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...mobileLinkStyle,
               fontWeight: activePage === 'home' ? '700' : '500'
             }}
-            onClick={() => {
-              console.log('[Navigation Mobile] Home clicked');
-              setMobileMenuOpen(false);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Home
           </Link>
@@ -158,10 +152,7 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...mobileLinkStyle,
               fontWeight: activePage === 'progress' ? '700' : '500'
             }}
-            onClick={() => {
-              console.log('[Navigation Mobile] Progress clicked');
-              setMobileMenuOpen(false);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Progress
           </Link>
@@ -171,10 +162,7 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
               ...mobileLinkStyle,
               fontWeight: activePage === 'team' ? '700' : '500'
             }}
-            onClick={() => {
-              console.log('[Navigation Mobile] Team clicked');
-              setMobileMenuOpen(false);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Team
           </Link>

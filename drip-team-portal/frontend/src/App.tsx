@@ -36,14 +36,8 @@ const queryClient = new QueryClient({
 function AppRoutes() {
   const isTeamDomain = useIsTeamDomain();
   
-  // Debug logging
-  console.log('[AppRoutes] Current pathname:', window.location.pathname);
-  console.log('[AppRoutes] Is team domain:', isTeamDomain);
-  console.log('[AppRoutes] Hostname:', window.location.hostname);
-  
   // Company site routes (www.drip-3d.com)
   if (!isTeamDomain) {
-    console.log('[AppRoutes] Rendering company routes');
     return (
       <Routes>
         <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
