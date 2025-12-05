@@ -26,6 +26,26 @@ const TeamPage: React.FC = () => {
 
   return (
     <div style={{ 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      backgroundColor: 'red',
+      color: 'white',
+      fontSize: '48px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999
+    }}>
+      TEAM PAGE IS RENDERING
+    </div>
+  );
+  
+  // TEMPORARY RETURN ABOVE
+  return (
+    <div style={{ 
       minHeight: '100vh',
       backgroundColor: '#354857'
     }}>
