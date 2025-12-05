@@ -9,6 +9,22 @@ import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
 
 const TeamPage: React.FC = () => {
+  // Debug logging
+  console.log('TeamPage rendering');
+  console.log('Window location:', window.location);
+  console.log('Hostname:', window.location.hostname);
+  
+  return (
+    <div style={{ backgroundColor: '#354857', minHeight: '100vh', padding: '60px' }}>
+      <h1 style={{ color: 'white' }}>Team Page Debug</h1>
+      <p style={{ color: 'white' }}>If you see this, the route is working.</p>
+      <p style={{ color: 'white' }}>Hostname: {window.location.hostname}</p>
+      <p style={{ color: 'white' }}>Path: {window.location.pathname}</p>
+    </div>
+  );
+  
+  // TEMPORARY RETURN TO DEBUG
+  
   // Set body background color to match page edges
   useBodyBackground('#354857');
   
