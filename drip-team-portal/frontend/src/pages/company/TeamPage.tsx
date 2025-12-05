@@ -60,13 +60,8 @@ const TeamPage: React.FC = () => {
             maxWidth: '1200px',
             margin: '40px auto 0'
           }}>
-            {teamMembers.map((member) => (
-              <TeamMemberCard
-                key={member.id}
-                member={member}
-                onClick={() => handleTeamMemberClick(member)}
-              />
-            ))}
+            {/* Temporarily comment out team cards for debugging */}
+            <p style={{ color: '#354857' }}>Team member cards temporarily disabled for debugging</p>
           </div>
         </div>
       </section>
@@ -76,106 +71,17 @@ const TeamPage: React.FC = () => {
         backgroundColor: '#354857',
         padding: '60px 42px'
       }}>
-        <div 
-          ref={section2.ref}
-          style={{ 
+        <div style={{ 
             maxWidth: '1200px', 
-            margin: '0 auto',
-            opacity: section2.isVisible ? 1 : 0,
-            transition: 'opacity 0.4s ease-in-out'
+            margin: '0 auto'
           }}>
           <p style={{
             color: '#ffffff',
             fontSize: '18px',
-            textAlign: 'center',
-            maxWidth: '600px',
-            margin: '0 auto 40px',
-            lineHeight: '1.6'
+            textAlign: 'center'
           }}>
-            Interested in learning more about DRIP or collaborating with our team? We'd love to hear from you.
+            Contact form temporarily disabled for debugging
           </p>
-          
-          {/* Contact Form */}
-          <form 
-            id="contact-form"
-            style={{
-            width: '60%',
-            margin: '0 auto'
-          }}>
-            <div style={{ marginBottom: '20px' }}>
-              <input 
-                type="text"
-                placeholder="Name"
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: '#ebf0f1',
-                  color: '#354857'
-                }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '20px' }}>
-              <input 
-                type="email"
-                placeholder="Email"
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: '#ebf0f1',
-                  color: '#354857'
-                }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '20px' }}>
-              <textarea 
-                placeholder="Message"
-                rows={5}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  border: 'none',
-                  borderRadius: '4px',
-                  backgroundColor: '#ebf0f1',
-                  color: '#354857',
-                  resize: 'vertical',
-                  minHeight: '120px'
-                }}
-              />
-            </div>
-            
-            <button 
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '14px 24px',
-                fontSize: '16px',
-                fontWeight: '600',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: '#ebf0f1',
-                color: '#354857',
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Send Message
-            </button>
-          </form>
         </div>
       </section>
 
