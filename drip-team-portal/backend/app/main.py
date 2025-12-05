@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from app.core.config import settings
 from app.db.database import engine
 from app.models import Base
@@ -119,3 +120,12 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "version": "3B-formula-integration", "updated": "2025-11-20 13:03"} # Enabled formula router
+
+# Redirect company site routes to the frontend if they hit the backend
+@app.get("/team")
+async def redirect_team():
+    return RedirectResponse(url="https://www.drip-3d.com/team", status_code=302)
+
+@app.get("/progress")
+async def redirect_progress():
+    return RedirectResponse(url="https://www.drip-3d.com/progress", status_code=302)

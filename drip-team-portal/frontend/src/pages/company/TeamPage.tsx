@@ -9,41 +9,21 @@ import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
 
 const TeamPage: React.FC = () => {
-  console.log('TeamPage rendering - checking hooks');
+  // Set body background color to match page edges
+  useBodyBackground('#354857');
   
-  // Test if hooks are causing the issue - comment them out
-  // useBodyBackground('#354857');
-  // const section2 = useFadeInWhenVisible();
-  // const section3 = useFadeInWhenVisible();
-  // const easterEgg = useFadeInWhenVisible();
+  // Easter egg hook
+  const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
   
-  const isRevealed = false;
-  const scrollAttempts = 0;
+  const section2 = useFadeInWhenVisible();
+  const section3 = useFadeInWhenVisible();
+  const easterEgg = useFadeInWhenVisible();
   
+  // Future: This will open a modal with more details from Linear
   const handleTeamMemberClick = (member: TeamMember) => {
     console.log('Team member clicked:', member.name);
+    // TODO: Open modal with member details, projects from Linear, etc.
   };
-
-  return (
-    <div style={{ 
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      backgroundColor: 'red',
-      color: 'white',
-      fontSize: '48px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 9999
-    }}>
-      TEAM PAGE IS RENDERING
-    </div>
-  );
-  
-  // TEMPORARY RETURN ABOVE
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -77,8 +57,13 @@ const TeamPage: React.FC = () => {
             maxWidth: '1200px',
             margin: '40px auto 0'
           }}>
-            {/* Temporarily comment out team cards for debugging */}
-            <p style={{ color: '#354857' }}>Team member cards temporarily disabled for debugging</p>
+            {teamMembers.map((member) => (
+              <TeamMemberCard
+                key={member.id}
+                member={member}
+                onClick={() => handleTeamMemberClick(member)}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -88,17 +73,106 @@ const TeamPage: React.FC = () => {
         backgroundColor: '#354857',
         padding: '60px 42px'
       }}>
-        <div style={{ 
+        <div 
+          ref={section2.ref}
+          style={{ 
             maxWidth: '1200px', 
-            margin: '0 auto'
+            margin: '0 auto',
+            opacity: section2.isVisible ? 1 : 0,
+            transition: 'opacity 0.4s ease-in-out'
           }}>
           <p style={{
             color: '#ffffff',
             fontSize: '18px',
-            textAlign: 'center'
+            textAlign: 'center',
+            maxWidth: '600px',
+            margin: '0 auto 40px',
+            lineHeight: '1.6'
           }}>
-            Contact form temporarily disabled for debugging
+            Interested in learning more about DRIP or collaborating with our team? We'd love to hear from you.
           </p>
+          
+          {/* Contact Form */}
+          <form 
+            id="contact-form"
+            style={{
+            width: '60%',
+            margin: '0 auto'
+          }}>
+            <div style={{ marginBottom: '20px' }}>
+              <input 
+                type="text"
+                placeholder="Name"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <input 
+                type="email"
+                placeholder="Email"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857'
+                }}
+              />
+            </div>
+            
+            <div style={{ marginBottom: '20px' }}>
+              <textarea 
+                placeholder="Message"
+                rows={5}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#ebf0f1',
+                  color: '#354857',
+                  resize: 'vertical',
+                  minHeight: '120px'
+                }}
+              />
+            </div>
+            
+            <button 
+              type="submit"
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                border: 'none',
+                borderRadius: '4px',
+                backgroundColor: '#ebf0f1',
+                color: '#354857',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              Send Message
+            </button>
+          </form>
         </div>
       </section>
 
