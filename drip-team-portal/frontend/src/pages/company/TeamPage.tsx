@@ -9,38 +9,19 @@ import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
 
 const TeamPage: React.FC = () => {
-  // Debug logging
-  console.log('TeamPage rendering');
-  console.log('Window location:', window.location);
-  console.log('Hostname:', window.location.hostname);
+  console.log('TeamPage rendering - checking hooks');
   
-  return (
-    <div style={{ backgroundColor: '#354857', minHeight: '100vh', padding: '60px' }}>
-      <h1 style={{ color: 'white' }}>Team Page Debug</h1>
-      <p style={{ color: 'white' }}>If you see this, the route is working.</p>
-      <p style={{ color: 'white' }}>Hostname: {window.location.hostname}</p>
-      <p style={{ color: 'white' }}>Path: {window.location.pathname}</p>
-    </div>
-  );
+  // Test if hooks are causing the issue - comment them out
+  // useBodyBackground('#354857');
+  // const section2 = useFadeInWhenVisible();
+  // const section3 = useFadeInWhenVisible();
+  // const easterEgg = useFadeInWhenVisible();
   
-  // TEMPORARY RETURN TO DEBUG
-  
-  // Set body background color to match page edges
-  useBodyBackground('#354857');
-  
-  // Easter egg hook - disabled for debugging
-  // const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
   const isRevealed = false;
   const scrollAttempts = 0;
   
-  const section2 = useFadeInWhenVisible();
-  const section3 = useFadeInWhenVisible();
-  const easterEgg = useFadeInWhenVisible();
-  
-  // Future: This will open a modal with more details from Linear
   const handleTeamMemberClick = (member: TeamMember) => {
     console.log('Team member clicked:', member.name);
-    // TODO: Open modal with member details, projects from Linear, etc.
   };
 
   return (
