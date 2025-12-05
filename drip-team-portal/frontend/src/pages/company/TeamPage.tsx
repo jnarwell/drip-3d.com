@@ -1,9 +1,9 @@
 import React from 'react';
 import Navigation from '../../components/company/Navigation';
 import Footer from '../../components/company/Footer';
-import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
+// import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
 import { useBodyBackground } from './useBodyBackground';
-import { useScrollEasterEgg } from '../../hooks/useScrollEasterEgg';
+// import { useScrollEasterEgg } from '../../hooks/useScrollEasterEgg';
 import { teamMembers } from '../../data/teamMembers';
 import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
@@ -12,12 +12,12 @@ const TeamPage: React.FC = () => {
   // Set body background color to match page edges
   useBodyBackground('#354857');
   
-  // Easter egg hook
-  const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
-  
-  const section2 = useFadeInWhenVisible();
-  const section3 = useFadeInWhenVisible();
-  const easterEgg = useFadeInWhenVisible();
+  // Temporarily disable hooks that might cause issues
+  const isRevealed = false;
+  const scrollAttempts = 0;
+  const section2 = { ref: null, isVisible: true };
+  const section3 = { ref: null, isVisible: true };
+  const easterEgg = { ref: null, isVisible: true };
   
   // Future: This will open a modal with more details from Linear
   const handleTeamMemberClick = (member: TeamMember) => {
