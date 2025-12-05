@@ -12,8 +12,10 @@ const TeamPage: React.FC = () => {
   // Set body background color to match page edges
   useBodyBackground('#354857');
   
-  // Easter egg hook
-  const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
+  // Easter egg hook - disabled for debugging
+  // const { isRevealed, scrollAttempts } = useScrollEasterEgg(15);
+  const isRevealed = false;
+  const scrollAttempts = 0;
   
   const section2 = useFadeInWhenVisible();
   const section3 = useFadeInWhenVisible();
