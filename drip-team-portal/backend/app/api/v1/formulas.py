@@ -619,13 +619,20 @@ async def create_formula_from_expression(
         if validation.is_valid:
             # Update the component property to use this formula
             component_prop = db.query(ComponentProperty).get(property_id)
+            logger.info(f"Fetched component property {property_id}: exists={component_prop is not None}")
             if component_prop:
+                logger.info(f"Property before update: formula_id={component_prop.formula_id}, is_calculated={component_prop.is_calculated}")
                 component_prop.formula_id = formula.id
                 component_prop.is_calculated = True
                 component_prop.calculation_status = "pending"
                 
                 # Try to calculate immediately
                 logger.info(f"Attempting to calculate formula for property {property_id}")
+                logger.info(f"Component property details: comp_id={component_prop.component_id}, formula_id={formula.id}")
+                
+                # Ensure the property has the formula_id set before calculation
+                db.flush()  # Ensure changes are visible to the formula engine
+                
                 calc_result = engine.calculate_property(component_prop)
                 if calc_result.success:
                     logger.info(f"Formula calculated successfully: {calc_result.value}")
@@ -634,8 +641,14 @@ async def create_formula_from_expression(
                 else:
                     component_prop.calculation_status = "error"
                     logger.error(f"Calculation failed: {calc_result.error_message}")
+                    logger.error(f"Calculation inputs: {calc_result.input_values}")
         
         db.commit()
+        
+        # Log the final state
+        if validation.is_valid and component_prop:
+            db.refresh(component_prop)  # Get the latest state from DB
+            logger.info(f"Final property state: formula_id={component_prop.formula_id}, is_calculated={component_prop.is_calculated}, status={component_prop.calculation_status}")
         
         return {
             "id": formula.id,
