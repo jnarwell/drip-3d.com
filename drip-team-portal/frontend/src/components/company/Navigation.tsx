@@ -38,7 +38,8 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    position: 'relative' as const
+    position: 'relative' as const,
+    zIndex: 1000
   };
 
   const logoStyle = {
@@ -134,7 +135,8 @@ const Navigation: React.FC<NavigationProps> = ({ activePage }) => {
           left: 0,
           right: 0,
           backgroundColor: '#354857',
-          boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+          zIndex: 9999
         }}>
           <Link 
             to="/" 
