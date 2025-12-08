@@ -524,7 +524,7 @@ async def create_formula_from_expression(
                     "reference_type": ReferenceType.COMPONENT_PROPERTY.value,
                     "target_component_id": target_component.id,
                     "target_property_definition_id": prop_def.id,
-                    "description": f"Reference to {target_comp_id_str}.{prop_name}"
+                    "description": f"Reference to {target_comp_id_str}.{prop_def.name}"
                 })
             else:
                 # Could be material property or constant
