@@ -7,13 +7,17 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 const Dashboard: React.FC = () => {
   const api = useAuthenticatedApi();
   
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
+  const { data: stats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: async () => {
       const response = await api.get('/api/v1/reports/dashboard-stats');
       return response.data;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: 1,
+    onError: (error) => {
+      console.error('Failed to load dashboard stats:', error);
+    },
   });
 
   const { data: recentActivity } = useQuery({
@@ -28,6 +32,23 @@ const Dashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-2">⚠️ Failed to load dashboard</div>
+          <p className="text-gray-600">Please try refreshing the page or contact support.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            Refresh Page
+          </button>
+        </div>
       </div>
     );
   }

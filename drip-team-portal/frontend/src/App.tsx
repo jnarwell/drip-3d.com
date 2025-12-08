@@ -21,6 +21,7 @@ import HomePage from './pages/company/HomePage';
 import ProgressPage from './pages/company/ProgressPage';
 import TeamPage from './pages/company/TeamPage';
 import ErrorBoundary from './components/ErrorBoundary';
+import TeamPortalErrorBoundary from './components/TeamPortalErrorBoundary';
 
 import './App.css';
 
@@ -50,31 +51,33 @@ function AppRoutes() {
   
   // Team portal routes (team.drip-3d.com)
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/"
-        element={
-          <DomainAwareProtectedRoute>
-            <Layout />
-          </DomainAwareProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="/dashboard" />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="components" element={<ComponentRegistry />} />
-        <Route path="components/:componentId" element={<ComponentDetailPage />} />
-        <Route path="tests" element={<TestCampaign />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="resources" element={<Resources />}>
-          <Route index element={<Navigate to="/resources/property-tables" />} />
-          <Route path="property-tables" element={<PropertyTables />} />
-          <Route path="constants" element={<Constants />} />
-          <Route path="templates" element={<Templates />} />
+    <TeamPortalErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            <DomainAwareProtectedRoute>
+              <Layout />
+            </DomainAwareProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="/dashboard" />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="components" element={<ComponentRegistry />} />
+          <Route path="components/:componentId" element={<ComponentDetailPage />} />
+          <Route path="tests" element={<TestCampaign />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="resources" element={<Resources />}>
+            <Route index element={<Navigate to="/resources/property-tables" />} />
+            <Route path="property-tables" element={<PropertyTables />} />
+            <Route path="constants" element={<Constants />} />
+            <Route path="templates" element={<Templates />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </TeamPortalErrorBoundary>
   );
 }
 
