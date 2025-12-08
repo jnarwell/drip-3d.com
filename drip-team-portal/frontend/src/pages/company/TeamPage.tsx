@@ -4,6 +4,7 @@ import Footer from '../../components/company/Footer';
 import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
 import { useBodyBackground } from './useBodyBackground';
 import { useScrollEasterEgg } from '../../hooks/useScrollEasterEgg';
+import { useMobile } from '../../hooks/useMobile';
 import { teamMembers } from '../../data/teamMembers';
 import { TeamMember } from '../../types/TeamMember';
 import TeamMemberCard from '../../components/company/TeamMemberCard';
@@ -18,6 +19,9 @@ const TeamPage: React.FC = () => {
   const section2 = useFadeInWhenVisible();
   const section3 = useFadeInWhenVisible();
   const easterEgg = useFadeInWhenVisible();
+  
+  // Mobile detection
+  const isMobile = useMobile();
   
   // Future: This will open a modal with more details from Linear
   const handleTeamMemberClick = (member: TeamMember) => {
@@ -35,13 +39,13 @@ const TeamPage: React.FC = () => {
       {/* Section 1 - Gray Background (Team Members) */}
       <section style={{ 
         backgroundColor: '#ebf0f1',
-        padding: '60px 42px'
+        padding: isMobile ? '40px 20px' : '60px 42px'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <h1 style={{ 
             color: '#354857',
-            marginBottom: '40px',
-            fontSize: '48px',
+            marginBottom: isMobile ? '30px' : '40px',
+            fontSize: isMobile ? '32px' : '48px',
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
@@ -51,11 +55,11 @@ const TeamPage: React.FC = () => {
           {/* Team member cards container - max 3 per row */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '30px',
-            marginTop: '40px',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: isMobile ? '20px' : '30px',
+            marginTop: isMobile ? '30px' : '40px',
             maxWidth: '1200px',
-            margin: '40px auto 0'
+            margin: isMobile ? '30px auto 0' : '40px auto 0'
           }}>
             {teamMembers.map((member) => (
               <TeamMemberCard
@@ -71,7 +75,7 @@ const TeamPage: React.FC = () => {
       {/* Section 2 - Blue Background (Placeholder) */}
       <section style={{ 
         backgroundColor: '#354857',
-        padding: '60px 42px'
+        padding: isMobile ? '40px 20px' : '60px 42px'
       }}>
         <div 
           ref={section2.ref}
@@ -96,7 +100,7 @@ const TeamPage: React.FC = () => {
           <form 
             id="contact-form"
             style={{
-            width: '60%',
+            width: isMobile ? '100%' : '60%',
             margin: '0 auto'
           }}>
             <div style={{ marginBottom: '20px' }}>
@@ -183,7 +187,7 @@ const TeamPage: React.FC = () => {
           style={{ 
             minHeight: '100vh',
             backgroundColor: '#ebf0f1',
-            padding: '60px 42px',
+            padding: isMobile ? '40px 20px' : '60px 42px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'

@@ -3,6 +3,7 @@ import Navigation from '../../components/company/Navigation';
 import Footer from '../../components/company/Footer';
 import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
 import { useBodyBackground } from './useBodyBackground';
+import { useMobile } from '../../hooks/useMobile';
 
 const HomePage: React.FC = () => {
   // Set body background to match top section
@@ -11,6 +12,9 @@ const HomePage: React.FC = () => {
   const section1Content = useFadeInWhenVisible();
   const section2 = useFadeInWhenVisible();
   const section3 = useFadeInWhenVisible();
+  
+  // Mobile detection
+  const isMobile = useMobile();
 
   return (
     <div style={{ 
@@ -22,13 +26,13 @@ const HomePage: React.FC = () => {
       {/* Section 1 - Gray Background */}
       <section style={{ 
         backgroundColor: '#ebf0f1',
-        padding: '60px 42px'
+        padding: isMobile ? '40px 20px' : '60px 42px'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
           <h1 style={{ 
             color: '#354857',
             marginBottom: '20px',
-            fontSize: '48px',
+            fontSize: isMobile ? '36px' : '48px',
             fontWeight: 'bold',
             textAlign: 'center'
           }}>
@@ -39,7 +43,7 @@ const HomePage: React.FC = () => {
             ref={section1Content.ref}
             style={{
               color: '#666666',
-              fontSize: '24px',
+              fontSize: isMobile ? '20px' : '24px',
               fontStyle: 'italic',
               opacity: section1Content.isVisible ? 1 : 0,
               transition: 'opacity 0.4s ease-in-out'
@@ -52,7 +56,7 @@ const HomePage: React.FC = () => {
       {/* Section 2 - Blue Background */}
       <section style={{ 
         backgroundColor: '#354857',
-        padding: '60px 42px'
+        padding: isMobile ? '40px 20px' : '60px 42px'
       }}>
         <div 
           ref={section2.ref}
@@ -65,10 +69,10 @@ const HomePage: React.FC = () => {
         >
           <h2 style={{ 
             color: '#ffffff',
-            fontSize: '36px',
+            fontSize: isMobile ? '28px' : '36px',
             fontWeight: 'bold',
             textAlign: 'center',
-            marginBottom: '40px'
+            marginBottom: isMobile ? '30px' : '40px'
           }}>
             L1 System Capabilities
           </h2>
@@ -76,8 +80,8 @@ const HomePage: React.FC = () => {
           {/* Capabilities Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '30px',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile ? '20px' : '30px',
             maxWidth: '1080px',
             margin: '0 auto'
           }}>
