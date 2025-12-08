@@ -102,6 +102,41 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
     const newValue = e.target.value;
     const cursorPos = e.target.selectionStart || 0;
     
+    // Debug logging
+    console.log('FormulaInput handleInputChange:', {
+      newValue,
+      cursorPos,
+      previousValue: value,
+      charAdded: newValue.length > value.length ? newValue[cursorPos - 1] : null
+    });
+    
+    // Prevent typing # in the middle of a property name
+    if (newValue.length > value.length && newValue[cursorPos - 1] === '#') {
+      // Check if we're in the middle of a property name
+      const beforeHash = newValue.substring(0, cursorPos - 1);
+      const lastDot = beforeHash.lastIndexOf('.');
+      const lastSpace = beforeHash.lastIndexOf(' ');
+      const lastOperator = Math.max(
+        beforeHash.lastIndexOf('+'),
+        beforeHash.lastIndexOf('-'),
+        beforeHash.lastIndexOf('*'),
+        beforeHash.lastIndexOf('/'),
+        beforeHash.lastIndexOf('('),
+        beforeHash.lastIndexOf(')'),
+        -1
+      );
+      
+      // If there's a dot after the last space/operator, we're in a property name
+      if (lastDot > lastSpace && lastDot > lastOperator) {
+        console.warn('Preventing # in middle of property name');
+        // Remove the # that was just typed
+        const fixedValue = newValue.slice(0, cursorPos - 1) + newValue.slice(cursorPos);
+        onChange(fixedValue);
+        setHasUserTyped(true);
+        return;
+      }
+    }
+    
     onChange(newValue);
     setHasUserTyped(true);
     
@@ -118,18 +153,26 @@ export const FormulaInput: React.FC<FormulaInputProps> = ({
       const beforeCursor = value.substring(0, cursorPos);
       const afterCursor = value.substring(cursorPos);
       
-      // Insert the suggestion
-      // Add # prefix if not already present
-      const needsPrefix = !beforeCursor.endsWith('#');
-      const prefix = needsPrefix ? '#' : '';
-      const newValue = beforeCursor + prefix + suggestion + afterCursor;
+      console.log('FormulaInput Tab completion:', {
+        value,
+        cursorPos,
+        beforeCursor,
+        afterCursor,
+        suggestion
+      });
+      
+      // Simply append the suggestion without adding # prefix
+      // The # should already be in the right place from user typing
+      const newValue = beforeCursor + suggestion + afterCursor;
+      
+      console.log('FormulaInput Tab result:', newValue);
+      
       onChange(newValue);
       setSuggestion('');
       
       // Move cursor after the completed text
       setTimeout(() => {
-        const prefixLength = needsPrefix ? 1 : 0;
-        const newPos = cursorPos + prefixLength + suggestion.length;
+        const newPos = cursorPos + suggestion.length;
         inputRef.current?.setSelectionRange(newPos, newPos);
         inputRef.current?.focus();
       }, 0);

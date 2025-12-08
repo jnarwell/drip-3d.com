@@ -128,6 +128,14 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     const values: any = {};
     const baseUnit = property.property_definition.unit;
     
+    // Check for malformed expressions with # in the middle of property names
+    const malformedPattern = /#\w+\.\w*#\w*/;
+    if (malformedPattern.test(inputValue)) {
+      alert('Invalid formula: Property names cannot contain # characters. Example: #cmp002.length (not #cmp002.le#ngth)');
+      console.error('Malformed formula detected:', inputValue);
+      return;
+    }
+    
     // Check if the input contains variable references or formulas
     if (hasVariableReferences(inputValue) || isFormula(inputValue)) {
       try {

@@ -458,29 +458,66 @@ async def create_formula_from_expression(
                     raise ValueError(f"Component not found: {target_comp_id_str}")
                 
                 # Extract property name
-                prop_name = full_match.split('.')[1]
-                # Convert to title case with spaces: length -> Length, youngsModulus -> Young's Modulus
-                prop_name = re.sub(r'(?<!^)(?=[A-Z])', ' ', prop_name).title()
+                prop_name_raw = full_match.split('.')[1]
                 
-                # Find property definition
+                # Try multiple strategies to find the property definition
+                prop_def = None
+                tried_names = []
+                
+                # Strategy 1: Try exact match (case insensitive)
                 prop_def = db.query(PropertyDefinition).filter(
-                    PropertyDefinition.name.ilike(prop_name)
+                    PropertyDefinition.name.ilike(prop_name_raw)
                 ).first()
+                tried_names.append(prop_name_raw)
                 
+                # Strategy 2: Convert camelCase to Title Case with spaces
                 if not prop_def:
-                    # Try exact match without case conversion
+                    # length -> Length, youngsModulus -> Young's Modulus
+                    prop_name_title = re.sub(r'(?<!^)(?=[A-Z])', ' ', prop_name_raw).title()
+                    # Special case for "Young's Modulus"
+                    prop_name_title = prop_name_title.replace("Young S ", "Young's ")
                     prop_def = db.query(PropertyDefinition).filter(
-                        PropertyDefinition.name.ilike(full_match.split('.')[1])
+                        PropertyDefinition.name.ilike(prop_name_title)
                     ).first()
+                    tried_names.append(prop_name_title)
+                
+                # Strategy 3: Simple title case
+                if not prop_def:
+                    prop_name_simple = prop_name_raw.title()
+                    prop_def = db.query(PropertyDefinition).filter(
+                        PropertyDefinition.name.ilike(prop_name_simple)
+                    ).first()
+                    tried_names.append(prop_name_simple)
+                
+                # Strategy 4: Check for common property name patterns
+                if not prop_def:
+                    # Map common abbreviations to full names
+                    property_map = {
+                        'length': 'Length',
+                        'width': 'Width', 
+                        'height': 'Height',
+                        'density': 'Density',
+                        'youngsmodulus': "Young's Modulus",
+                        'youngs_modulus': "Young's Modulus",
+                        'elasticmodulus': 'Elastic Modulus',
+                        'elastic_modulus': 'Elastic Modulus'
+                    }
+                    normalized_name = prop_name_raw.lower().replace('_', '')
+                    if normalized_name in property_map:
+                        mapped_name = property_map[normalized_name]
+                        prop_def = db.query(PropertyDefinition).filter(
+                            PropertyDefinition.name == mapped_name
+                        ).first()
+                        tried_names.append(mapped_name)
                     
                 if not prop_def:
                     # Log available property definitions for debugging
                     all_props = db.query(PropertyDefinition).all()
                     prop_names = [p.name for p in all_props]
-                    logger.error(f"Property definition not found: {prop_name}")
-                    logger.error(f"Tried: {prop_name} and {full_match.split('.')[1]}")
+                    logger.error(f"Property definition not found for: {prop_name_raw}")
+                    logger.error(f"Tried names: {tried_names}")
                     logger.error(f"Available properties: {prop_names}")
-                    raise ValueError(f"Property definition not found: {prop_name}")
+                    raise ValueError(f"Property definition not found: {prop_name_raw}. Available: {', '.join(prop_names[:10])}...")
                 
                 references.append({
                     "variable_name": var_name,
