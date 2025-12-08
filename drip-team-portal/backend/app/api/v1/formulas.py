@@ -618,10 +618,10 @@ async def create_formula_from_expression(
         
         if validation.is_valid:
             # Update the component property to use this formula
-            component_prop = db.query(ComponentProperty).get(property_id)
+            component_prop = db.query(ComponentProperty).filter(ComponentProperty.id == property_id).first()
             logger.info(f"Fetched component property {property_id}: exists={component_prop is not None}")
             if component_prop:
-                logger.info(f"Property before update: formula_id={component_prop.formula_id}, is_calculated={component_prop.is_calculated}")
+                logger.info(f"Property before update: formula_id={component_prop.formula_id}, is_calculated={component_prop.is_calculated}, component_id={component_prop.component_id}")
                 component_prop.formula_id = formula.id
                 component_prop.is_calculated = True
                 component_prop.calculation_status = "pending"
@@ -813,6 +813,35 @@ async def recalculate_property_formula(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error recalculating property: {str(e)}"
         )
+
+
+@router.get("/debug/property/{property_id}")
+async def debug_property_formula(
+    property_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Debug endpoint to check property formula state"""
+    component_prop = db.query(ComponentProperty).filter(ComponentProperty.id == property_id).first()
+    if not component_prop:
+        return {"error": "Property not found"}
+    
+    formula = None
+    if component_prop.formula_id:
+        formula = db.query(PropertyFormula).filter(PropertyFormula.id == component_prop.formula_id).first()
+    
+    return {
+        "property_id": property_id,
+        "is_calculated": component_prop.is_calculated,
+        "formula_id": component_prop.formula_id,
+        "calculation_status": component_prop.calculation_status,
+        "single_value": component_prop.single_value,
+        "formula_exists": formula is not None,
+        "formula_expression": formula.formula_expression if formula else None,
+        "formula_name": formula.name if formula else None,
+        "component_id": component_prop.component_id,
+        "property_definition_id": component_prop.property_definition_id
+    }
 
 
 @router.post("/recalculate-dependents/{property_id}")
