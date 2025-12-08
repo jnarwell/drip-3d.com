@@ -15,9 +15,6 @@ const Dashboard: React.FC = () => {
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     retry: 1,
-    onError: (error) => {
-      console.error('Failed to load dashboard stats:', error);
-    },
   });
 
   const { data: recentActivity } = useQuery({
@@ -73,7 +70,7 @@ const Dashboard: React.FC = () => {
           <div>
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>Components Verified</span>
-              <span>{stats?.componentsVerified}/{stats?.totalComponents}</span>
+              <span>{stats?.componentsVerified || 0}/{stats?.totalComponents || 0}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -88,7 +85,7 @@ const Dashboard: React.FC = () => {
           <div>
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>Tests Complete</span>
-              <span>{stats?.testsComplete}/{stats?.totalTests}</span>
+              <span>{stats?.testsComplete || 0}/{stats?.totalTests || 0}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -146,7 +143,7 @@ const Dashboard: React.FC = () => {
                 innerRadius={60}
                 outerRadius={80}
               >
-                {stats?.componentsByStatus?.map((entry, index) => (
+                {stats?.componentsByStatus?.map((entry: { status: string; count: number }, index: number) => (
                   <Cell key={`cell-${index}`} fill={getStatusColor(entry.status)} />
                 ))}
               </Pie>
@@ -164,7 +161,7 @@ const Dashboard: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Critical Path</h2>
           <p className="text-sm text-gray-600 mb-3">Next tests required for progress</p>
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {stats?.criticalPath?.map((test) => (
+            {stats?.criticalPath?.map((test: any) => (
               <div key={test.id} className="flex items-center justify-between p-2 border rounded">
                 <div>
                   <span className="font-mono text-sm">{test.test_id}</span>
@@ -186,7 +183,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Risk Assessment</h2>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {stats?.risks?.map((risk, index) => (
+            {stats?.risks?.map((risk: any, index: number) => (
               <div key={index} className="border rounded p-3">
                 <div className="flex items-start justify-between">
                   <h3 className="text-sm font-medium text-gray-900">{risk.category}</h3>
