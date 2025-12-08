@@ -4,9 +4,11 @@
 
 **Issue**: Accessing `https://www.drip-3d.com/team` directly in the browser results in a connection timeout/502 error, but navigating to the Team page via the navigation bar works correctly.
 
-**Status**: Active
+**Status**: Active - Partially Resolved
 
 **Discovered**: 2024-12-04
+
+**Last Updated**: 2024-12-04
 
 **Details**:
 - The `/team` route fails when accessed directly via URL
@@ -18,8 +20,9 @@
 **Investigation Summary**:
 - Confirmed the issue is not in the React code (component renders in console)
 - Not related to custom React hooks (disabling them didn't fix it)
-- Appears to be a Railway routing/deployment issue
-- Possibly related to how Railway handles path-based routing between services
+- Found and removed conflicting `/team/` directory in `public/assets/images/team/`
+- Issue persists after removing the directory conflict
+- Appears to be a deeper Railway routing/deployment issue
 
 **Workaround**: Users can access the Team page by:
 1. Going to the homepage first: `https://www.drip-3d.com`
@@ -31,8 +34,9 @@
 3. ✗ Disabled React hooks (scroll easter egg, fade-in animations)
 4. ✗ Added backend redirect handlers
 5. ✗ Simplified TeamPage component to minimal version
+6. ✓ Removed conflicting `/team/` directory (partial fix)
 
-**Root Cause**: Unknown - likely Railway infrastructure routing issue where `/team` requests are not properly routed to the frontend service.
+**Root Cause**: Partially identified - there was a conflicting `/team/` directory that has been removed. However, the issue persists, suggesting a deeper Railway infrastructure routing issue.
 
 ---
 

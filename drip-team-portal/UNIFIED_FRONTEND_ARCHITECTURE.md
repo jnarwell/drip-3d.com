@@ -85,14 +85,14 @@ All assets are stored in the frontend's public folder and shared between both si
 ```
 frontend/public/
 ├── assets/
-│   ├── css/          # Shared stylesheets
-│   ├── images/       # Shared images
-│   │   ├── team/     # Team photos
-│   │   └── system/   # System diagrams
-│   └── data/         # JSON data files
-│       ├── team.json
-│       ├── milestones.json
-│       └── specs.json
+│   ├── css/          # Legacy stylesheets (being phased out)
+│   └── images/       # Shared images
+│       └── system/   # System diagrams
+├── team-images/      # Team member photos (renamed from /team/)
+└── data/            # JSON data files
+    ├── team-data.json   # Team member data
+    ├── milestones.json
+    └── specs.json
 ```
 
 ### Component Reusability
@@ -171,6 +171,42 @@ VITE_API_URL=http://localhost:8000
 VITE_API_URL=https://backend-production-aa29.up.railway.app
 ```
 
+## Styling Architecture
+
+### Inline Styles Approach
+
+The company pages (HomePage, TeamPage, ProgressPage) use inline styles for:
+- Better component encapsulation
+- Easier dynamic styling
+- Reduced CSS conflicts
+- Simplified deployment
+
+### Mobile Responsiveness
+
+Mobile support is implemented through:
+
+```typescript
+// hooks/useMobile.tsx
+export const useMobile = (breakpoint: number = 768) => {
+  const [isMobile, setIsMobile] = useState(false);
+  // ... responsive logic
+};
+```
+
+Key responsive features:
+- Navigation collapses to hamburger menu
+- Grid layouts stack on mobile
+- Font sizes scale appropriately
+- Padding/margins adjust for mobile
+
+### Custom Hooks
+
+Company pages utilize several custom hooks:
+- `useBodyBackground`: Sets page-specific body colors
+- `useFadeInWhenVisible`: Intersection Observer for animations
+- `useScrollEasterEgg`: Hidden content on repeated scrolling
+- `useMobile`: Responsive design detection
+
 ## Migration from Static Site
 
 ### What Changed
@@ -179,6 +215,7 @@ VITE_API_URL=https://backend-production-aa29.up.railway.app
 2. **Vanilla JS → React Hooks**: Interactive features reimplemented with React patterns
 3. **Static Assets → Public Folder**: All assets moved to React public directory
 4. **Multiple Files → Single SPA**: Three HTML files became one React app
+5. **CSS Files → Inline Styles**: Company pages now use inline styles
 
 ### Preserved Features
 
@@ -224,6 +261,24 @@ console.log('Is team domain:', window.location.hostname);
 localStorage.setItem('forceDomain', 'team'); // or 'public'
 ```
 
+## Recent Updates (December 2024)
+
+### Company Pages Enhancement
+- Added alternating section backgrounds (gray/blue pattern)
+- Implemented fade-in animations for content sections
+- Created scroll-triggered easter egg on Team page
+- Added mobile responsiveness to all company pages
+
+### Infrastructure Changes
+- Fixed navigation Link components for proper React Router usage
+- Resolved `/team/` directory conflict causing route issues
+- Updated nginx configuration for SPA routing
+- Enhanced mobile navigation with proper z-index layering
+
+### Known Issues
+- Direct URL access to `/team` route fails (see docs/KNOWN_ISSUES.md)
+- Workaround: Navigate via homepage and click Team link
+
 ---
 
-Last Updated: December 2, 2025
+Last Updated: December 4, 2024
