@@ -103,7 +103,7 @@ Project management integration for progress tracking and test result synchroniza
 │                    Frontend (React)                       │
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
 │  │Company Pages│  │ Team Portal  │  │ Material UI   │  │
-│  │  (Legacy CSS)│  │  (Tailwind)  │  │  Components   │  │
+│  │(Inline CSS) │  │  (Tailwind)  │  │  Components   │  │
 │  └─────────────┘  └──────────────┘  └───────────────┘  │
 └────────────────────────┬────────────────────────────────┘
                          │ API Calls
@@ -157,6 +157,9 @@ POST /api/v1/enhanced/property-tables/import-from-document
 ```
 GET  /api/v1/linear/progress
 POST /api/v1/linear/refresh
+GET  /api/v1/linear-enhanced/team-members
+GET  /api/v1/linear-enhanced/member/{id}/projects
+POST /api/v1/linear-enhanced/refresh-all
 ```
 
 ## Development Guidelines
@@ -207,11 +210,17 @@ When working with these systems:
 
 ---
 
-*Last Updated: December 4, 2025*
-*Documentation Version: 1.1.0*
+*Last Updated: December 14, 2025*
+*Documentation Version: 1.2.0*
 *Platform: DRIP Acoustic Manufacturing System*
 
 ## Recent Updates
+
+### December 14, 2025 (v1.2.0)
+- **Documentation Audit**: Aligned docs with current application state
+- **Reports Router**: Now enabled for dashboard stats
+- **Linear Enhanced API**: Documented team member endpoints
+- **Known Issues Updated**: Confirmed /team URL issue still active
 
 ### December 4, 2025 (v1.1.0)
 - **Company Pages Rebuilt**: Migrated from hybrid CSS to inline styles

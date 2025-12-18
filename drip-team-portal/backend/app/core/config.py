@@ -1,5 +1,36 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from pathlib import Path
+
+# Find the .env file - check current dir, parent dirs, and common locations
+def find_env_file():
+    current = Path.cwd()
+
+    # Check current dir and up to 3 levels up
+    check_dir = current
+    for _ in range(4):
+        env_path = check_dir / ".env"
+        if env_path.exists():
+            return str(env_path)
+        check_dir = check_dir.parent
+
+    # Check common subdirectories (for when running from parent dir)
+    for subdir in ["drip-team-portal", "backend", "drip-team-portal/backend"]:
+        env_path = current / subdir / ".env"
+        if env_path.exists():
+            return str(env_path)
+
+    # Check relative to this file's location
+    config_dir = Path(__file__).parent  # app/core/
+    backend_dir = config_dir.parent.parent  # backend/
+    portal_dir = backend_dir.parent  # drip-team-portal/
+
+    for check_dir in [backend_dir, portal_dir]:
+        env_path = check_dir / ".env"
+        if env_path.exists():
+            return str(env_path)
+
+    return ".env"  # Fallback to default
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "DRIP Team Portal"
@@ -33,6 +64,7 @@ class Settings(BaseSettings):
     ALLOWED_EMAIL_DOMAIN: str = "@drip-3d.com"
     
     class Config:
-        env_file = ".env"
+        env_file = find_env_file()
+        extra = "ignore"  # Ignore extra fields from .env (like VITE_* frontend vars)
 
 settings = Settings()

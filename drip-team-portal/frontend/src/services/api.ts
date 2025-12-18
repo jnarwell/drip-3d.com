@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 
-// Force HTTPS for production Railway deployment
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace('http://', 'https://');
+// Use HTTPS for production, HTTP for localhost
+const rawApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = rawApiUrl.includes('localhost') ? rawApiUrl : rawApiUrl.replace('http://', 'https://');
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -12,12 +13,12 @@ export const api = axios.create({
   },
 });
 
-// Force ALL requests to use HTTPS (fix for persistent Mixed Content issues)
+// Force HTTPS for production (but allow HTTP for localhost)
 api.interceptors.request.use((config) => {
-  if (config.baseURL && config.baseURL.startsWith('http://')) {
+  if (config.baseURL && config.baseURL.startsWith('http://') && !config.baseURL.includes('localhost')) {
     config.baseURL = config.baseURL.replace('http://', 'https://');
   }
-  if (config.url && config.url.startsWith('http://')) {
+  if (config.url && config.url.startsWith('http://') && !config.url.includes('localhost')) {
     config.url = config.url.replace('http://', 'https://');
   }
   return config;
@@ -35,11 +36,11 @@ export const useAuthenticatedApi = () => {
   });
 
   authenticatedApi.interceptors.request.use(async (config) => {
-    // Force HTTPS for authenticated requests too
-    if (config.baseURL && config.baseURL.startsWith('http://')) {
+    // Force HTTPS for production (but allow HTTP for localhost)
+    if (config.baseURL && config.baseURL.startsWith('http://') && !config.baseURL.includes('localhost')) {
       config.baseURL = config.baseURL.replace('http://', 'https://');
     }
-    if (config.url && config.url.startsWith('http://')) {
+    if (config.url && config.url.startsWith('http://') && !config.url.includes('localhost')) {
       config.url = config.url.replace('http://', 'https://');
     }
     

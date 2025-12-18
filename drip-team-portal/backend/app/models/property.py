@@ -54,14 +54,10 @@ class ComponentProperty(Base):
     max_value = Column(Float)
     average_value = Column(Float)
     tolerance = Column(Float)
-    
-    # Formula-based calculation fields - STEP 3A: Re-enabled with clean database
-    is_calculated = Column(Boolean, default=False)  # True if value comes from formula
-    formula_id = Column(Integer, nullable=True)  # Removed FK constraint temporarily for safety
-    last_calculated = Column(DateTime, nullable=True)
-    calculation_inputs = Column(JSON, nullable=True)  # Store input values used in calculation
-    calculation_status = Column(String, default="manual")  # "manual", "calculated", "error", "stale"
-    
+
+    # Link to value system - allows literals, expressions, or references
+    value_node_id = Column(Integer, ForeignKey("value_nodes.id"))
+
     # Metadata
     notes = Column(String)
     source = Column(String)  # Where this data came from
@@ -77,7 +73,7 @@ class ComponentProperty(Base):
     component = relationship("Component", back_populates="properties")
     property_definition = relationship("PropertyDefinition", back_populates="property_values")
     source_material = relationship("Material", foreign_keys=[source_material_id])
-    # Note: PropertyFormula relationship will be added after import resolution
+    value_node = relationship("ValueNode", foreign_keys=[value_node_id])
 
 
 class UnitSystem(Base):

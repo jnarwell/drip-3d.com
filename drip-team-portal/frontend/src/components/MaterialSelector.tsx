@@ -77,17 +77,6 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({ componentId, curren
   const [isSearchingMP, setIsSearchingMP] = useState(false);
   const [mpSearchType, setMpSearchType] = useState<'formula' | 'alloy'>('alloy');
 
-  // Debug logging
-  console.log('MaterialSelector Debug:', {
-    componentId,
-    isOpen,
-    searchMode,
-    mpSearchType,
-    searchTerm,
-    mpSearchResults: mpSearchResults.length,
-    timestamp: new Date().toISOString()
-  });
-
   const { data: materials, isLoading } = useQuery<Material[]>({
     queryKey: ['materials', selectedCategory, searchTerm],
     queryFn: async () => {

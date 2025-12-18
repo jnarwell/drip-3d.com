@@ -1,18 +1,55 @@
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
 import { Navigate } from 'react-router-dom';
 import { useIsTeamDomain } from '../hooks/useDomain';
 import { authConfig } from './auth';
 
+// Check if running in local dev mode (localhost without Auth0 config)
+const isLocalDev = () => {
+  const hostname = window.location.hostname;
+  const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+  const hasAuth0Config = authConfig.domain && authConfig.clientId;
+  return isLocalhost && !hasAuth0Config;
+};
+
+// Mock auth context for local development
+const MockAuthContext = createContext<{
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: { email: string; name: string } | null;
+}>({
+  isAuthenticated: true,
+  isLoading: false,
+  user: { email: 'dev@drip-3d.com', name: 'Local Developer' },
+});
+
+export const useMockAuth = () => useContext(MockAuthContext);
+
 export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isTeamDomain = useIsTeamDomain();
-  
+
   // Only initialize Auth0 on team domain
   if (!isTeamDomain) {
     return <>{children}</>;
   }
 
-  // Safety check for team domain
+  // Local dev mode - bypass Auth0 entirely
+  if (isLocalDev()) {
+    console.log('🔧 Running in LOCAL DEV MODE - Auth0 bypassed');
+    return (
+      <MockAuthContext.Provider
+        value={{
+          isAuthenticated: true,
+          isLoading: false,
+          user: { email: 'dev@drip-3d.com', name: 'Local Developer' },
+        }}
+      >
+        {children}
+      </MockAuthContext.Provider>
+    );
+  }
+
+  // Safety check for team domain (production)
   if (!authConfig.domain || !authConfig.clientId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-yellow-50">
@@ -41,15 +78,25 @@ export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = 
 
 export const DomainAwareProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isTeamDomain = useIsTeamDomain();
-  
+
   // Public access for company domain
   if (!isTeamDomain) {
     return <>{children}</>;
   }
-  
-  // Protected access for team domain
+
+  // Local dev mode - auto-authenticated
+  if (isLocalDev()) {
+    return <>{children}</>;
+  }
+
+  // Protected access for team domain (production)
+  return <Auth0ProtectedRoute>{children}</Auth0ProtectedRoute>;
+};
+
+// Separate component to use Auth0 hook (only rendered when Auth0 is initialized)
+const Auth0ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading, user } = useAuth0();
-  
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -68,7 +115,7 @@ export const DomainAwareProtectedRoute: React.FC<{ children: React.ReactNode }> 
   // Check email domain for team access
   const email = user?.email || '';
   const allowedDomain = '@drip-3d.com';
-  
+
   if (!email.endsWith(allowedDomain)) {
     return (
       <div className="flex items-center justify-center min-h-screen">

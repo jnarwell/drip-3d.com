@@ -17,10 +17,14 @@ component_materials = Table(
 
 class Material(Base):
     __tablename__ = "materials"
-    
+
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False, unique=True)
     category = Column(String, nullable=False)  # Metal, Ceramic, Polymer, Composite, etc.
+
+    # Auto-generated unique code for formula references (e.g., "SS304_001")
+    # Used in expressions like: #SS304_001.density
+    code = Column(String, unique=True, index=True)
     subcategory = Column(String)  # Aluminum Alloy, Steel Alloy, etc.
     
     # Common identifiers
@@ -45,12 +49,15 @@ class Material(Base):
 
 class MaterialProperty(Base):
     __tablename__ = "material_properties"
-    
+
     id = Column(Integer, primary_key=True)
     material_id = Column(Integer, ForeignKey("materials.id"), nullable=False)
     property_definition_id = Column(Integer, ForeignKey("property_definitions.id"), nullable=False)
-    
-    # Standard property values with temperature dependence
+
+    # Link to value system - allows literals, expressions, or references
+    value_node_id = Column(Integer, ForeignKey("value_nodes.id"))
+
+    # Standard property values with temperature dependence (legacy, use value_node_id)
     value = Column(Float)
     value_min = Column(Float)
     value_max = Column(Float)
@@ -72,6 +79,7 @@ class MaterialProperty(Base):
     # Relationships
     material = relationship("Material", back_populates="property_values")
     property_definition = relationship("PropertyDefinition")
+    value_node = relationship("ValueNode", foreign_keys=[value_node_id])
 
 
 class MaterialPropertyTemplate(Base):

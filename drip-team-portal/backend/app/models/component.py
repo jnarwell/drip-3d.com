@@ -24,10 +24,14 @@ class RDPhase(str, enum.Enum):
 
 class Component(Base):
     __tablename__ = "components"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     component_id = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
+
+    # Auto-generated unique code for formula references (e.g., "HEATBED_001")
+    # Used in expressions like: #HEATBED_001.thermal_conductivity
+    code = Column(String, unique=True, index=True)
     part_number = Column(String)
     category = Column(Enum(ComponentCategory), nullable=False)
     status = Column(Enum(ComponentStatus), default=ComponentStatus.NOT_TESTED, index=True)

@@ -39,8 +39,9 @@ class ComponentPropertyBase(BaseModel):
 
 
 class ComponentPropertyCreate(ComponentPropertyBase):
-    is_calculated: Optional[bool] = False
-    formula_id: Optional[int] = None
+    # Expression support - if provided, creates an expression ValueNode
+    expression: Optional[str] = None
+    unit_id: Optional[int] = None
 
 
 class ComponentPropertyUpdate(BaseModel):
@@ -52,8 +53,22 @@ class ComponentPropertyUpdate(BaseModel):
     notes: Optional[str] = None
     source: Optional[str] = None
     conditions: Optional[Dict[str, Any]] = None
-    is_calculated: Optional[bool] = None
-    formula_id: Optional[int] = None
+    # Expression support
+    expression: Optional[str] = None
+    unit_id: Optional[int] = None
+
+
+class ValueNodeBrief(BaseModel):
+    """Brief info about a value node."""
+    id: int
+    node_type: str
+    expression_string: Optional[str] = None
+    computed_value: Optional[float] = None
+    computed_unit_symbol: Optional[str] = None
+    computation_status: str
+
+    class Config:
+        from_attributes = True
 
 
 class ComponentPropertyResponse(ComponentPropertyBase):
@@ -62,14 +77,10 @@ class ComponentPropertyResponse(ComponentPropertyBase):
     property_definition: PropertyDefinitionResponse
     updated_at: datetime
     updated_by: Optional[str] = None
-    
-    # STEP 3A: Formula fields re-enabled with clean database
-    is_calculated: Optional[bool] = False
-    formula_id: Optional[int] = None
-    last_calculated: Optional[datetime] = None
-    calculation_inputs: Optional[Dict[str, Any]] = None
-    calculation_status: Optional[str] = "manual"
-    
+    # Value system integration
+    value_node_id: Optional[int] = None
+    value_node: Optional[ValueNodeBrief] = None
+
     class Config:
         from_attributes = True
 

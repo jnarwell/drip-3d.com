@@ -20,14 +20,6 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
     queryKey: ['component-properties', componentId],
     queryFn: async () => {
       const response = await api.get(`/api/v1/components/${componentId}/properties`);
-      console.log('PropertyList: Fetched properties:', response.data.map((p: any) => ({
-        id: p.id,
-        name: p.property_definition?.name,
-        is_calculated: p.is_calculated,
-        formula_id: p.formula_id,
-        value: p.single_value || p.average_value,
-        calculation_status: p.calculation_status
-      })));
       return response.data;
     },
   });

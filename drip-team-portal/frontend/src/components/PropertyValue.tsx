@@ -4,9 +4,7 @@ import { useAuthenticatedApi } from '../services/api';
 import { ComponentProperty, ValueType } from '../types';
 import { useUnits } from '../contexts/UnitContext';
 import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
-import { FormulaInput } from './FormulaInput';
-import { hasVariableReferences, resolveAllVariables, replaceVariableReferences, isFormula } from '../utils/variableResolver';
-import { useFormula } from '../hooks/useFormula';
+import ExpressionInput from './ExpressionInput';
 
 interface PropertyValueProps {
   property: ComponentProperty;
@@ -20,7 +18,9 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const { formatWithUserUnit, formatRangeWithUserUnit, getUserUnit, getDimensionFromUnit, convertToUserUnit } = useUnits();
-  const { createFormula } = useFormula();
+
+  // Check if property has an expression
+  const hasExpression = property.value_node?.node_type === 'expression';
 
   // Get dimension from property unit
   const dimension = getDimensionFromUnit(property.property_definition.unit);
@@ -29,50 +29,21 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   // Initialize input value when entering edit mode
   useEffect(() => {
     if (isEditing) {
-      // Check if property has a formula - fetch the expression from backend
-      if (property.is_calculated && property.formula_id) {
-        // Add a small delay to ensure backend is ready
-        const timer = setTimeout(() => {
-          api.get(`/api/v1/formulas/property/${property.id}/formula`)
-            .then(response => {
-              if (response.data.has_formula && response.data.expression) {
-                setInputValue(response.data.expression);
-              }
-            })
-            .catch(error => {
-              console.error('Error fetching formula:', error);
-              // Fall back to stored formula expression if available
-              // First try notes, then try the formula description pattern
-              if (property.notes) {
-                // Check for the standard formula pattern in notes
-                const formulaMatch = property.notes.match(/Formula.*?: (.+?)(?:\s*$|\s*-)/);
-                if (formulaMatch) {
-                  setInputValue(formulaMatch[1]);
-                  return;
-                }
-                // Also check if the entire note might be a formula
-                if (property.notes.includes('.') && (property.notes.includes('cmp') || /[+\-*/()]/.test(property.notes))) {
-                  setInputValue(property.notes);
-                  return;
-                }
-              }
-              // If all else fails, show the calculated value
-              setInputValueFromProperty();
-            });
-        }, 100);
-        
-        return () => clearTimeout(timer);
-      }
-      
-      // No formula - show the current value
       setInputValueFromProperty();
     }
-  }, [isEditing, property.formula_id, property.is_calculated]);
+  }, [isEditing]);
 
   const setInputValueFromProperty = () => {
     const def = property.property_definition;
+
+    // If it has an expression, show the expression
+    if (hasExpression && property.value_node?.expression_string) {
+      setInputValue(property.value_node.expression_string);
+      return;
+    }
+
+    // Otherwise show the literal value
     let initialValue = '';
-    
     switch (def.value_type) {
       case ValueType.SINGLE:
         if (property.single_value !== null && property.single_value !== undefined) {
@@ -85,7 +56,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         }
         break;
       case ValueType.RANGE:
-        if (property.min_value !== null && property.min_value !== undefined && 
+        if (property.min_value !== null && property.min_value !== undefined &&
             property.max_value !== null && property.max_value !== undefined) {
           if (dimension) {
             const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
@@ -101,15 +72,15 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           if (dimension) {
             const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
             const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, def.unit, dimension) : 0;
-            initialValue = convertedTol ? `${convertedAvg} ± ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
+            initialValue = convertedTol ? `${convertedAvg} +/- ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
           } else {
             const tol = property.tolerance || 0;
-            initialValue = tol ? `${property.average_value} ± ${tol} ${def.unit}` : `${property.average_value} ${def.unit}`;
+            initialValue = tol ? `${property.average_value} +/- ${tol} ${def.unit}` : `${property.average_value} ${def.unit}`;
           }
         }
         break;
     }
-    
+
     setInputValue(initialValue);
   };
 
@@ -124,161 +95,102 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   });
 
   const handleSave = async () => {
-    let valueToProcess = inputValue;
     const values: any = {};
-    const baseUnit = property.property_definition.unit;
-    
-    // Check for malformed expressions with # in the middle of property names
-    const malformedPattern = /#\w+\.\w*#\w*/;
-    if (malformedPattern.test(inputValue)) {
-      alert('Invalid formula: Property names cannot contain # characters. Example: #cmp002.length (not #cmp002.le#ngth)');
-      console.error('Malformed formula detected:', inputValue);
-      return;
-    }
-    
-    // Check if the input contains variable references or formulas
-    if (hasVariableReferences(inputValue) || isFormula(inputValue)) {
-      try {
-        // Create a formula on the backend
-        const result = await createFormula.mutateAsync({
-          propertyId: property.id,
-          componentId: componentId,
-          componentDbId: property.component_id, // Use the property's component_id which is the DB ID
-          expression: inputValue,
-          propertyDefinitionId: property.property_definition.id
-        });
-        
-        console.log('Formula created:', result);
-        console.log('Property before formula creation:', property);
-        console.log('Current property state:', {
-          id: property.id,
-          is_calculated: property.is_calculated,
-          formula_id: property.formula_id,
-          value: property.single_value || property.average_value,
-          calculation_status: property.calculation_status
-        });
-        
-        // Check if formula was successfully created and applied
-        if (result.validation_status === 'error') {
-          console.error('Formula validation failed:', result.validation_message || 'Unknown error');
-          console.error('Full formula result:', result);
-          
-          // Show user-friendly error for self-referencing
-          if (result.validation_message?.includes('cannot reference itself')) {
-            alert('Error: A formula cannot reference its own property. Please use a different variable.');
-          }
-          
-          // Don't exit - continue to save as manual value
-        } else {
-          // Wait a moment for backend to finish
-          setTimeout(async () => {
-            console.log('Refetching component properties after formula creation');
-            // Force refresh by refetching
-            await queryClient.refetchQueries({ queryKey: ['component-properties', componentId] });
-            console.log('Refetch complete, setting editing to false');
-            setIsEditing(false);
-          }, 2000); // Increased to 2 seconds
-          return; // Exit early - the formula creation will update the property
-        }
-        
-      } catch (error: any) {
-        console.error('Error creating formula:', error);
-        console.error('Error response:', error.response?.data);
-        // Fall back to storing as notes if formula creation fails
-        values.is_calculated = false;
-        values.calculation_status = 'manual';
-        values.notes = `Formula (failed to create): ${inputValue}`;
-        // Log error detail if available
-        if (error.response?.data?.detail) {
-          console.error('Formula creation failed with detail:', error.response.data.detail);
-        }
-      }
+    const trimmed = inputValue.trim();
+
+    // Check if it's an expression (contains # reference)
+    if (trimmed.includes('#')) {
+      values.expression = trimmed;
     } else {
-      // Regular value - mark as manual and clear formula association
-      values.is_calculated = false;
-      values.calculation_status = 'manual';
-      values.formula_id = null; // Clear the formula association
-    }
-    
-    const parsed = parseValueWithUnit(valueToProcess, userUnit);
-    
-    // Always try to convert to base unit if we have a known dimension
-    // If user didn't specify a unit, parsed.unit will be userUnit (their preference)
-    // We need to convert from that to the base unit
-    
-    if (parsed.isRange && parsed.min !== undefined && parsed.max !== undefined) {
-      // Convert from parsed unit (which could be user's unit) to base unit
-      let minBase = parsed.min;
-      let maxBase = parsed.max;
-      
-      if (dimension) {
-        // We know the dimension, so convert from parsed unit to base unit
-        minBase = convertUnit(parsed.min, parsed.unit, baseUnit);
-        maxBase = convertUnit(parsed.max, parsed.unit, baseUnit);
-      }
-      
-      if (property.property_definition.value_type === ValueType.AVERAGE) {
-        // For average type, calculate average and tolerance
-        values.average_value = (minBase + maxBase) / 2;
-        values.tolerance = (maxBase - minBase) / 2;
-      } else {
-        // For range type
-        values.min_value = minBase;
-        values.max_value = maxBase;
-      }
-    } else if (!parsed.isRange && parsed.value !== undefined) {
-      // Single value - convert to base unit
-      let valueBase = parsed.value;
-      
-      if (dimension) {
-        // We know the dimension, so convert from parsed unit to base unit
-        valueBase = convertUnit(parsed.value, parsed.unit, baseUnit);
-        console.log('Converting value:', parsed.value, parsed.unit, '->', valueBase, baseUnit);
-      }
-      
-      if (property.property_definition.value_type === ValueType.SINGLE) {
-        values.single_value = valueBase;
-      } else if (property.property_definition.value_type === ValueType.AVERAGE) {
-        values.average_value = valueBase;
-        values.tolerance = 0;
-      } else if (property.property_definition.value_type === ValueType.RANGE) {
-        // If they entered a single value for a range property, use it as both min and max
-        values.min_value = valueBase;
-        values.max_value = valueBase;
+      // Parse as literal value
+      const baseUnit = property.property_definition.unit;
+      const parsed = parseValueWithUnit(trimmed, userUnit);
+
+      if (parsed.isRange && parsed.min !== undefined && parsed.max !== undefined) {
+        let minBase = parsed.min;
+        let maxBase = parsed.max;
+
+        if (dimension) {
+          minBase = convertUnit(parsed.min, parsed.unit, baseUnit);
+          maxBase = convertUnit(parsed.max, parsed.unit, baseUnit);
+        }
+
+        if (property.property_definition.value_type === ValueType.AVERAGE) {
+          values.average_value = (minBase + maxBase) / 2;
+          values.tolerance = (maxBase - minBase) / 2;
+        } else {
+          values.min_value = minBase;
+          values.max_value = maxBase;
+        }
+      } else if (!parsed.isRange && parsed.value !== undefined) {
+        let valueBase = parsed.value;
+
+        if (dimension) {
+          valueBase = convertUnit(parsed.value, parsed.unit, baseUnit);
+        }
+
+        if (property.property_definition.value_type === ValueType.SINGLE) {
+          values.single_value = valueBase;
+        } else if (property.property_definition.value_type === ValueType.AVERAGE) {
+          values.average_value = valueBase;
+          values.tolerance = 0;
+        } else if (property.property_definition.value_type === ValueType.RANGE) {
+          values.min_value = valueBase;
+          values.max_value = valueBase;
+        }
       }
     }
-    
+
     updateProperty.mutate(values);
   };
 
   const renderValue = () => {
     const def = property.property_definition;
-    
+
     if (isEditing) {
       return (
-        <FormulaInput
-          value={inputValue}
-          onChange={setInputValue}
-          placeholder={`e.g., "10 ${userUnit}" or "cmp1.width * 2"`}
-          componentId={componentId}
-          excludeVariableId={(() => {
-            // Match the exact naming convention from backend variables.py
-            // CMP-001 -> cmp1
-            const comp_id = componentId.toLowerCase().replace('cmp-', 'cmp');
-            // Convert property name to camelCase: "Young's Modulus" -> "youngsModulus"
-            const prop_name = property.property_definition.name
-              .split(' ')
-              .map((word, i) => i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join('')
-              .replace(/[^a-zA-Z0-9]/g, '');
-            return `${comp_id}.${prop_name}`;
-          })()}
-          className="w-64"
-        />
+        <div className="w-80">
+          <ExpressionInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSubmit={handleSave}
+            onCancel={() => {
+              setIsEditing(false);
+              setInputValue('');
+            }}
+            placeholder={`e.g., "10 ${userUnit}" or "#CODE.property"`}
+            autoFocus
+          />
+        </div>
       );
     }
-    
-    // Display mode - show values in user's preferred units if conversion available
+
+    // Display mode - check for expression first
+    if (hasExpression && property.value_node) {
+      const computed = property.value_node.computed_value;
+      const status = property.value_node.computation_status;
+      const expr = property.value_node.expression_string;
+
+      return (
+        <div className="flex items-center gap-2">
+          <span className={`font-mono text-sm ${status === 'error' ? 'text-red-600' : 'text-gray-900'}`}>
+            {status === 'valid' && computed !== null && computed !== undefined
+              ? formatValueWithUnit(computed, property.value_node.computed_unit_symbol || def.unit)
+              : status === 'error'
+              ? 'Error'
+              : 'Calculating...'}
+          </span>
+          <span className="text-xs text-gray-400 font-mono truncate max-w-32" title={expr || ''}>
+            = {expr}
+          </span>
+          {status === 'stale' && (
+            <span className="text-xs px-1 py-0.5 bg-yellow-100 text-yellow-700 rounded">stale</span>
+          )}
+        </div>
+      );
+    }
+
+    // Display literal values in user's preferred units
     switch (def.value_type) {
       case ValueType.SINGLE:
         if (property.single_value !== null && property.single_value !== undefined) {
@@ -286,26 +198,24 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
             const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
             return <span className="text-gray-900">{formatWithUserUnit(convertedValue, dimension)}</span>;
           } else {
-            // No conversion available, show original value with original unit
             return <span className="text-gray-900">{formatValueWithUnit(property.single_value, def.unit)}</span>;
           }
         }
         return <span className="text-gray-400 italic">Not set</span>;
-        
+
       case ValueType.RANGE:
-        if (property.min_value !== null && property.min_value !== undefined && 
+        if (property.min_value !== null && property.min_value !== undefined &&
             property.max_value !== null && property.max_value !== undefined) {
           if (dimension) {
             const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
             const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
             return <span className="text-gray-900">{formatRangeWithUserUnit(convertedMin, convertedMax, dimension)}</span>;
           } else {
-            // No conversion available, show original values with original unit
             return <span className="text-gray-900">{formatRangeWithUnit(property.min_value, property.max_value, def.unit)}</span>;
           }
         }
         return <span className="text-gray-400 italic">Not set</span>;
-        
+
       case ValueType.AVERAGE:
         if (property.average_value !== null && property.average_value !== undefined) {
           if (dimension) {
@@ -314,17 +224,16 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
               const convertedTol = convertToUserUnit(property.tolerance, def.unit, dimension);
               return (
                 <span className="text-gray-900">
-                  {formatWithUserUnit(convertedAvg, dimension)} ± {formatWithUserUnit(convertedTol, dimension)}
+                  {formatWithUserUnit(convertedAvg, dimension)} +/- {formatWithUserUnit(convertedTol, dimension)}
                 </span>
               );
             }
             return <span className="text-gray-900">{formatWithUserUnit(convertedAvg, dimension)}</span>;
           } else {
-            // No conversion available, show original values with original unit
             if (property.tolerance && property.tolerance !== null && property.tolerance !== undefined) {
               return (
                 <span className="text-gray-900">
-                  {formatValueWithUnit(property.average_value, '')} ± {formatValueWithUnit(property.tolerance, def.unit)}
+                  {formatValueWithUnit(property.average_value, '')} +/- {formatValueWithUnit(property.tolerance, def.unit)}
                 </span>
               );
             }
@@ -342,26 +251,17 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           <span className="text-sm font-medium text-gray-700">
             {property.property_definition.name}
           </span>
-          <div 
+          <div
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => !isEditing && setIsEditing(true)}
           >
             {renderValue()}
           </div>
-          
-          {/* Formula indicator */}
-          {(property.is_calculated || property.formula_id) && (
-            <div className="flex items-center gap-1">
-              <svg className="w-3 h-3 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
-                <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
-              </svg>
-              <span className="text-xs text-purple-600 font-medium">
-                {property.calculation_status === 'calculated' ? 'Formula' : 
-                 property.calculation_status === 'error' ? 'Error' : 
-                 property.calculation_status === 'stale' ? 'Stale' : 'Formula'}
-              </span>
-            </div>
+          {/* Expression indicator */}
+          {hasExpression && !isEditing && (
+            <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded">
+              expr
+            </span>
           )}
         </div>
         {property.notes && (
@@ -375,13 +275,14 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           </p>
         )}
       </div>
-      
+
       <div className="flex items-center gap-2 ml-4">
         {isEditing ? (
           <>
             <button
               onClick={handleSave}
-              className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors"
+              disabled={updateProperty.isPending}
+              className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
               aria-label="Save"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

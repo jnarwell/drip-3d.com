@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import logging
 
@@ -12,20 +12,69 @@ else:
     from app.core.security import get_current_user
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType
 from app.models.component import Component
-from app.models.formula_isolated import PropertyFormula
-from app.services.formula_engine import FormulaEngine
+from app.models.values import ValueNode
+from app.models.units import Unit
+from app.services.value_engine import ValueEngine, ExpressionError
 from app.schemas.property import (
     PropertyDefinitionCreate,
     PropertyDefinitionResponse,
     ComponentPropertyCreate,
     ComponentPropertyUpdate,
-    ComponentPropertyResponse
+    ComponentPropertyResponse,
+    ValueNodeBrief
 )
 
 router = APIRouter(prefix="/api/v1")
 logger = logging.getLogger(__name__)
 
-# Property Definitions endpoints
+
+# ==================== Helper Functions ====================
+
+def _property_to_response(prop: ComponentProperty, db: Session) -> Dict[str, Any]:
+    """Convert ComponentProperty to response dict with value_node info."""
+    response = {
+        "id": prop.id,
+        "component_id": prop.component_id,
+        "property_definition_id": prop.property_definition_id,
+        "property_definition": prop.property_definition,
+        "single_value": prop.single_value,
+        "min_value": prop.min_value,
+        "max_value": prop.max_value,
+        "average_value": prop.average_value,
+        "tolerance": prop.tolerance,
+        "notes": prop.notes,
+        "source": prop.source,
+        "conditions": prop.conditions,
+        "updated_at": prop.updated_at,
+        "updated_by": prop.updated_by,
+        "value_node_id": prop.value_node_id,
+        "value_node": None
+    }
+
+    # Add value_node info if linked
+    if prop.value_node_id:
+        value_node = db.query(ValueNode).filter(ValueNode.id == prop.value_node_id).first()
+        if value_node:
+            computed_unit_symbol = None
+            if value_node.computed_unit_id:
+                unit = db.query(Unit).filter(Unit.id == value_node.computed_unit_id).first()
+                if unit:
+                    computed_unit_symbol = unit.symbol
+
+            response["value_node"] = {
+                "id": value_node.id,
+                "node_type": value_node.node_type.value,
+                "expression_string": value_node.expression_string,
+                "computed_value": value_node.computed_value,
+                "computed_unit_symbol": computed_unit_symbol,
+                "computation_status": value_node.computation_status.value
+            }
+
+    return response
+
+
+# ==================== Property Definitions ====================
+
 @router.get("/property-definitions", response_model=List[PropertyDefinitionResponse])
 async def get_property_definitions(
     property_type: PropertyType = None,
@@ -56,58 +105,54 @@ async def create_property_definition(
     return db_property_def
 
 
-# Component Properties endpoints
-@router.get("/components/{component_id}/properties", response_model=List[ComponentPropertyResponse])
+# ==================== Component Properties ====================
+
+@router.get("/components/{component_id}/properties")
 async def get_component_properties(
     component_id: str,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get all properties for a specific component"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    logger.info(f"🔍 Getting properties for component: {component_id}")
-    
+    """Get all properties for a specific component with computed values."""
+    logger.info(f"Getting properties for component: {component_id}")
+
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
-    logger.info(f"📋 Component found: DB ID {component.id}, current material: {component.primary_material_id}")
-    
+
     properties = db.query(ComponentProperty).filter(
         ComponentProperty.component_id == component.id
     ).all()
-    
-    logger.info(f"📊 Found {len(properties)} properties")
-    # STEP 3A DEBUG: Temporarily removed detailed logging to fix 500 error
-    
-    # Debug logging for formula properties
-    for prop in properties:
-        if prop.is_calculated or prop.formula_id:
-            logger.info(f"Formula property: {prop.property_definition.name} - is_calculated: {prop.is_calculated}, formula_id: {prop.formula_id}, value: {prop.single_value or prop.average_value}, status: {prop.calculation_status}")
-    
-    return properties
+
+    logger.info(f"Found {len(properties)} properties")
+
+    # Convert to response with value_node info
+    return [_property_to_response(p, db) for p in properties]
 
 
-@router.post("/components/{component_id}/properties", response_model=ComponentPropertyResponse)
+@router.post("/components/{component_id}/properties")
 async def add_component_property(
     component_id: str,
     property_data: ComponentPropertyCreate,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Add a property to a component"""
+    """
+    Add a property to a component.
+
+    If single_value is provided, creates a literal ValueNode.
+    If expression is provided, creates an expression ValueNode.
+    """
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
+
     # Check if property definition exists
     property_def = db.query(PropertyDefinition).filter(
         PropertyDefinition.id == property_data.property_definition_id
@@ -117,7 +162,7 @@ async def add_component_property(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Property definition not found"
         )
-    
+
     # Check if this property already exists for the component
     existing = db.query(ComponentProperty).filter(
         ComponentProperty.component_id == component.id,
@@ -128,20 +173,62 @@ async def add_component_property(
             status_code=status.HTTP_409_CONFLICT,
             detail="This property already exists for the component"
         )
-    
+
+    # Create ValueNode if value or expression provided
+    value_node_id = None
+    engine = ValueEngine(db)
+
+    # Build description for the value node
+    comp_code = component.code or f"COMP_{component.id}"
+    value_description = f"{comp_code}.{property_def.name}"
+
+    if property_data.expression:
+        # Create expression ValueNode
+        try:
+            value_node = engine.create_expression(
+                expression=property_data.expression,
+                description=value_description,
+                created_by=current_user["email"],
+                resolve_references=True
+            )
+            # Try to compute
+            engine.recalculate(value_node)
+            value_node_id = value_node.id
+            logger.info(f"Created expression ValueNode {value_node_id} for {value_description}")
+        except ExpressionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid expression: {str(e)}"
+            )
+
+    elif property_data.single_value is not None:
+        # Create literal ValueNode
+        value_node = engine.create_literal(
+            value=property_data.single_value,
+            unit_id=property_data.unit_id,
+            description=value_description,
+            created_by=current_user["email"]
+        )
+        value_node_id = value_node.id
+        logger.info(f"Created literal ValueNode {value_node_id} for {value_description}")
+
+    # Create the property, excluding expression and unit_id which aren't model fields
+    property_dict = property_data.dict(exclude={"expression", "unit_id"})
     db_property = ComponentProperty(
         component_id=component.id,
-        **property_data.dict(),
+        **property_dict,
+        value_node_id=value_node_id,
         updated_by=current_user["email"]
     )
-    
+
     db.add(db_property)
     db.commit()
     db.refresh(db_property)
-    return db_property
+
+    return _property_to_response(db_property, db)
 
 
-@router.patch("/components/{component_id}/properties/{property_id}", response_model=ComponentPropertyResponse)
+@router.patch("/components/{component_id}/properties/{property_id}")
 async def update_component_property(
     component_id: str,
     property_id: int,
@@ -149,14 +236,19 @@ async def update_component_property(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Update a component property value"""
+    """
+    Update a component property value.
+
+    If expression is provided, updates/creates an expression ValueNode.
+    If single_value is provided, updates/creates a literal ValueNode.
+    """
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
+
     property_value = db.query(ComponentProperty).filter(
         ComponentProperty.id == property_id,
         ComponentProperty.component_id == component.id
@@ -166,50 +258,97 @@ async def update_component_property(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Property not found"
         )
-    
+
     update_data = property_update.dict(exclude_unset=True)
-    
-    # If formula_id is being set to null, also update calculation fields
-    if 'formula_id' in update_data and update_data['formula_id'] is None:
-        # Store the old formula_id before clearing
-        old_formula_id = property_value.formula_id
-        update_data['is_calculated'] = False
-        update_data['calculation_status'] = 'manual'
-    
+    engine = ValueEngine(db)
+
+    # Build description for value node
+    comp_code = component.code or f"COMP_{component.id}"
+    value_description = f"{comp_code}.{property_value.property_definition.name}"
+
+    # Handle expression update
+    if "expression" in update_data and update_data["expression"]:
+        expression = update_data.pop("expression")
+        unit_id = update_data.pop("unit_id", None)
+
+        try:
+            if property_value.value_node_id:
+                # Update existing value node
+                existing_node = db.query(ValueNode).filter(
+                    ValueNode.id == property_value.value_node_id
+                ).first()
+                if existing_node:
+                    engine.update_expression(existing_node, expression)
+                    engine.recalculate(existing_node)
+            else:
+                # Create new expression ValueNode
+                value_node = engine.create_expression(
+                    expression=expression,
+                    description=value_description,
+                    created_by=current_user["email"],
+                    resolve_references=True
+                )
+                engine.recalculate(value_node)
+                property_value.value_node_id = value_node.id
+
+            logger.info(f"Updated expression for property {property_id}")
+
+        except ExpressionError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid expression: {str(e)}"
+            )
+
+    # Handle single_value update (literal)
+    elif "single_value" in update_data and update_data["single_value"] is not None:
+        single_value = update_data["single_value"]
+        unit_id = update_data.pop("unit_id", None)
+
+        if property_value.value_node_id:
+            # Update existing value node if it's a literal
+            existing_node = db.query(ValueNode).filter(
+                ValueNode.id == property_value.value_node_id
+            ).first()
+            if existing_node and existing_node.node_type.value == "literal":
+                engine.update_literal(existing_node, single_value, unit_id)
+                # Auto-recalculate all stale dependents
+                engine.recalculate_stale(existing_node)
+            else:
+                # Create new literal (replaces expression with literal)
+                value_node = engine.create_literal(
+                    value=single_value,
+                    unit_id=unit_id,
+                    description=value_description,
+                    created_by=current_user["email"]
+                )
+                property_value.value_node_id = value_node.id
+        else:
+            # Create new literal ValueNode
+            value_node = engine.create_literal(
+                value=single_value,
+                unit_id=unit_id,
+                description=value_description,
+                created_by=current_user["email"]
+            )
+            property_value.value_node_id = value_node.id
+
+        logger.info(f"Updated literal value for property {property_id}")
+
+    # Remove unit_id from update_data if still present (not a model field)
+    update_data.pop("unit_id", None)
+    update_data.pop("expression", None)
+
+    # Update other fields
     for field, value in update_data.items():
         setattr(property_value, field, value)
-    
+
     property_value.updated_at = datetime.utcnow()
     property_value.updated_by = current_user["email"]
-    
+
     db.commit()
-    
-    # If we removed a formula, optionally delete it from the database
-    if 'formula_id' in update_data and update_data['formula_id'] is None and 'old_formula_id' in locals() and old_formula_id:
-        try:
-            # Delete the old formula as it's no longer referenced
-            old_formula = db.query(PropertyFormula).get(old_formula_id)
-            if old_formula:
-                db.delete(old_formula)
-                db.commit()
-                logger.info(f"Deleted orphaned formula {old_formula_id}")
-        except Exception as e:
-            logger.error(f"Error deleting orphaned formula: {e}")
-    
     db.refresh(property_value)
-    
-    # Recalculate any dependent formulas
-    try:
-        from app.services.formula_engine import FormulaEngine
-        engine = FormulaEngine(db)
-        updated_properties = engine.update_dependent_properties(property_id)
-        if updated_properties:
-            logger.info(f"Updated {len(updated_properties)} dependent formulas after property {property_id} change")
-    except Exception as e:
-        logger.error(f"Error updating dependent formulas: {e}")
-        # Don't fail the property update if formula recalculation fails
-    
-    return property_value
+
+    return _property_to_response(property_value, db)
 
 
 @router.delete("/components/{component_id}/properties/{property_id}")
@@ -219,14 +358,14 @@ async def delete_component_property(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Delete a component property"""
+    """Delete a component property and its associated ValueNode."""
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
+
     property_value = db.query(ComponentProperty).filter(
         ComponentProperty.id == property_id,
         ComponentProperty.component_id == component.id
@@ -236,28 +375,34 @@ async def delete_component_property(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Property not found"
         )
-    
+
+    # Note: We don't delete the ValueNode here as it might be referenced elsewhere
+    # The ValueNode can be orphaned and cleaned up separately if needed
+
     db.delete(property_value)
     db.commit()
-    
+
     return {"status": "success", "message": "Property deleted"}
 
 
-@router.post("/components/{component_id}/properties/{property_id}/calculate")
-async def calculate_property_value(
+# ==================== Property Recalculation ====================
+
+@router.post("/components/{component_id}/properties/{property_id}/recalculate")
+async def recalculate_property(
     component_id: str,
     property_id: int,
+    cascade: bool = False,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Calculate a property value using its formula"""
+    """Force recalculation of a property's ValueNode."""
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
+
     property_value = db.query(ComponentProperty).filter(
         ComponentProperty.id == property_id,
         ComponentProperty.component_id == component.id
@@ -267,88 +412,35 @@ async def calculate_property_value(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Property not found"
         )
-    
-    if not property_value.is_calculated or not property_value.formula_id:
+
+    if not property_value.value_node_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Property is not formula-based"
+            detail="Property has no associated ValueNode"
         )
-    
-    # Use formula engine to calculate
-    engine = FormulaEngine(db)
-    result = engine.calculate_property(property_value)
-    
-    if not result.success:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Formula calculation failed: {result.error_message}"
-        )
-    
-    # Update the property with calculated value
-    engine._update_property_value(property_value, result)
-    property_value.updated_by = current_user["email"]
-    db.commit()
-    db.refresh(property_value)
-    
-    return {
-        "status": "success",
-        "calculated_value": result.value,
-        "input_values": result.input_values,
-        "property": ComponentPropertyResponse.from_orm(property_value)
-    }
 
-
-@router.post("/components/{component_id}/properties/calculate-all")
-async def calculate_all_properties(
-    component_id: str,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
-):
-    """Calculate all formula-based properties for a component"""
-    component = db.query(Component).filter(Component.component_id == component_id).first()
-    if not component:
+    value_node = db.query(ValueNode).filter(
+        ValueNode.id == property_value.value_node_id
+    ).first()
+    if not value_node:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Component {component_id} not found"
+            detail="ValueNode not found"
         )
-    
-    # Get all formula-based properties
-    formula_properties = db.query(ComponentProperty).filter(
-        ComponentProperty.component_id == component.id,
-        ComponentProperty.is_calculated == True,
-        ComponentProperty.formula_id.isnot(None)
-    ).all()
-    
-    if not formula_properties:
-        return {"status": "success", "message": "No formula-based properties found", "calculated": 0}
-    
-    engine = FormulaEngine(db)
-    results = []
-    errors = []
-    
-    for prop in formula_properties:
-        result = engine.calculate_property(prop)
-        if result.success:
-            engine._update_property_value(prop, result)
-            prop.updated_by = current_user["email"]
-            results.append({
-                "property_id": prop.id,
-                "property_name": prop.property_definition.name,
-                "calculated_value": result.value
-            })
-        else:
-            errors.append({
-                "property_id": prop.id,
-                "property_name": prop.property_definition.name,
-                "error": result.error_message
-            })
-    
+
+    engine = ValueEngine(db)
+    success, error = engine.recalculate(value_node)
+
+    nodes_recalculated = 1
+    if cascade and success:
+        recalculated = engine.recalculate_stale(value_node)
+        nodes_recalculated += len(recalculated)
+
     db.commit()
-    
+
     return {
-        "status": "success",
-        "calculated": len(results),
-        "failed": len(errors),
-        "results": results,
-        "errors": errors
+        "success": success,
+        "error": error,
+        "computed_value": value_node.computed_value,
+        "nodes_recalculated": nodes_recalculated
     }

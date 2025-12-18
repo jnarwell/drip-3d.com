@@ -406,6 +406,110 @@ GET /api/v1/linear/health
 }
 ```
 
+## Enhanced Linear API (Team Members & Projects)
+
+### Overview
+
+The enhanced Linear API (`/api/v1/linear-enhanced/`) provides additional endpoints for fetching team member data and project assignments. This is used for displaying team-specific information on both the company Team page and the team portal.
+
+### Available Endpoints
+
+#### Get Team Members with Projects
+```
+GET /api/v1/linear-enhanced/team-members?force_refresh=false
+
+Response:
+{
+  "lastUpdated": "2025-12-14T10:00:00Z",
+  "members": [
+    {
+      "id": "lead",
+      "linearId": "user_abc123",
+      "name": "Jamie Marwell",
+      "email": "jamie@drip-3d.com",
+      "avatarUrl": "https://...",
+      "isAdmin": true,
+      "activeProjects": ["Acoustic System", "Documentation"],
+      "leadProjects": [...],
+      "memberProjects": [...]
+    }
+  ]
+}
+```
+
+#### Get Member's Project Details
+```
+GET /api/v1/linear-enhanced/member/{member_id}/projects
+
+Response:
+{
+  "memberId": "lead",
+  "leadProjects": [
+    {
+      "projectName": "Acoustic System Design",
+      "projectId": "proj_123",
+      "phase": 1,
+      "progress": 0.75,
+      "health": "onTrack"
+    }
+  ],
+  "memberProjects": [...],
+  "lastUpdated": "2025-12-14T10:00:00Z"
+}
+```
+
+#### Force Refresh All Caches
+```
+POST /api/v1/linear-enhanced/refresh-all
+
+Response:
+{
+  "message": "All caches refreshed successfully",
+  "results": {
+    "initiatives": { "refreshed": true, ... },
+    "team_members": { "refreshed": true, ... },
+    "projects_by_member": { "refreshed": true, ... }
+  }
+}
+```
+
+### Frontend Hooks
+
+```typescript
+// Available in frontend/src/hooks/useLinearData.tsx
+
+// Fetch progress phases (used by ProgressPage)
+const { phases, loading, error, refetch } = useLinearProgress();
+
+// Fetch team members with projects (for TeamPage - planned)
+const { members, loading, error, refetch } = useLinearTeam();
+
+// Fetch specific member's projects
+const { leadProjects, memberProjects, loading } = useLinearMemberProjects(memberId);
+```
+
+### Team Member ID Mapping
+
+The system maps Linear users to internal team member IDs:
+
+| Linear Name | Team ID | Role |
+|-------------|---------|------|
+| Jamie Marwell | `lead` | Lead Engineer |
+| Emma Blemaster | `chemical` | Chemical |
+| Addison Prarie | `software` | Software/Simulation |
+| Ryota Sato | `acoustics` | Acoustics |
+| Weston Keller | `electrical` | Power Systems |
+| Pierce Thompson | `mechanical` | Mechanical |
+
+### Planned Integration
+
+The enhanced API hooks exist but are not yet connected to the Team pages. Future work:
+1. Connect `useLinearTeam()` to TeamPage component cards
+2. Show project assignments per team member
+3. Display lead/member roles with progress indicators
+
+---
+
 ## Best Practices
 
 ### Issue Creation
@@ -455,6 +559,6 @@ GET /api/v1/linear/health
 
 ---
 
-*Last Updated: December 2, 2025*
-*System Version: 1.0.0*
+*Last Updated: December 14, 2025*
+*System Version: 1.1.0*
 *Priority: MEDIUM - Project visibility and coordination system*

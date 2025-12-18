@@ -141,12 +141,16 @@ export interface ComponentProperty {
   conditions?: Record<string, any>;
   updated_at: string;
   updated_by?: string;
-  // Formula-related fields
-  is_calculated?: boolean;
-  formula_id?: number;
-  calculation_status?: 'manual' | 'calculated' | 'error' | 'stale';
-  calculation_inputs?: Record<string, any>;
-  last_calculated_at?: string;
+  // Value system integration
+  value_node_id?: number;
+  value_node?: {
+    id: number;
+    node_type: 'literal' | 'expression' | 'reference' | 'table_lookup';
+    expression_string?: string;
+    computed_value?: number;
+    computed_unit_symbol?: string;
+    computation_status: 'pending' | 'valid' | 'stale' | 'error' | 'circular';
+  };
 }
 
 export interface DashboardStats {
