@@ -95,8 +95,8 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
   }, [value]);
 
   // Debounce timer refs
-  const entityTimerRef = useRef<NodeJS.Timeout>();
-  const propertyTimerRef = useRef<NodeJS.Timeout>();
+  const entityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const propertyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Track the latest query to prevent race conditions
   const latestEntityQueryRef = useRef<string>('');
   const latestPropertyQueryRef = useRef<{ entityCode: string; query: string }>({ entityCode: '', query: '' });
