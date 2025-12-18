@@ -68,11 +68,14 @@
 
 **Issue**: When editing a source property value, dependent expressions stayed in "stale" status and didn't auto-recalculate.
 
-**Status**: RESOLVED (December 17, 2025)
+**Status**: RESOLVED (December 18, 2025)
 
-**Solution**:
-- Added `engine.recalculate_stale(node)` calls after:
-  - `update_literal()` in properties.py
-  - `update_literal()` in values.py PUT /literal endpoint
-  - `recalculate()` in values.py PUT /expression endpoint
+**Root Cause**: The `recalculate_stale()` function was walking upstream (dependencies) instead of downstream (dependents). When a literal is updated, its dependents are marked stale, but walking dependencies wouldn't find them.
+
+**Solution (Two Parts)**:
+1. Added `engine.recalculate_stale(node)` calls after update endpoints
+2. Fixed the graph traversal direction in `value_engine.py`:
+   - `recalculate_stale()` now walks `node.dependents` (downstream)
+   - Added `_collect_stale_dependents()` to recursively find stale nodes
+   - Added `_sort_by_dependency_order()` to ensure correct calculation order
 - Dependent values now automatically recalculate when source changes
