@@ -561,45 +561,82 @@ class ValueEngine:
 
     def recalculate_stale(self, node: ValueNode) -> List[ValueNode]:
         """
-        Recalculate all stale nodes in the dependency tree rooted at node.
+        Recalculate all stale dependents of this node.
 
-        Uses topological sort to ensure dependencies are calculated first.
+        Walks downstream (dependents) to find stale nodes, then recalculates
+        them in proper order (dependencies first).
 
         Returns list of recalculated nodes.
         """
-        # Get all stale nodes in dependency order
-        stale_nodes = self._get_stale_nodes_ordered(node)
-        recalculated = []
+        # Collect all stale dependents (walking downstream)
+        stale_nodes = self._collect_stale_dependents(node)
 
+        if not stale_nodes:
+            logger.debug(f"No stale dependents found for node {node.id}")
+            return []
+
+        logger.info(f"Found {len(stale_nodes)} stale dependents to recalculate")
+
+        # Sort by dependency order (nodes with fewer dependencies first)
+        # This ensures we recalculate in the right order
+        stale_nodes = self._sort_by_dependency_order(stale_nodes)
+
+        recalculated = []
         for n in stale_nodes:
+            logger.debug(f"Recalculating stale node {n.id}: {n.expression_string}")
             success, error = self.recalculate(n)
             if success:
                 recalculated.append(n)
+                logger.info(f"Successfully recalculated node {n.id}, new value: {n.computed_value}")
             else:
                 logger.warning(f"Failed to recalculate node {n.id}: {error}")
 
+        self.db.flush()
         return recalculated
 
-    def _get_stale_nodes_ordered(self, node: ValueNode, visited: Set[int] = None) -> List[ValueNode]:
-        """Get all stale nodes in topological order (dependencies first)."""
+    def _collect_stale_dependents(self, node: ValueNode, visited: Set[int] = None) -> List[ValueNode]:
+        """Collect all stale nodes that depend on this node (walk downstream)."""
         if visited is None:
             visited = set()
 
-        if node.id in visited:
-            return []
-
-        visited.add(node.id)
         result = []
 
-        # First, process dependencies
-        for dep in node.dependencies:
-            result.extend(self._get_stale_nodes_ordered(dep.source_node, visited))
+        # Walk through dependents (things that depend ON this node)
+        for dep in node.dependents:
+            dependent = dep.dependent_node
+            if dependent.id in visited:
+                continue
+            visited.add(dependent.id)
 
-        # Then add this node if stale
-        if node.is_stale():
-            result.append(node)
+            # If this dependent is stale, add it
+            if dependent.is_stale():
+                result.append(dependent)
+
+            # Recursively collect from this dependent's dependents
+            result.extend(self._collect_stale_dependents(dependent, visited))
 
         return result
+
+    def _sort_by_dependency_order(self, nodes: List[ValueNode]) -> List[ValueNode]:
+        """Sort nodes so dependencies are calculated before dependents."""
+        node_ids = {n.id for n in nodes}
+
+        # Calculate dependency depth for each node
+        depths = {}
+        for node in nodes:
+            depths[node.id] = self._get_dependency_depth(node, node_ids)
+
+        # Sort by depth (lower depth = fewer dependencies = calculate first)
+        return sorted(nodes, key=lambda n: depths[n.id])
+
+    def _get_dependency_depth(self, node: ValueNode, relevant_ids: Set[int]) -> int:
+        """Get the dependency depth of a node within a set of relevant nodes."""
+        max_depth = 0
+        for dep in node.dependencies:
+            if dep.source_id in relevant_ids:
+                source_node = dep.source_node
+                max_depth = max(max_depth, 1 + self._get_dependency_depth(source_node, relevant_ids))
+        return max_depth
 
     def get_dependency_tree(self, node: ValueNode, depth: int = 10) -> Dict[str, Any]:
         """
