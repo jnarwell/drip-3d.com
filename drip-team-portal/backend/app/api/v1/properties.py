@@ -295,6 +295,8 @@ async def update_component_property(
                     # Update existing expression node
                     engine.update_expression(existing_node, expression)
                     engine.recalculate(existing_node)
+                    # Auto-recalculate all stale dependents
+                    engine.recalculate_stale(existing_node)
                 else:
                     # Existing node is a literal - create new expression to replace it
                     value_node = engine.create_expression(
