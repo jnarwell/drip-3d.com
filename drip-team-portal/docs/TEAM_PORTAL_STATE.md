@@ -1,5 +1,5 @@
 # Team Portal State Analysis
-**Date**: December 17, 2025
+**Date**: December 19, 2025
 
 ## Current State Overview
 
@@ -79,10 +79,18 @@ Dimensional analysis with 7 SI base dimensions:
 - Amount (mol)
 - Luminous intensity (cd)
 
+#### Architecture (December 2025 Overhaul)
+- **SI Base Storage**: All values computed and stored in SI base units internally
+- **Backend-driven Preferences**: User preferences stored in database (`user_unit_preferences` table)
+- **Display-only Conversion**: Frontend converts from SI to user's preferred unit only for display
+- **computed_unit_symbol Field**: ValueNode stores the SI unit symbol (e.g., "m", "Pa") for proper display conversion
+
 #### Features
 - Automatic unit computation through expressions
 - Unit conversion between compatible units
-- User-preferred unit display (stored in localStorage)
+- Mixed unit expressions (e.g., `100 mm + 1 m` works correctly)
+- Dimension tracking through expression evaluation
+- User-preferred unit display per quantity type
 
 ### 5. **Main Pages**
 
@@ -141,12 +149,21 @@ ValueNode:
   - id, node_type (LITERAL/EXPRESSION/REFERENCE/TABLE_LOOKUP)
   - numeric_value, unit_id (for literals)
   - expression_string, parsed_expression (for expressions)
-  - computed_value, computed_unit_id (cached result)
+  - computed_value, computed_unit_id, computed_unit_symbol (cached result)
   - computation_status (VALID/STALE/ERROR/PENDING/CIRCULAR)
 
 ValueDependency:
   - dependent_id, source_id
   - variable_name (how it's referenced in expression)
+```
+
+### User Preferences Models (`/backend/app/models/user_preferences.py`)
+```python
+UserUnitPreference:
+  - id, user_id
+  - quantity_type (e.g., "length", "pressure", "temperature")
+  - preferred_unit_id (FK to units table)
+  - precision (display precision, default 0.01)
 ```
 
 ### Unit Models (`/backend/app/models/units.py`)
@@ -163,8 +180,10 @@ Unit:
 ### ValueEngine (`/backend/app/services/value_engine.py`)
 - Expression parsing with SymPy
 - Reference resolution (component/material property lookup)
+- Unit conversion to SI base units during evaluation
+- SI unit symbol tracking (stored in `computed_unit_symbol`)
 - Dependency graph building
-- Stale detection and recalculation cascade
+- Stale detection and recalculation cascade (walks dependents, not dependencies)
 - Circular dependency detection
 
 ### UnitEngine (`/backend/app/services/unit_engine.py`)

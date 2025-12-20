@@ -79,3 +79,25 @@
    - Added `_collect_stale_dependents()` to recursively find stale nodes
    - Added `_sort_by_dependency_order()` to ensure correct calculation order
 - Dependent values now automatically recalculate when source changes
+
+---
+
+## 6. Expression Results Showing Wrong Units (RESOLVED)
+
+**Issue**: Expression results computed in SI base units (e.g., 0.4 meters) were displayed with the wrong unit symbol (e.g., "0.4 mm" instead of "0.4 m"), causing values to appear 1000x incorrect.
+
+**Status**: RESOLVED (December 19, 2025)
+
+**Root Cause**: The API wasn't returning the SI unit symbol for the computed value. The frontend needs to know the *actual* computed unit to convert properly for display.
+
+**Solution (Three Parts)**:
+1. Added `computed_unit_symbol` field to ValueNode model (stores "m", "Pa", etc.)
+2. Updated `value_engine.py` to track and store SI unit symbol during expression evaluation
+3. Updated `properties.py` API to return `computed_unit_symbol` in the response
+
+**Key Files**:
+- `backend/app/models/values.py` - Added `computed_unit_symbol` column
+- `backend/app/services/value_engine.py` - Unit tracking during evaluation
+- `backend/app/api/v1/properties.py` - Return `computed_unit_symbol` in response
+
+**Architecture Note**: All values are computed and stored in SI base units. The `computed_unit_symbol` tells the frontend which SI unit to convert FROM when displaying in the user's preferred unit.

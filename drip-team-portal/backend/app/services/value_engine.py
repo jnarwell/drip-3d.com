@@ -38,6 +38,31 @@ logger = logging.getLogger(__name__)
 # Property names must start with a letter (e.g., Density, thermal_conductivity)
 REFERENCE_PATTERN = re.compile(r'#([a-zA-Z0-9][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)?)')
 
+# Regex for literal values with units: 12mm, 5 m, 100Pa, 3.14 kg, etc.
+# Captures: number (with optional decimal), optional space, unit symbol
+LITERAL_WITH_UNIT_PATTERN = re.compile(
+    r'(?<![a-zA-Z0-9_])(-?\d+\.?\d*)\s*'  # Number (negative allowed)
+    r'(nm|μm|mm|cm|m|km|'  # Length
+    r'mm²|cm²|m²|km²|ha|in²|ft²|'  # Area
+    r'mm³|cm³|mL|L|m³|in³|ft³|gal|'  # Volume
+    r'μg|mg|g|kg|t|oz|lb|'  # Mass
+    r'μN|mN|N|kN|MN|lbf|'  # Force
+    r'Pa|kPa|MPa|GPa|bar|mbar|psi|ksi|'  # Pressure
+    r'K|°C|°F|'  # Temperature
+    r'ps|ns|μs|ms|s|min|h|d|yr|'  # Time
+    r'Hz|kHz|MHz|GHz|'  # Frequency
+    r'J|kJ|MJ|Wh|kWh|BTU|'  # Energy
+    r'W|mW|kW|MW|hp|'  # Power
+    r'N·m|kN·m|lbf·ft|'  # Torque
+    r'A|mA|μA|V|mV|kV|Ω|kΩ|MΩ|'  # Electrical
+    r'rad|mrad|deg|°|'  # Angle
+    r'm/s|km/h|ft/s|mph|'  # Velocity
+    r'm/s²|'  # Acceleration
+    r'kg/m³|g/cm³|lb/ft³'  # Density
+    r')(?![a-zA-Z0-9_])',  # Negative lookahead to avoid partial matches
+    re.UNICODE
+)
+
 
 class ExpressionError(Exception):
     """Error during expression parsing or evaluation."""
@@ -170,6 +195,120 @@ class ValueEngine:
 
     # ==================== EXPRESSION PARSING ====================
 
+    # SI base units for each dimension
+    DIMENSION_SI_UNITS = {
+        'length': 'm',
+        'area': 'm²',
+        'volume': 'm³',
+        'mass': 'kg',
+        'force': 'N',
+        'pressure': 'Pa',
+        'temperature': 'K',
+        'time': 's',
+        'frequency': 'Hz',
+        'energy': 'J',
+        'power': 'W',
+        'torque': 'N·m',
+        'current': 'A',
+        'voltage': 'V',
+        'resistance': 'Ω',
+        'angle': 'rad',
+        'velocity': 'm/s',
+        'acceleration': 'm/s²',
+        'density': 'kg/m³',
+    }
+
+    # Map unit symbols to their dimension
+    UNIT_TO_DIMENSION = {
+        # Length
+        'nm': 'length', 'μm': 'length', 'mm': 'length', 'cm': 'length', 'm': 'length', 'km': 'length',
+        'in': 'length', 'ft': 'length',
+        # Area
+        'mm²': 'area', 'cm²': 'area', 'm²': 'area', 'km²': 'area', 'ha': 'area', 'in²': 'area', 'ft²': 'area',
+        # Volume
+        'mm³': 'volume', 'cm³': 'volume', 'mL': 'volume', 'L': 'volume', 'm³': 'volume',
+        'in³': 'volume', 'ft³': 'volume', 'gal': 'volume',
+        # Mass
+        'μg': 'mass', 'mg': 'mass', 'g': 'mass', 'kg': 'mass', 't': 'mass', 'oz': 'mass', 'lb': 'mass',
+        # Force
+        'μN': 'force', 'mN': 'force', 'N': 'force', 'kN': 'force', 'MN': 'force', 'lbf': 'force',
+        # Pressure
+        'Pa': 'pressure', 'kPa': 'pressure', 'MPa': 'pressure', 'GPa': 'pressure',
+        'bar': 'pressure', 'mbar': 'pressure', 'psi': 'pressure', 'ksi': 'pressure',
+        # Temperature
+        'K': 'temperature', '°C': 'temperature', '°F': 'temperature',
+        # Time
+        'ps': 'time', 'ns': 'time', 'μs': 'time', 'ms': 'time', 's': 'time',
+        'min': 'time', 'h': 'time', 'd': 'time', 'yr': 'time',
+        # Frequency
+        'Hz': 'frequency', 'kHz': 'frequency', 'MHz': 'frequency', 'GHz': 'frequency',
+        # Energy
+        'J': 'energy', 'kJ': 'energy', 'MJ': 'energy', 'Wh': 'energy', 'kWh': 'energy', 'BTU': 'energy',
+        # Power
+        'W': 'power', 'mW': 'power', 'kW': 'power', 'MW': 'power', 'hp': 'power',
+        # Torque
+        'N·m': 'torque', 'kN·m': 'torque', 'lbf·ft': 'torque',
+        # Electrical
+        'A': 'current', 'mA': 'current', 'μA': 'current',
+        'V': 'voltage', 'mV': 'voltage', 'kV': 'voltage',
+        'Ω': 'resistance', 'kΩ': 'resistance', 'MΩ': 'resistance',
+        # Angle
+        'rad': 'angle', 'mrad': 'angle', 'deg': 'angle', '°': 'angle',
+        # Velocity
+        'm/s': 'velocity', 'km/h': 'velocity', 'ft/s': 'velocity', 'mph': 'velocity',
+        # Acceleration
+        'm/s²': 'acceleration',
+        # Density
+        'kg/m³': 'density', 'g/cm³': 'density', 'lb/ft³': 'density',
+    }
+
+    # Unit conversion factors to SI base units
+    UNIT_TO_SI = {
+        # Length -> meters
+        'nm': 1e-9, 'μm': 1e-6, 'mm': 0.001, 'cm': 0.01, 'm': 1, 'km': 1000,
+        'in': 0.0254, 'ft': 0.3048,
+        # Area -> m²
+        'mm²': 1e-6, 'cm²': 1e-4, 'm²': 1, 'km²': 1e6, 'ha': 1e4,
+        'in²': 0.00064516, 'ft²': 0.092903,
+        # Volume -> m³
+        'mm³': 1e-9, 'cm³': 1e-6, 'mL': 1e-6, 'L': 0.001, 'm³': 1,
+        'in³': 1.6387e-5, 'ft³': 0.0283168, 'gal': 0.00378541,
+        # Mass -> kg
+        'μg': 1e-9, 'mg': 1e-6, 'g': 0.001, 'kg': 1, 't': 1000,
+        'oz': 0.0283495, 'lb': 0.453592,
+        # Force -> N
+        'μN': 1e-6, 'mN': 1e-3, 'N': 1, 'kN': 1000, 'MN': 1e6,
+        'lbf': 4.44822,
+        # Pressure -> Pa
+        'Pa': 1, 'kPa': 1000, 'MPa': 1e6, 'GPa': 1e9,
+        'bar': 1e5, 'mbar': 100, 'psi': 6894.76, 'ksi': 6.89476e6,
+        # Temperature -> K (special handling needed for offset)
+        'K': 1, '°C': 1, '°F': 5/9,  # Note: offset conversion handled separately
+        # Time -> seconds
+        'ps': 1e-12, 'ns': 1e-9, 'μs': 1e-6, 'ms': 0.001, 's': 1,
+        'min': 60, 'h': 3600, 'd': 86400, 'yr': 3.154e7,
+        # Frequency -> Hz
+        'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9,
+        # Energy -> J
+        'J': 1, 'kJ': 1000, 'MJ': 1e6, 'Wh': 3600, 'kWh': 3.6e6, 'BTU': 1055.06,
+        # Power -> W
+        'W': 1, 'mW': 0.001, 'kW': 1000, 'MW': 1e6, 'hp': 745.7,
+        # Torque -> N·m
+        'N·m': 1, 'kN·m': 1000, 'lbf·ft': 1.35582,
+        # Electrical
+        'A': 1, 'mA': 0.001, 'μA': 1e-6,
+        'V': 1, 'mV': 0.001, 'kV': 1000,
+        'Ω': 1, 'kΩ': 1000, 'MΩ': 1e6,
+        # Angle -> radians
+        'rad': 1, 'mrad': 0.001, 'deg': 0.0174533, '°': 0.0174533,
+        # Velocity -> m/s
+        'm/s': 1, 'km/h': 0.277778, 'ft/s': 0.3048, 'mph': 0.44704,
+        # Acceleration -> m/s²
+        'm/s²': 1,
+        # Density -> kg/m³
+        'kg/m³': 1, 'g/cm³': 1000, 'lb/ft³': 16.0185,
+    }
+
     def _parse_expression(self, expression: str) -> Dict[str, Any]:
         """
         Parse an expression string into an AST-like structure.
@@ -179,19 +318,52 @@ class ValueEngine:
         - Functions: sqrt, sin, cos, tan, log, exp, abs
         - Constants: pi, e
         - References: #entity.property
+        - Literal values with units: 12mm, 5 m, 100Pa
 
         Returns a dict with parsing results.
         """
         # Replace references with placeholder symbols
         placeholders = {}
+        ref_units = {}  # Store unit symbols for each reference
+        literal_values = {}  # Store converted literal values
         refs = self._extract_references(expression)
 
         modified_expr = expression
         for i, ref in enumerate(refs):
             placeholder = f"__ref_{i}__"
             placeholders[placeholder] = ref
+            # Look up and store the unit for this reference
+            unit_symbol = self._get_reference_unit(ref)
+            if unit_symbol:
+                ref_units[placeholder] = unit_symbol
             # Replace #ref with placeholder (handle the # prefix)
             modified_expr = modified_expr.replace(f"#{ref}", placeholder)
+
+        # Replace literal values with units (e.g., 12mm -> converted SI value)
+        literal_matches = LITERAL_WITH_UNIT_PATTERN.findall(modified_expr)
+        for j, (value_str, unit) in enumerate(literal_matches):
+            original_text = f"{value_str}{unit}"
+            # Also handle with space
+            original_with_space = f"{value_str} {unit}"
+
+            numeric_value = float(value_str)
+            # Convert to SI base unit
+            conversion_factor = self.UNIT_TO_SI.get(unit, 1)
+            si_value = numeric_value * conversion_factor
+
+            placeholder = f"__lit_{j}__"
+            literal_values[placeholder] = {
+                'original': original_text,
+                'value': numeric_value,
+                'unit': unit,
+                'si_value': si_value
+            }
+
+            # Replace in expression (try both with and without space)
+            if original_with_space in modified_expr:
+                modified_expr = modified_expr.replace(original_with_space, placeholder, 1)
+            else:
+                modified_expr = modified_expr.replace(original_text, placeholder, 1)
 
         # Try to parse with SymPy
         try:
@@ -212,6 +384,8 @@ class ValueEngine:
             # Add placeholders as symbols
             for p in placeholders:
                 local_dict[p] = Symbol(p)
+            for p in literal_values:
+                local_dict[p] = Symbol(p)
 
             parsed = sympify(modified_expr, locals=local_dict)
 
@@ -219,6 +393,8 @@ class ValueEngine:
                 "original": expression,
                 "modified": modified_expr,
                 "placeholders": placeholders,
+                "ref_units": ref_units,  # Unit symbols for each reference placeholder
+                "literal_values": literal_values,
                 "sympy_repr": str(parsed),
                 "references": refs,
                 "valid": True
@@ -239,6 +415,54 @@ class ValueEngine:
         code = re.sub(r'_+', '_', code)
         code = code.strip('_')
         return code
+
+    def _get_reference_unit(self, ref: str) -> Optional[str]:
+        """
+        Get the unit symbol for a reference.
+
+        Returns the unit symbol (e.g., 'mm', 'Pa') or None if not found.
+        """
+        parts = ref.split(".")
+        if len(parts) != 2:
+            return None
+
+        entity_code, prop_name = parts
+
+        # Try Component
+        component = self.db.query(Component).filter(Component.code == entity_code).first()
+        if not component:
+            from sqlalchemy import func
+            generated_code_expr = func.trim(
+                func.regexp_replace(
+                    func.regexp_replace(func.upper(Component.name), '[^a-zA-Z0-9]', '_', 'g'),
+                    '_+', '_', 'g'
+                ), '_'
+            )
+            component = self.db.query(Component).filter(generated_code_expr == entity_code).first()
+
+        if component:
+            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name).first()
+            if prop_def:
+                return prop_def.unit
+
+        # Try Material
+        material = self.db.query(Material).filter(Material.code == entity_code).first()
+        if not material:
+            from sqlalchemy import func
+            generated_code_expr = func.trim(
+                func.regexp_replace(
+                    func.regexp_replace(func.upper(Material.name), '[^a-zA-Z0-9]', '_', 'g'),
+                    '_+', '_', 'g'
+                ), '_'
+            )
+            material = self.db.query(Material).filter(generated_code_expr == entity_code).first()
+
+        if material:
+            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name).first()
+            if prop_def:
+                return prop_def.unit
+
+        return None
 
     def _resolve_reference(self, ref: str) -> Optional[ValueNode]:
         """
@@ -396,52 +620,54 @@ class ValueEngine:
 
     # ==================== EXPRESSION EVALUATION ====================
 
-    def compute_value(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str]]:
+    def compute_value(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
         """
         Compute the value of a node.
 
-        Returns: (value, unit_id, success, error_message)
+        Returns: (value, unit_id, success, error_message, si_unit_symbol)
         """
         # Circular dependency check
         if node.id in self._evaluation_stack:
             node.computation_status = ComputationStatus.CIRCULAR
             node.computation_error = "Circular dependency detected"
-            return (None, None, False, "Circular dependency detected")
+            return (None, None, False, "Circular dependency detected", None)
 
         self._evaluation_stack.add(node.id)
 
         try:
             if node.node_type == NodeType.LITERAL:
-                return (node.numeric_value, node.unit_id, True, None)
+                return (node.numeric_value, node.unit_id, True, None, None)
 
             elif node.node_type == NodeType.REFERENCE:
                 if not node.reference_node:
-                    return (None, None, False, "Referenced node not found")
-                ref_value, ref_unit, success, error = self.compute_value(node.reference_node)
-                return (ref_value, ref_unit, success, error)
+                    return (None, None, False, "Referenced node not found", None)
+                ref_value, ref_unit, success, error, si_unit = self.compute_value(node.reference_node)
+                return (ref_value, ref_unit, success, error, si_unit)
 
             elif node.node_type == NodeType.EXPRESSION:
                 return self._evaluate_expression(node)
 
             else:
-                return (None, None, False, f"Unknown node type: {node.node_type}")
+                return (None, None, False, f"Unknown node type: {node.node_type}", None)
 
         finally:
             self._evaluation_stack.discard(node.id)
 
-    def _evaluate_expression(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str]]:
+    def _evaluate_expression(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
         """
         Evaluate an expression node.
 
         Resolves all dependencies, substitutes values, and computes result.
         Also tracks unit propagation through the expression.
+
+        Returns: (value, unit_id, success, error_message, si_unit_symbol)
         """
         if not node.parsed_expression:
-            return (None, None, False, "Expression not parsed")
+            return (None, None, False, "Expression not parsed", None)
 
         parsed = node.parsed_expression
         if not parsed.get("valid"):
-            return (None, None, False, "Invalid parsed expression")
+            return (None, None, False, "Invalid parsed expression", None)
 
         # Get values for all dependencies
         values = {}
@@ -449,10 +675,10 @@ class ValueEngine:
 
         for dep in node.dependencies:
             source = dep.source_node
-            val, unit_id, success, error = self.compute_value(source)
+            val, unit_id, success, error, _ = self.compute_value(source)
 
             if not success:
-                return (None, None, False, f"Dependency '{dep.variable_name}' failed: {error}")
+                return (None, None, False, f"Dependency '{dep.variable_name}' failed: {error}", None)
 
             placeholder = None
             for p, ref in parsed.get("placeholders", {}).items():
@@ -482,22 +708,51 @@ class ValueEngine:
                 'e': 2.718281828459045,
             }
 
-            # Add placeholder values
+            # Add placeholder values (from references) - CONVERT TO SI
+            ref_units = parsed.get("ref_units", {})
+            dimensions_used = set()  # Track dimensions for SI unit determination
             for p, val in values.items():
-                local_dict[p] = val
+                unit_symbol = ref_units.get(p)
+                if unit_symbol:
+                    conversion_factor = self.UNIT_TO_SI.get(unit_symbol, 1)
+                    si_val = val * conversion_factor
+                    logger.debug(f"Converting {p}: {val} {unit_symbol} -> {si_val} SI (factor: {conversion_factor})")
+                    local_dict[p] = si_val
+                    # Track the dimension
+                    dimension = self.UNIT_TO_DIMENSION.get(unit_symbol)
+                    if dimension:
+                        dimensions_used.add(dimension)
+                else:
+                    local_dict[p] = val
+
+            # Add literal values with units (already converted to SI)
+            for p, lit_info in parsed.get("literal_values", {}).items():
+                local_dict[p] = lit_info['si_value']
+                # Track the dimension from literal
+                lit_unit = lit_info.get('unit')
+                if lit_unit:
+                    dimension = self.UNIT_TO_DIMENSION.get(lit_unit)
+                    if dimension:
+                        dimensions_used.add(dimension)
 
             # Evaluate
             result = eval(modified_expr, {"__builtins__": {}}, local_dict)
 
-            # TODO: Compute resulting unit through dimensional analysis
-            # For now, return None for unit (will be implemented with more complex expressions)
+            # Determine the SI unit symbol for the result
+            # For simple expressions (add/subtract), result has same dimension as inputs
+            result_si_unit = None
+            if len(dimensions_used) == 1:
+                dimension = list(dimensions_used)[0]
+                result_si_unit = self.DIMENSION_SI_UNITS.get(dimension)
+
+            # Store SI unit symbol in parsed_expression for later use
             result_unit_id = self._compute_result_unit(parsed, units)
 
-            return (float(result), result_unit_id, True, None)
+            return (float(result), result_unit_id, True, None, result_si_unit)
 
         except Exception as e:
             logger.error(f"Failed to evaluate expression: {e}")
-            return (None, None, False, f"Evaluation error: {e}")
+            return (None, None, False, f"Evaluation error: {e}", None)
 
     def _compute_result_unit(self, parsed: Dict, units: Dict[str, int]) -> Optional[int]:
         """
@@ -529,11 +784,14 @@ class ValueEngine:
         """
         self._evaluation_stack.clear()
 
-        value, unit_id, success, error = self.compute_value(node)
+        value, unit_id, success, error, si_unit_symbol = self.compute_value(node)
 
         if success:
             node.computed_value = value
             node.computed_unit_id = unit_id
+            # Store the SI unit symbol for frontend display conversion
+            if si_unit_symbol:
+                node.computed_unit_symbol = si_unit_symbol
             node.computation_status = ComputationStatus.VALID
             node.computation_error = None
             node.last_computed = datetime.utcnow()

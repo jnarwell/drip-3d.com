@@ -27,6 +27,7 @@ from app.api.v1.variables import router as variables_router
 from app.api.v1.units import router as units_router
 from app.api.v1.values import router as values_router
 from app.api.v1.search import router as search_router
+from app.api.v1.user_preferences import router as user_preferences_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -49,6 +50,7 @@ async def startup_event():
             from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
             from app.models.units import Unit, UnitConversion, UnitAlias
             from app.models.values import ValueNode, ValueDependency, PropertyValueLink
+            from app.models.user_preferences import UserUnitPreference
 
             # Create all tables
             logging.info("Creating database tables...")
@@ -117,6 +119,7 @@ app.include_router(variables_router, tags=["variables"])
 app.include_router(units_router, tags=["units"])
 app.include_router(values_router, tags=["values"])
 app.include_router(search_router, tags=["search"])
+app.include_router(user_preferences_router, tags=["user-preferences"])
 
 @app.get("/")
 async def root():

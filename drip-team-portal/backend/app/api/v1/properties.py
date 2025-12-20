@@ -55,8 +55,10 @@ def _property_to_response(prop: ComponentProperty, db: Session) -> Dict[str, Any
     if prop.value_node_id:
         value_node = db.query(ValueNode).filter(ValueNode.id == prop.value_node_id).first()
         if value_node:
-            computed_unit_symbol = None
-            if value_node.computed_unit_id:
+            # Use the computed_unit_symbol stored directly on the ValueNode
+            # Fall back to looking up from computed_unit_id for backwards compatibility
+            computed_unit_symbol = value_node.computed_unit_symbol
+            if not computed_unit_symbol and value_node.computed_unit_id:
                 unit = db.query(Unit).filter(Unit.id == value_node.computed_unit_id).first()
                 if unit:
                     computed_unit_symbol = unit.symbol

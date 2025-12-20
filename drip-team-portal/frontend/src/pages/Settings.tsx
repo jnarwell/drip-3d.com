@@ -14,7 +14,8 @@ interface UnitSettings {
 
 const Settings: React.FC = () => {
   const { user } = useAuth0();
-  const { unitSettings: currentUnitSettings, updateUnitSetting } = useUnits();
+  const { unitSettings: currentUnitSettings, updateUnitSetting, saveAllPreferences, isLoading: isLoadingPreferences } = useUnits();
+  const [isSaving, setIsSaving] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
     'general': true,
@@ -520,17 +521,29 @@ const Settings: React.FC = () => {
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => {
-            // Save each unit setting to the context
-            Object.entries(unitSettings).forEach(([dimension, setting]) => {
-              updateUnitSetting(dimension, setting);
-            });
-            // You could add a toast notification here
-            alert('Settings saved successfully!');
+          disabled={isSaving}
+          onClick={async () => {
+            setIsSaving(true);
+            try {
+              // First update all settings in context
+              Object.entries(unitSettings).forEach(([dimension, setting]) => {
+                updateUnitSetting(dimension, setting);
+              });
+              // Then save to backend
+              await saveAllPreferences();
+              alert('Settings saved successfully!');
+            } catch (error) {
+              console.error('Failed to save settings:', error);
+              alert('Failed to save settings. Please try again.');
+            } finally {
+              setIsSaving(false);
+            }
           }}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          className={`inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+            isSaving ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+          }`}
         >
-          Save Settings
+          {isSaving ? 'Saving...' : 'Save Settings'}
         </button>
       </div>
     </div>

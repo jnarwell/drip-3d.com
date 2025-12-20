@@ -147,21 +147,24 @@ class SystemConstantCreate(BaseModel):
 - **API Endpoints**: All CRUD operations for components, properties, materials, constants
 - **Database**: PostgreSQL with auto-schema creation
 - **Static site migration**: Successfully migrated to React with all functionality preserved
+- **Value/Expression System**: Full reactive value system with `#entity.property` references
+- **Unit System**: SI base unit storage, user preferences in database, proper display conversion
 
-### **🔧 In Progress**
-- **Formula System**: Database models created, API integration pending
-- **Variable Reference System**: `#prefix` UI pattern for formula variables
-- **Property Calculations**: Formula-based property value calculation
+### **✅ Recently Completed**
+- **Expression References**: `#ENTITY.property` syntax for referencing any property
+- **Unit Tracking**: `computed_unit_symbol` field tracks SI unit for proper display conversion
+- **Auto-Recalculation**: Dependent expressions auto-recalculate when sources change
+- **User Unit Preferences**: Per-user display unit preferences stored in database
 
 ### **🗂️ Database Schema Status**
 ```sql
 -- Core tables (✅ Working)
-components, materials, properties, property_definitions, 
+components, materials, properties, property_definitions,
 system_constants, property_tables, users, tests
 
--- Formula tables (✅ Created, 🔧 Integration pending)  
-property_formulas, property_references, formula_validation_rules,
-calculation_history, formula_templates
+-- Value System tables (✅ Working)
+value_nodes, value_dependencies, units, unit_conversions,
+user_unit_preferences
 ```
 
 ## 🔄 **Deployment Checklist**

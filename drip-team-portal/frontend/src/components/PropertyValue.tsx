@@ -170,12 +170,25 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
       const computed = property.value_node.computed_value;
       const status = property.value_node.computation_status;
       const expr = property.value_node.expression_string;
+      const computedUnit = property.value_node.computed_unit_symbol || def.unit;
+
+      // Get dimension from computed unit and convert to user's preferred unit
+      const computedDimension = getDimensionFromUnit(computedUnit);
+      let displayValue = '';
+      if (status === 'valid' && computed !== null && computed !== undefined) {
+        if (computedDimension) {
+          const convertedValue = convertToUserUnit(computed, computedUnit, computedDimension);
+          displayValue = formatWithUserUnit(convertedValue, computedDimension);
+        } else {
+          displayValue = formatValueWithUnit(computed, computedUnit);
+        }
+      }
 
       return (
         <div className="flex items-center gap-2">
-          <span className={`font-mono text-sm ${status === 'error' ? 'text-red-600' : 'text-gray-900'}`}>
+          <span className={status === 'error' ? 'text-red-600' : 'text-gray-900'}>
             {status === 'valid' && computed !== null && computed !== undefined
-              ? formatValueWithUnit(computed, property.value_node.computed_unit_symbol || def.unit)
+              ? displayValue
               : status === 'error'
               ? 'Error'
               : 'Calculating...'}

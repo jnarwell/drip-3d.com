@@ -71,6 +71,7 @@ class ValueNode(Base):
     # Computed/cached result (for expressions and references)
     computed_value = Column(Float, nullable=True)
     computed_unit_id = Column(Integer, ForeignKey("units.id"), nullable=True)
+    computed_unit_symbol = Column(String, nullable=True)  # SI unit symbol for display (e.g., "m", "Pa")
     computation_status = Column(SQLEnum(ComputationStatus), default=ComputationStatus.PENDING)
     computation_error = Column(Text, nullable=True)
     last_computed = Column(DateTime, nullable=True)
