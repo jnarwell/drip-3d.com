@@ -22,7 +22,7 @@ interface UnitContextValue {
   getUserUnit: (dimension: string) => string;
   getDimensionFromUnit: (unit: string) => string | null;
   isLoading: boolean;
-  saveAllPreferences: () => Promise<void>;
+  saveAllPreferences: (settings?: UnitSettings) => Promise<void>;
 }
 
 const UnitContext = createContext<UnitContextValue | null>(null);
@@ -292,8 +292,10 @@ export const UnitProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Save all current settings to the backend
-  const saveAllPreferences = useCallback(async () => {
-    const preferences = Object.entries(unitSettings).map(([dimension, setting]) => ({
+  // Accepts optional settings parameter to avoid race condition with state updates
+  const saveAllPreferences = useCallback(async (settingsToSave?: UnitSettings) => {
+    const settingsSource = settingsToSave || unitSettings;
+    const preferences = Object.entries(settingsSource).map(([dimension, setting]) => ({
       quantity_type: dimension,
       unit_symbol: setting.scale,
       precision: setting.precision ?? 0.01,

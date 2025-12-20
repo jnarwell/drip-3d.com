@@ -349,13 +349,22 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
   return (
     <div className="relative">
       <div className="relative">
-        {/* Ghost text layer */}
+        {/* Ghost text layer - must match input styling exactly */}
         <div
-          className="absolute inset-0 px-3 py-2 font-mono text-sm pointer-events-none whitespace-pre"
-          style={{ color: 'transparent' }}
+          className="absolute inset-0 pointer-events-none whitespace-pre overflow-hidden flex items-center"
+          aria-hidden="true"
         >
-          {value}
-          <span className="text-gray-400">{ghostText}</span>
+          {/* Inner container matching input padding and border offset */}
+          <div
+            className="px-3 font-mono text-sm leading-5"
+            style={{
+              marginLeft: '1px',  // Account for input border
+              marginTop: '1px',
+            }}
+          >
+            <span style={{ color: 'transparent' }}>{value}</span>
+            <span className="text-gray-400">{ghostText}</span>
+          </div>
         </div>
 
         {/* Actual input */}
@@ -366,7 +375,7 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm bg-transparent ${className}`}
+          className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm leading-5 bg-transparent ${className}`}
           autoFocus={autoFocus}
           autoComplete="off"
         />

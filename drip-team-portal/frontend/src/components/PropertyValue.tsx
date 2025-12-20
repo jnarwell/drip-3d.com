@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { ComponentProperty, ValueType } from '../types';
 import { useUnits } from '../contexts/UnitContext';
-import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
+import { parseValueWithUnit, convertUnit, formatValueWithUnit, formatRangeWithUnit, BASE_UNITS } from '../utils/unitConversion';
 import ExpressionInput from './ExpressionInput';
 
 interface PropertyValueProps {
@@ -43,12 +43,15 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     }
 
     // Otherwise show the literal value
+    // NOTE: Values are stored in SI units (meters, kg, etc.), not in def.unit
+    // So we need to convert FROM the SI unit, not from def.unit
+    const siUnit = dimension ? BASE_UNITS[dimension] : def.unit;
     let initialValue = '';
     switch (def.value_type) {
       case ValueType.SINGLE:
         if (property.single_value !== null && property.single_value !== undefined) {
           if (dimension) {
-            const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
+            const convertedValue = convertToUserUnit(property.single_value, siUnit, dimension);
             initialValue = `${convertedValue} ${userUnit}`;
           } else {
             initialValue = `${property.single_value} ${def.unit}`;
@@ -59,8 +62,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         if (property.min_value !== null && property.min_value !== undefined &&
             property.max_value !== null && property.max_value !== undefined) {
           if (dimension) {
-            const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
-            const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
+            const convertedMin = convertToUserUnit(property.min_value, siUnit, dimension);
+            const convertedMax = convertToUserUnit(property.max_value, siUnit, dimension);
             initialValue = `${convertedMin} - ${convertedMax} ${userUnit}`;
           } else {
             initialValue = `${property.min_value} - ${property.max_value} ${def.unit}`;
@@ -70,8 +73,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
       case ValueType.AVERAGE:
         if (property.average_value !== null && property.average_value !== undefined) {
           if (dimension) {
-            const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
-            const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, def.unit, dimension) : 0;
+            const convertedAvg = convertToUserUnit(property.average_value, siUnit, dimension);
+            const convertedTol = property.tolerance ? convertToUserUnit(property.tolerance, siUnit, dimension) : 0;
             initialValue = convertedTol ? `${convertedAvg} +/- ${convertedTol} ${userUnit}` : `${convertedAvg} ${userUnit}`;
           } else {
             const tol = property.tolerance || 0;
@@ -89,7 +92,9 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
       await api.patch(`/api/v1/components/${componentId}/properties/${property.id}`, values);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['component-properties', componentId] });
+      // Invalidate ALL component-properties queries to refresh dependent values in other components
+      // When a value changes, expressions in other components that reference it are recalculated
+      queryClient.invalidateQueries({ queryKey: ['component-properties'] });
       setIsEditing(false);
     },
   });
@@ -98,12 +103,25 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     const values: any = {};
     const trimmed = inputValue.trim();
 
-    // Check if it's an expression (contains # reference)
-    if (trimmed.includes('#')) {
+    // Check if it's an expression:
+    // - Contains # reference (e.g., #component.property)
+    // - Contains math operators with values (e.g., 1m + 0.3mm, (1/8)*3mm)
+    // We detect expressions by looking for: operators between values, parentheses, or references
+    const hasReference = trimmed.includes('#');
+    const hasMathExpression = /[\+\-\*\/\(\)]/.test(trimmed) &&
+      // Make sure it's not just a negative number or a range like "1 - 2"
+      // Look for patterns like "1m + 2mm" or "(1/8)*3" etc.
+      (/\d+\.?\d*\s*[a-zA-Z°μ]*\s*[\+\*\/]\s*\d/.test(trimmed) ||
+       /\d+\.?\d*\s*[a-zA-Z°μ]*\s*\-\s*\d+\.?\d*\s*[a-zA-Z°μ]+\s*[\+\*\/]/.test(trimmed) ||
+       /\(.*\)/.test(trimmed));
+
+    if (hasReference || hasMathExpression) {
       values.expression = trimmed;
     } else {
       // Parse as literal value
-      const baseUnit = property.property_definition.unit;
+      // NOTE: Always convert to SI unit for storage consistency with expressions
+      // The backend stores all values in SI (meters, kg, etc.)
+      const siUnit = dimension ? BASE_UNITS[dimension] : property.property_definition.unit;
       const parsed = parseValueWithUnit(trimmed, userUnit);
 
       if (parsed.isRange && parsed.min !== undefined && parsed.max !== undefined) {
@@ -111,8 +129,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         let maxBase = parsed.max;
 
         if (dimension) {
-          minBase = convertUnit(parsed.min, parsed.unit, baseUnit);
-          maxBase = convertUnit(parsed.max, parsed.unit, baseUnit);
+          minBase = convertUnit(parsed.min, parsed.unit, siUnit);
+          maxBase = convertUnit(parsed.max, parsed.unit, siUnit);
         }
 
         if (property.property_definition.value_type === ValueType.AVERAGE) {
@@ -126,7 +144,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         let valueBase = parsed.value;
 
         if (dimension) {
-          valueBase = convertUnit(parsed.value, parsed.unit, baseUnit);
+          valueBase = convertUnit(parsed.value, parsed.unit, siUnit);
         }
 
         if (property.property_definition.value_type === ValueType.SINGLE) {
@@ -204,11 +222,15 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
     }
 
     // Display literal values in user's preferred units
+    // NOTE: Values are stored in SI units (meters, kg, etc.), not in def.unit
+    // So we need to convert FROM the SI unit, not from def.unit
+    const siUnit = dimension ? BASE_UNITS[dimension] : def.unit;
+
     switch (def.value_type) {
       case ValueType.SINGLE:
         if (property.single_value !== null && property.single_value !== undefined) {
           if (dimension) {
-            const convertedValue = convertToUserUnit(property.single_value, def.unit, dimension);
+            const convertedValue = convertToUserUnit(property.single_value, siUnit, dimension);
             return <span className="text-gray-900">{formatWithUserUnit(convertedValue, dimension)}</span>;
           } else {
             return <span className="text-gray-900">{formatValueWithUnit(property.single_value, def.unit)}</span>;
@@ -220,8 +242,8 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
         if (property.min_value !== null && property.min_value !== undefined &&
             property.max_value !== null && property.max_value !== undefined) {
           if (dimension) {
-            const convertedMin = convertToUserUnit(property.min_value, def.unit, dimension);
-            const convertedMax = convertToUserUnit(property.max_value, def.unit, dimension);
+            const convertedMin = convertToUserUnit(property.min_value, siUnit, dimension);
+            const convertedMax = convertToUserUnit(property.max_value, siUnit, dimension);
             return <span className="text-gray-900">{formatRangeWithUserUnit(convertedMin, convertedMax, dimension)}</span>;
           } else {
             return <span className="text-gray-900">{formatRangeWithUnit(property.min_value, property.max_value, def.unit)}</span>;
@@ -232,9 +254,9 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
       case ValueType.AVERAGE:
         if (property.average_value !== null && property.average_value !== undefined) {
           if (dimension) {
-            const convertedAvg = convertToUserUnit(property.average_value, def.unit, dimension);
+            const convertedAvg = convertToUserUnit(property.average_value, siUnit, dimension);
             if (property.tolerance && property.tolerance !== null && property.tolerance !== undefined) {
-              const convertedTol = convertToUserUnit(property.tolerance, def.unit, dimension);
+              const convertedTol = convertToUserUnit(property.tolerance, siUnit, dimension);
               return (
                 <span className="text-gray-900">
                   {formatWithUserUnit(convertedAvg, dimension)} +/- {formatWithUserUnit(convertedTol, dimension)}

@@ -14,6 +14,7 @@ from app.models.property import PropertyDefinition, ComponentProperty, PropertyT
 from app.models.component import Component
 from app.models.values import ValueNode
 from app.models.units import Unit
+from app.models.user import User
 from app.services.value_engine import ValueEngine, ExpressionError
 from app.schemas.property import (
     PropertyDefinitionCreate,
@@ -26,6 +27,15 @@ from app.schemas.property import (
 
 router = APIRouter(prefix="/api/v1")
 logger = logging.getLogger(__name__)
+
+
+def _get_user_id(db: Session, current_user: dict) -> Optional[int]:
+    """Get database user ID from auth context."""
+    auth0_id = current_user.get("sub", "")
+    if not auth0_id:
+        return None
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    return user.id if user else None
 
 
 # ==================== Helper Functions ====================
@@ -178,7 +188,8 @@ async def add_component_property(
 
     # Create ValueNode if value or expression provided
     value_node_id = None
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     # Build description for the value node
     comp_code = component.code or f"COMP_{component.id}"
@@ -262,7 +273,8 @@ async def update_component_property(
         )
 
     update_data = property_update.dict(exclude_unset=True)
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     # Build description for value node
     comp_code = component.code or f"COMP_{component.id}"
@@ -279,9 +291,24 @@ async def update_component_property(
                 existing_node = db.query(ValueNode).filter(
                     ValueNode.id == property_value.value_node_id
                 ).first()
-                if existing_node:
+                if existing_node and existing_node.node_type.value == "expression":
+                    # Update existing expression node
                     engine.update_expression(existing_node, expression)
                     engine.recalculate(existing_node)
+                else:
+                    # Existing node is a literal - create new expression to replace it
+                    value_node = engine.create_expression(
+                        expression=expression,
+                        description=value_description,
+                        created_by=current_user["email"],
+                        resolve_references=True
+                    )
+                    # Transfer dependents from old node to new node
+                    engine.transfer_dependents(existing_node, value_node)
+                    engine.recalculate(value_node)
+                    # Recalculate anything that was depending on the old node
+                    engine.recalculate_stale(value_node)
+                    property_value.value_node_id = value_node.id
             else:
                 # Create new expression ValueNode
                 value_node = engine.create_expression(
@@ -323,6 +350,10 @@ async def update_component_property(
                     description=value_description,
                     created_by=current_user["email"]
                 )
+                # Transfer dependents from old node to new node
+                engine.transfer_dependents(existing_node, value_node)
+                # Recalculate anything that was depending on the old node
+                engine.recalculate_stale(value_node)
                 property_value.value_node_id = value_node.id
         else:
             # Create new literal ValueNode
@@ -430,7 +461,8 @@ async def recalculate_property(
             detail="ValueNode not found"
         )
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     success, error = engine.recalculate(value_node)
 
     nodes_recalculated = 1

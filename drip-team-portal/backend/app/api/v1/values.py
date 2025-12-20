@@ -23,10 +23,20 @@ else:
     from app.core.security import get_current_user
 from app.models.values import ValueNode, ValueDependency, NodeType, ComputationStatus
 from app.models.units import Unit
+from app.models.user import User
 from app.services.value_engine import ValueEngine, ExpressionError, CircularDependencyError
 
 router = APIRouter(prefix="/api/v1/values")
 logger = logging.getLogger(__name__)
+
+
+def _get_user_id(db: Session, current_user: dict) -> Optional[int]:
+    """Get database user ID from auth context."""
+    auth0_id = current_user.get("sub", "")
+    if not auth0_id:
+        return None
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    return user.id if user else None
 
 
 # ============== Pydantic Schemas ==============
@@ -163,7 +173,8 @@ async def create_literal_value(
         if not unit:
             raise HTTPException(status_code=404, detail="Unit not found")
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     node = engine.create_literal(
         value=data.value,
         unit_id=data.unit_id,
@@ -182,7 +193,8 @@ async def create_expression_value(
     current_user: dict = Depends(get_current_user)
 ):
     """Create an expression value node."""
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     try:
         node = engine.create_expression(
@@ -217,7 +229,8 @@ async def create_reference_value(
     if not ref_node:
         raise HTTPException(status_code=404, detail="Referenced node not found")
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     node = engine.create_reference(
         reference_node_id=data.reference_node_id,
         description=data.description,
@@ -328,7 +341,8 @@ async def recalculate_value(
     if not node:
         raise HTTPException(status_code=404, detail="Value node not found")
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     try:
         success, error = engine.recalculate(node)
@@ -375,7 +389,8 @@ async def recalculate_all_stale(
         ])
     ).all()
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     successful = 0
     failed = 0
     errors = []
@@ -416,7 +431,8 @@ async def get_dependencies(
     if not node:
         raise HTTPException(status_code=404, detail="Value node not found")
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     tree = engine.get_dependency_tree(node, depth=depth)
 
     return tree
@@ -461,7 +477,8 @@ async def validate_expression(
     current_user: dict = Depends(get_current_user)
 ):
     """Validate an expression without creating a node."""
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     try:
         parsed = engine._parse_expression(data.expression)
@@ -506,7 +523,8 @@ async def update_literal_value(
         if not unit:
             raise HTTPException(status_code=404, detail="Unit not found")
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
     engine.update_literal(node, data.value, data.unit_id)
     # Auto-recalculate all stale dependents
     engine.recalculate_stale(node)
@@ -537,7 +555,8 @@ async def update_expression_value(
             detail="Can only update expression values with this endpoint"
         )
 
-    engine = ValueEngine(db)
+    user_id = _get_user_id(db, current_user)
+    engine = ValueEngine(db, user_id=user_id)
 
     try:
         engine.update_expression(node, data.expression)

@@ -63,6 +63,15 @@ LITERAL_WITH_UNIT_PATTERN = re.compile(
     re.UNICODE
 )
 
+# Regex for bare numeric literals (numbers without units)
+# Used to identify literals that need user-preferred unit conversion
+# Matches integers and decimals, negative numbers, scientific notation
+# Excludes numbers already captured by LITERAL_WITH_UNIT_PATTERN (has unit suffix)
+BARE_LITERAL_PATTERN = re.compile(
+    r'(?<![a-zA-Z0-9_\.])(-?\d+\.?\d*(?:[eE][+-]?\d+)?)(?![a-zA-Z0-9_\.])',
+    re.UNICODE
+)
+
 
 class ExpressionError(Exception):
     """Error during expression parsing or evaluation."""
@@ -85,10 +94,35 @@ class ValueEngine:
     - Cascade updates when values change
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: Optional[int] = None):
         self.db = db
+        self.user_id = user_id
         self.unit_engine = UnitEngine(db)
         self._evaluation_stack: Set[int] = set()  # For circular dependency detection
+        self._user_unit_prefs: Optional[Dict[str, str]] = None  # Cache for user preferences
+
+    def _get_user_unit_preference(self, dimension: str) -> Optional[str]:
+        """
+        Get user's preferred unit symbol for a given dimension.
+
+        Returns the unit symbol (e.g., 'mm') or None if no preference set.
+        """
+        if not self.user_id:
+            return None
+
+        # Lazy load and cache preferences
+        if self._user_unit_prefs is None:
+            self._user_unit_prefs = {}
+            from app.models.user_preferences import UserUnitPreference
+            prefs = self.db.query(UserUnitPreference).filter(
+                UserUnitPreference.user_id == self.user_id
+            ).all()
+            for pref in prefs:
+                unit = self.db.query(Unit).filter(Unit.id == pref.preferred_unit_id).first()
+                if unit:
+                    self._user_unit_prefs[pref.quantity_type] = unit.symbol
+
+        return self._user_unit_prefs.get(dimension)
 
     # ==================== VALUE CREATION ====================
 
@@ -365,6 +399,33 @@ class ValueEngine:
             else:
                 modified_expr = modified_expr.replace(original_text, placeholder, 1)
 
+        # Capture bare numeric literals (numbers without units)
+        # These need to be converted using user's preferred unit for the expression's dimension
+        bare_literals = {}
+        # Find bare literals in the modified expression (after unit literals are replaced)
+        bare_matches = BARE_LITERAL_PATTERN.findall(modified_expr)
+        for k, value_str in enumerate(bare_matches):
+            # Skip if this is a placeholder reference (starts with __)
+            if '__' in str(value_str):
+                continue
+            try:
+                numeric_value = float(value_str)
+                placeholder = f"__bare_{k}__"
+                bare_literals[placeholder] = {
+                    'original': value_str,
+                    'value': numeric_value,
+                }
+                # Replace in expression
+                # Use word boundary replacement to avoid partial matches
+                modified_expr = re.sub(
+                    rf'(?<![a-zA-Z0-9_\.]){re.escape(value_str)}(?![a-zA-Z0-9_\.])',
+                    placeholder,
+                    modified_expr,
+                    count=1
+                )
+            except ValueError:
+                continue
+
         # Try to parse with SymPy
         try:
             # Define allowed functions and constants
@@ -386,6 +447,8 @@ class ValueEngine:
                 local_dict[p] = Symbol(p)
             for p in literal_values:
                 local_dict[p] = Symbol(p)
+            for p in bare_literals:
+                local_dict[p] = Symbol(p)
 
             parsed = sympify(modified_expr, locals=local_dict)
 
@@ -395,6 +458,7 @@ class ValueEngine:
                 "placeholders": placeholders,
                 "ref_units": ref_units,  # Unit symbols for each reference placeholder
                 "literal_values": literal_values,
+                "bare_literals": bare_literals,  # Unitless numbers that need user unit conversion
                 "sympy_repr": str(parsed),
                 "references": refs,
                 "valid": True
@@ -708,22 +772,20 @@ class ValueEngine:
                 'e': 2.718281828459045,
             }
 
-            # Add placeholder values (from references) - CONVERT TO SI
+            # Add placeholder values (from references)
+            # NOTE: Values from referenced ValueNodes are ALREADY in SI (stored that way)
+            # So we do NOT convert them again. We only use ref_units to track dimensions.
             ref_units = parsed.get("ref_units", {})
             dimensions_used = set()  # Track dimensions for SI unit determination
             for p, val in values.items():
+                # Value is already in SI from compute_value, no conversion needed
+                local_dict[p] = val
+                # Track the dimension for bare literal handling
                 unit_symbol = ref_units.get(p)
                 if unit_symbol:
-                    conversion_factor = self.UNIT_TO_SI.get(unit_symbol, 1)
-                    si_val = val * conversion_factor
-                    logger.debug(f"Converting {p}: {val} {unit_symbol} -> {si_val} SI (factor: {conversion_factor})")
-                    local_dict[p] = si_val
-                    # Track the dimension
                     dimension = self.UNIT_TO_DIMENSION.get(unit_symbol)
                     if dimension:
                         dimensions_used.add(dimension)
-                else:
-                    local_dict[p] = val
 
             # Add literal values with units (already converted to SI)
             for p, lit_info in parsed.get("literal_values", {}).items():
@@ -734,6 +796,36 @@ class ValueEngine:
                     dimension = self.UNIT_TO_DIMENSION.get(lit_unit)
                     if dimension:
                         dimensions_used.add(dimension)
+
+            # Handle bare literals (numbers without units)
+            # Only convert them using user's preferred unit for ADDITIVE expressions
+            # For expressions with * or /, bare literals should be dimensionless scalars
+            bare_literals = parsed.get("bare_literals", {})
+            original_expr = parsed.get("original", "")
+
+            # Check if expression has multiplication/division operators
+            # If so, bare literals should NOT be unit-converted (they're dimensionless scalars like "divide by 2")
+            has_mult_div = '*' in original_expr or '/' in original_expr
+
+            if bare_literals and len(dimensions_used) == 1 and not has_mult_div:
+                # Pure additive expression - convert bare literals using user's preferred unit
+                dimension = list(dimensions_used)[0]
+                user_unit = self._get_user_unit_preference(dimension)
+                if user_unit:
+                    conversion_factor = self.UNIT_TO_SI.get(user_unit, 1)
+                    logger.info(f"Converting bare literals using user preference: {user_unit} (factor: {conversion_factor})")
+                    for p, bare_info in bare_literals.items():
+                        si_val = bare_info['value'] * conversion_factor
+                        logger.debug(f"Bare literal {p}: {bare_info['value']} {user_unit} -> {si_val} SI")
+                        local_dict[p] = si_val
+                else:
+                    # No user preference - use raw value (interpreted as SI)
+                    for p, bare_info in bare_literals.items():
+                        local_dict[p] = bare_info['value']
+            else:
+                # Has * or /, no dimension context, or multiple dimensions - use raw values (dimensionless)
+                for p, bare_info in bare_literals.items():
+                    local_dict[p] = bare_info['value']
 
             # Evaluate
             result = eval(modified_expr, {"__builtins__": {}}, local_dict)
@@ -817,6 +909,37 @@ class ValueEngine:
 
         self.db.flush()
 
+    def transfer_dependents(self, old_node: ValueNode, new_node: ValueNode):
+        """
+        Transfer all dependents from old_node to new_node.
+
+        Used when replacing a node (e.g., expression -> literal) to maintain
+        dependency relationships. Also marks all transferred dependents as stale
+        recursively (including their dependents).
+        """
+        # Get all dependencies where old_node is the source
+        deps_to_transfer = self.db.query(ValueDependency).filter(
+            ValueDependency.source_id == old_node.id
+        ).all()
+
+        logger.info(f"Transferring {len(deps_to_transfer)} dependents from node {old_node.id} to node {new_node.id}")
+
+        for dep in deps_to_transfer:
+            # Update the source_id to point to new node
+            dep.source_id = new_node.id
+            # Mark the dependent AND all its downstream dependents as stale (recursive)
+            self._mark_node_and_dependents_stale(dep.dependent_node)
+
+        self.db.flush()
+
+    def _mark_node_and_dependents_stale(self, node: ValueNode):
+        """Mark this node and all its downstream dependents as stale (recursive)."""
+        if node.computation_status == ComputationStatus.VALID:
+            node.computation_status = ComputationStatus.STALE
+        # Recursively mark all downstream dependents
+        for dep in node.dependents:
+            self._mark_node_and_dependents_stale(dep.dependent_node)
+
     def recalculate_stale(self, node: ValueNode) -> List[ValueNode]:
         """
         Recalculate all stale dependents of this node.
@@ -826,7 +949,10 @@ class ValueEngine:
 
         Returns list of recalculated nodes.
         """
-        # Collect all stale dependents (walking downstream)
+        # First ensure all downstream dependents are marked stale (recursive)
+        self.mark_dependents_stale(node)
+
+        # Then collect all stale dependents (walking downstream)
         stale_nodes = self._collect_stale_dependents(node)
 
         if not stale_nodes:
