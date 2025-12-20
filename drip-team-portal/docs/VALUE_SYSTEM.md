@@ -104,11 +104,18 @@ The core service in `backend/app/services/value_engine.py`:
 3. **Literal Values with Units**
    - Inline syntax: `12mm`, `5 m`, `100Pa`, `3.14 kg`
    - Automatically converted to SI for storage
+   - Both literals and expressions stored consistently in SI base units
 
 4. **Dependency Management**
    - Automatic tracking via `ValueDependency` table
-   - Cascade stale marking when sources change
+   - **Infinite cascade recalculation**: A → B → C → D... all update automatically
+   - **Cross-component updates**: Changes cascade globally across all components
    - Circular dependency detection and prevention
+
+5. **Node Replacement**
+   - Seamlessly switch between literal and expression types
+   - Dependencies automatically transferred to new node
+   - Dependents marked stale and recalculated
 
 ### API Usage
 
@@ -136,7 +143,22 @@ success, error = engine.recalculate(node)
 **Mark Dependents Stale:**
 ```python
 engine.mark_dependents_stale(source_node)
-# All nodes depending on source_node are marked STALE
+# All nodes depending on source_node are marked STALE (recursively)
+```
+
+**Transfer Dependents (Node Replacement):**
+```python
+engine.transfer_dependents(old_node, new_node)
+# Moves all dependencies from old_node to new_node
+# Used when replacing literal ↔ expression
+# Automatically marks transferred dependents as stale
+```
+
+**Recalculate Stale Dependents:**
+```python
+recalculated = engine.recalculate_stale(source_node)
+# Recursively finds and recalculates all stale downstream nodes
+# Returns list of recalculated nodes
 ```
 
 ## Unit Propagation
@@ -158,6 +180,7 @@ All computed values are stored in SI base units:
 
 ### Conversion Flow
 
+**Expressions:**
 ```
 User Input: "12 mm + #CMP001.length"
                     ↓
@@ -167,26 +190,60 @@ Evaluate:          Result in meters (SI)
                     ↓
 Store:             computed_value=X, computed_unit_symbol="m"
                     ↓
-Display:           Convert to user's preferred unit (e.g., inches)
+Display:           Convert from SI to user's preferred unit
 ```
+
+**Literals:**
+```
+User Input: "10 mm"
+                    ↓
+Frontend converts to SI: 0.01 m
+                    ↓
+Store:             computed_value=0.01, computed_unit_symbol="m"
+                    ↓
+Display:           Convert from SI to user's preferred unit
+```
+
+**Key Principle:** All values (literals AND expressions) are stored consistently in SI base units. The frontend handles conversion both ways.
 
 ## Reactive Updates
 
-When a source value changes:
+When a source value changes, the system performs **infinite cascade recalculation** across all components:
 
 ```
 1. User updates #CMP001.length
         ↓
-2. Engine marks all dependents as STALE
+2. Engine recursively marks ALL downstream dependents as STALE
+   (A → B → C → D... infinite levels)
         ↓
-3. Stale nodes collected (walk dependency graph)
+3. Stale nodes collected by walking downstream dependency graph
         ↓
 4. Sorted by dependency order (sources first)
         ↓
 5. Each node recalculated in order
         ↓
 6. New values stored, status → VALID
+        ↓
+7. Frontend invalidates ALL component queries for cross-component refresh
 ```
+
+### Node Replacement Behavior
+
+When switching between literal and expression (or vice versa):
+
+```
+1. New ValueNode created with new type
+        ↓
+2. transfer_dependents() moves all dependencies to new node
+        ↓
+3. Transferred dependents marked STALE (recursively)
+        ↓
+4. New node recalculated
+        ↓
+5. Cascade recalculation runs for all stale dependents
+```
+
+This ensures expressions that referenced the old node continue working seamlessly.
 
 ## Integration Points
 
@@ -256,6 +313,12 @@ tree = engine.get_dependency_tree(node)
 
 ---
 
-*Last Updated: December 19, 2025*
-*System Version: 2.0.0*
+*Last Updated: December 20, 2025*
+*System Version: 2.1.0*
 *Replaces: 01_VARIABLE_FORMULA_SYSTEM.md (deprecated)*
+
+**Version 2.1.0 Changes:**
+- Infinite cascade recalculation (A → B → C → D... unlimited levels)
+- Cross-component reactive updates
+- Node replacement with dependency transfer
+- Consistent SI storage for both literals and expressions
