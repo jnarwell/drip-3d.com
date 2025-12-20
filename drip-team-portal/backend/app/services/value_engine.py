@@ -664,12 +664,32 @@ class ValueEngine:
                     MaterialProperty.property_definition_id == prop_def.id
                 ).first()
 
-                if mat_prop and mat_prop.value_node_id:
-                    return self.db.query(ValueNode).filter(
-                        ValueNode.id == mat_prop.value_node_id
-                    ).first()
+                if mat_prop:
+                    if mat_prop.value_node_id:
+                        return self.db.query(ValueNode).filter(
+                            ValueNode.id == mat_prop.value_node_id
+                        ).first()
+                    else:
+                        # Property exists but has no value_node - create one from the legacy value
+                        literal_value = mat_prop.value or mat_prop.value_min
+                        if literal_value is not None:
+                            logger.info(f"Creating literal ValueNode for material property with value={literal_value}")
+                            # Create a new literal ValueNode for this property
+                            new_node = ValueNode(
+                                node_type=NodeType.LITERAL,
+                                numeric_value=literal_value,
+                                computed_value=literal_value,
+                                computation_status=ComputationStatus.VALID,
+                                description=f"{entity_code}.{prop_name}"
+                            )
+                            self.db.add(new_node)
+                            self.db.flush()
+                            # Link it back to the MaterialProperty
+                            mat_prop.value_node_id = new_node.id
+                            self.db.flush()
+                            return new_node
 
-            logger.debug(f"Material {entity_code} found but property {prop_name} not found or has no value_node")
+            logger.debug(f"Material {entity_code} found but property {prop_name} not found or has no value")
 
         # Fallback: Try to find by description (legacy/direct value node reference)
         node = self.db.query(ValueNode).filter(
