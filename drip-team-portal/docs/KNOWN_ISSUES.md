@@ -101,3 +101,75 @@
 - `backend/app/api/v1/properties.py` - Return `computed_unit_symbol` in response
 
 **Architecture Note**: All values are computed and stored in SI base units. The `computed_unit_symbol` tells the frontend which SI unit to convert FROM when displaying in the user's preferred unit.
+
+---
+
+## 7. Literal Values Display Bug After Reload (RESOLVED)
+
+**Issue**: When entering a value like "10mm", it displayed correctly initially but showed "0.001 mm" after page reload.
+
+**Status**: RESOLVED (December 20, 2025)
+
+**Root Cause**: Inconsistency between literal and expression storage:
+- Expressions were evaluated and stored in SI units (e.g., 0.01 meters)
+- Literals were stored in the property definition's unit (e.g., 10 mm)
+- Display code assumed everything was in SI, causing wrong conversions
+
+**Solution (Two Parts)**:
+1. **Frontend (PropertyValue.tsx)**: Updated `handleSave` to convert literal values to SI before sending to backend, matching expression behavior
+2. **Frontend (PropertyValue.tsx)**: Fixed display to convert FROM SI base unit (`BASE_UNITS[dimension]`) instead of from property definition unit
+
+**Key Change**: Both literals and expressions now stored consistently in SI base units.
+
+---
+
+## 8. Node Replacement Breaks Dependencies (RESOLVED)
+
+**Issue**: When changing a property from expression to literal (or vice versa), dependent expressions would stop updating because they were linked to the OLD ValueNode ID.
+
+**Status**: RESOLVED (December 20, 2025)
+
+**Root Cause**: Creating a new ValueNode for the replacement didn't transfer the dependency links from the old node.
+
+**Solution**:
+- Added `transfer_dependents(old_node, new_node)` method to ValueEngine
+- Called during node replacement to update all `ValueDependency.source_id` references
+- Marks transferred dependents as stale for recalculation
+
+**Key Files**:
+- `backend/app/services/value_engine.py` - New `transfer_dependents()` method
+- `backend/app/api/v1/properties.py` - Calls transfer on node replacement
+
+---
+
+## 9. Cascade Recalculation Only One Level Deep (RESOLVED)
+
+**Issue**: With dependency chain A → B → C (C depends on B, B depends on A), changing A would recalculate B but not C.
+
+**Status**: RESOLVED (December 20, 2025)
+
+**Root Cause**: The stale marking and collection wasn't fully recursive through all downstream dependency levels.
+
+**Solution (Three Parts)**:
+1. Added `_mark_node_and_dependents_stale()` helper that recursively marks ALL downstream nodes
+2. Updated `transfer_dependents()` to use recursive marking
+3. Updated `recalculate_stale()` to call `mark_dependents_stale()` before collecting
+
+**Result**: Infinite cascade recalculation now works - changing a value cascades through unlimited dependency levels (A → B → C → D → ...).
+
+---
+
+## 10. Cross-Component Updates Not Showing (RESOLVED)
+
+**Issue**: When updating a value in Component A, dependent expressions in Component B wouldn't refresh in the UI even though they were recalculated in the backend.
+
+**Status**: RESOLVED (December 20, 2025)
+
+**Root Cause**: Frontend only invalidated queries for the current component (`['component-properties', componentId]`), not for other components.
+
+**Solution**: Changed `updateProperty` mutation's `onSuccess` to invalidate ALL component-properties queries:
+```typescript
+queryClient.invalidateQueries({ queryKey: ['component-properties'] });
+```
+
+**Key File**: `frontend/src/components/PropertyValue.tsx`

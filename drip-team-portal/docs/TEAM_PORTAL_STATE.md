@@ -133,9 +133,8 @@ Dimensional analysis with 7 SI base dimensions:
 - `/api/v1/linear` - Linear integration (progress data)
 - `/api/v1/linear-enhanced` - Enhanced Linear (team members, projects)
 - `/api/v1/reports` - Dashboard stats and activity
-- `/api/v1/variables` - Variable management
 
-### New Value System Endpoints
+### Value System Endpoints
 - `/api/v1/units` - Unit definitions and conversions
 - `/api/v1/values` - ValueNode CRUD and recalculation
 - `/api/v1/search/entities` - Entity autocomplete search

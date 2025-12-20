@@ -263,7 +263,8 @@ This ensures expressions that referenced the old node continue working seamlessl
 POST /api/v1/values/              # Create value node
 GET  /api/v1/values/{id}          # Get node with computed value
 PUT  /api/v1/values/{id}          # Update (recalculates)
-GET  /api/v1/variables/search     # Search available references
+GET  /api/v1/search/entities      # Search entities for autocomplete
+GET  /api/v1/search/entities/{code}/properties  # Get entity properties
 POST /api/v1/values/{id}/recalculate  # Force recalculation
 ```
 

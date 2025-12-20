@@ -23,7 +23,6 @@ from app.api.v1.property_tables_enhanced import router as property_tables_enhanc
 from app.api.v1.linear import router as linear_router
 from app.api.v1.linear_enhanced import router as linear_enhanced_router
 from app.api.v1.constants import router as constants_router
-from app.api.v1.variables import router as variables_router
 from app.api.v1.units import router as units_router
 from app.api.v1.values import router as values_router
 from app.api.v1.search import router as search_router
@@ -115,7 +114,6 @@ app.include_router(property_table_templates_router, prefix="/api/v1/property-tab
 app.include_router(property_tables_enhanced_router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
 app.include_router(linear_router, tags=["linear"])
 app.include_router(linear_enhanced_router, tags=["linear-enhanced"])
-app.include_router(variables_router, tags=["variables"])
 app.include_router(units_router, tags=["units"])
 app.include_router(values_router, tags=["values"])
 app.include_router(search_router, tags=["search"])

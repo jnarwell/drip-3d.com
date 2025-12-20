@@ -120,12 +120,19 @@ GET /api/v1/values/{value_id}
 POST /api/v1/values/{value_id}/recalculate
 ```
 
-### Search Variables
+### Search Entities (for autocomplete)
 ```
-GET /api/v1/variables/search?q=length
+GET /api/v1/search/entities?q=FRAME
 ```
 
-Returns available references for autocomplete.
+Returns entity codes matching the query for expression autocomplete.
+
+### Get Entity Properties (for autocomplete)
+```
+GET /api/v1/search/entities/{entity_code}/properties?q=len
+```
+
+Returns properties for an entity, for expression autocomplete after typing `#CODE.`
 
 ---
 
