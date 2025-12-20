@@ -100,24 +100,24 @@
     },
     {
       "id": "electrical",
-      "name": "Weston Keller",
+      "name": "Molly Miller",
       "role": "Electrical Engineering",
       "badge": "Electrical",
-      "photo": "assets/images/team/weston-keller.jpg",
+      "photo": "assets/images/team/molly-miller.jpg",
       "bio": {
-        "full": "Weston is studying Electrical Engineering and Music with a focus in DSP, analog circuits, and information theory. He works with fMRI neural imaging techniques and functional analysis with the CLiMB Lab at Stanford Bio-X. Recent side projects include (RV)iolin - Logistic Regression and RV Filtering for Realistic Violin Timbre FM Synthesis, and Tone Death - Sound Stem Separation and Neuroplasticity Aids in VR Space at Stanford's Center for Computer Research In Music and Acoustics (CCRMA). In his free time, Weston plays violin and works on documentary short films.",
+        "full": "Molly is an Electrical Engineering student specializing in PCB design and power architecture. She brings expertise in power systems design and circuit board development to the DRIP team.",
         "responsibilities": [
-          "Manage AC/DC power distribution and controls",
-          "PCB design"
+          "PCB design and layout",
+          "Power architecture and distribution"
         ],
         "expertise": [
-          "Hardware Rapid Prototyping",
-          "Digital Signal Processing",
-          "Embedded Systems Design"
+          "PCB Design",
+          "Power Architecture",
+          "Electrical Systems"
         ]
       },
       "social": {
-        "email": "weston@drip-3d.com"
+        "email": "molly@drip-3d.com"
       }
     },
     {

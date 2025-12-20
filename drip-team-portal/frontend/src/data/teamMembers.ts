@@ -31,10 +31,10 @@ export const teamMembers: TeamMember[] = [
   },
   {
     id: 'electrical',
-    name: 'Weston Keller',
+    name: 'Molly Miller',
     role: 'Power Systems',
-    field: 'Electrical & Power Engineering',
-    imageUrl: '/team-images/weston-keller.jpg'
+    field: 'PCB Design & Power Architecture',
+    imageUrl: '/team-images/molly-miller.jpg'
   },
   {
     id: 'mechanical',
