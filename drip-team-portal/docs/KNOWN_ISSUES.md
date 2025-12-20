@@ -173,3 +173,23 @@ queryClient.invalidateQueries({ queryKey: ['component-properties'] });
 ```
 
 **Key File**: `frontend/src/components/PropertyValue.tsx`
+
+---
+
+## 11. Expression Update Doesn't Cascade to Cross-Component Dependents (RESOLVED)
+
+**Issue**: When directly editing an expression (e.g., B on Frame), cross-component dependents (e.g., C on Heatbed referencing B) would get stuck on "calculating..." and never update. However, if a literal upstream of B was changed, the cascade worked correctly.
+
+**Status**: RESOLVED (December 20, 2025)
+
+**Root Cause**: The expression update path was missing `recalculate_stale()` call. Literal updates had it, but expression updates didn't cascade to dependents.
+
+**Solution**: Added `engine.recalculate_stale(existing_node)` after updating an existing expression node in `properties.py`:
+```python
+if existing_node and existing_node.node_type.value == "expression":
+    engine.update_expression(existing_node, expression)
+    engine.recalculate(existing_node)
+    engine.recalculate_stale(existing_node)  # Added this line
+```
+
+**Key File**: `backend/app/api/v1/properties.py`
