@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Regex for variable references: #entity.property
 # Entity codes can start with numbers (e.g., 304_STAINLESS_STEEL_001)
-# Property names must start with a letter (e.g., Density, thermal_conductivity)
+# Property names use underscores for spaces (e.g., Yield_Strength matches "Yield Strength")
 REFERENCE_PATTERN = re.compile(r'#([a-zA-Z0-9][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)?)')
 
 # Regex for literal values with units: 12mm, 5 m, 100Pa, 3.14 kg, etc.
@@ -491,6 +491,8 @@ class ValueEngine:
             return None
 
         entity_code, prop_name = parts
+        # Normalize property name: underscores → spaces (Yield_Strength → "Yield Strength")
+        prop_name_normalized = prop_name.replace('_', ' ')
 
         # Try Component
         component = self.db.query(Component).filter(Component.code == entity_code).first()
@@ -505,7 +507,7 @@ class ValueEngine:
             component = self.db.query(Component).filter(generated_code_expr == entity_code).first()
 
         if component:
-            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name).first()
+            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name_normalized).first()
             if prop_def:
                 return prop_def.unit
 
@@ -522,7 +524,7 @@ class ValueEngine:
             material = self.db.query(Material).filter(generated_code_expr == entity_code).first()
 
         if material:
-            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name).first()
+            prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name_normalized).first()
             if prop_def:
                 return prop_def.unit
 
@@ -552,7 +554,9 @@ class ValueEngine:
             return None
 
         entity_code, prop_name = parts
-        print(f"DEBUG: Resolving reference: entity_code={entity_code}, prop_name={prop_name}")
+        # Normalize property name: underscores → spaces (Yield_Strength → "Yield Strength")
+        prop_name_normalized = prop_name.replace('_', ' ')
+        print(f"DEBUG: Resolving reference: entity_code={entity_code}, prop_name={prop_name} -> normalized={prop_name_normalized}")
 
         # Try to find Component by code
         component = self.db.query(Component).filter(
@@ -581,11 +585,11 @@ class ValueEngine:
 
         if component:
             print(f"DEBUG: Component found: id={component.id}, name={component.name}")
-            # Find the property definition
+            # Find the property definition (use normalized name with spaces)
             prop_def = self.db.query(PropertyDefinition).filter(
-                PropertyDefinition.name == prop_name
+                PropertyDefinition.name == prop_name_normalized
             ).first()
-            print(f"DEBUG: Property definition lookup for '{prop_name}': {prop_def.id if prop_def else 'NOT FOUND'}")
+            print(f"DEBUG: Property definition lookup for '{prop_name_normalized}': {prop_def.id if prop_def else 'NOT FOUND'}")
 
             if prop_def:
                 # Find the ComponentProperty linking them
@@ -608,14 +612,28 @@ class ValueEngine:
                         literal_value = comp_prop.single_value or comp_prop.average_value or comp_prop.min_value
                         print(f"DEBUG: No value_node, checking literal_value={literal_value}")
                         if literal_value is not None:
-                            print(f"DEBUG: Creating literal ValueNode for property with value={literal_value}")
-                            # Create a new literal ValueNode for this property
-                            # Note: unit_id would require looking up the unit in the units table
-                            # For now, we just store the numeric value
+                            # Convert from property unit to SI base unit
+                            prop_unit = prop_def.unit if prop_def else None
+                            si_value = literal_value
+                            si_unit_symbol = None
+
+                            if prop_unit and prop_unit in self.UNIT_TO_SI:
+                                conversion_factor = self.UNIT_TO_SI[prop_unit]
+                                si_value = literal_value * conversion_factor
+                                # Get the SI base unit for this dimension
+                                dimension = self.UNIT_TO_DIMENSION.get(prop_unit)
+                                if dimension:
+                                    si_unit_symbol = self.DIMENSION_SI_UNITS.get(dimension)
+                                print(f"DEBUG: Converting component property: {literal_value} {prop_unit} -> {si_value} {si_unit_symbol}")
+                            else:
+                                print(f"DEBUG: Creating literal ValueNode for property with value={literal_value} (no unit conversion)")
+
+                            # Create a new literal ValueNode for this property (in SI units)
                             new_node = ValueNode(
                                 node_type=NodeType.LITERAL,
-                                numeric_value=literal_value,
-                                computed_value=literal_value,
+                                numeric_value=si_value,
+                                computed_value=si_value,
+                                computed_unit_symbol=si_unit_symbol,
                                 computation_status=ComputationStatus.VALID,
                                 description=f"{entity_code}.{prop_name}"
                             )
@@ -627,7 +645,7 @@ class ValueEngine:
                             print(f"DEBUG: Created and linked ValueNode id={new_node.id}")
                             return new_node
 
-            logger.warning(f"Component {entity_code} found but property {prop_name} not found or has no value_node")
+            logger.warning(f"Component {entity_code} found but property '{prop_name_normalized}' not found or has no value_node")
 
         # Try to find Material by code
         material = self.db.query(Material).filter(
@@ -652,9 +670,9 @@ class ValueEngine:
             ).first()
 
         if material:
-            # Find the property definition
+            # Find the property definition (use normalized name with spaces)
             prop_def = self.db.query(PropertyDefinition).filter(
-                PropertyDefinition.name == prop_name
+                PropertyDefinition.name == prop_name_normalized
             ).first()
 
             if prop_def:
@@ -673,12 +691,28 @@ class ValueEngine:
                         # Property exists but has no value_node - create one from the legacy value
                         literal_value = mat_prop.value or mat_prop.value_min
                         if literal_value is not None:
-                            logger.info(f"Creating literal ValueNode for material property with value={literal_value}")
-                            # Create a new literal ValueNode for this property
+                            # Convert from property unit to SI base unit
+                            prop_unit = prop_def.unit if prop_def else None
+                            si_value = literal_value
+                            si_unit_symbol = None
+
+                            if prop_unit and prop_unit in self.UNIT_TO_SI:
+                                conversion_factor = self.UNIT_TO_SI[prop_unit]
+                                si_value = literal_value * conversion_factor
+                                # Get the SI base unit for this dimension
+                                dimension = self.UNIT_TO_DIMENSION.get(prop_unit)
+                                if dimension:
+                                    si_unit_symbol = self.DIMENSION_SI_UNITS.get(dimension)
+                                logger.info(f"Converting material property: {literal_value} {prop_unit} -> {si_value} {si_unit_symbol}")
+                            else:
+                                logger.info(f"Creating literal ValueNode for material property with value={literal_value} (no unit conversion)")
+
+                            # Create a new literal ValueNode for this property (in SI units)
                             new_node = ValueNode(
                                 node_type=NodeType.LITERAL,
-                                numeric_value=literal_value,
-                                computed_value=literal_value,
+                                numeric_value=si_value,
+                                computed_value=si_value,
+                                computed_unit_symbol=si_unit_symbol,
                                 computation_status=ComputationStatus.VALID,
                                 description=f"{entity_code}.{prop_name}"
                             )
@@ -689,7 +723,7 @@ class ValueEngine:
                             self.db.flush()
                             return new_node
 
-            logger.debug(f"Material {entity_code} found but property {prop_name} not found or has no value")
+            logger.debug(f"Material {entity_code} found but property '{prop_name_normalized}' not found or has no value")
 
         # Fallback: Try to find by description (legacy/direct value node reference)
         node = self.db.query(ValueNode).filter(

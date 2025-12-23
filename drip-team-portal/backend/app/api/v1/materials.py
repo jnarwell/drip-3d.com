@@ -13,6 +13,10 @@ from app.models.material import Material, MaterialProperty, component_materials
 from app.models.component import Component
 from app.models.property import ComponentProperty, PropertyDefinition
 from app.schemas.material import MaterialResponse, MaterialPropertyValue, ComponentMaterialAdd, ComponentMaterialResponse
+from app.services.material_property_manager import convert_to_si
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1")
 
@@ -132,20 +136,29 @@ async def set_component_material(
         ).first()
         
         if not existing:
+            # Convert values to SI base units for consistent storage
+            prop_def = mat_prop.property_definition
+            prop_unit = prop_def.unit if prop_def else None
+            si_value = convert_to_si(mat_prop.value, prop_unit)
+            si_min = convert_to_si(mat_prop.value_min, prop_unit)
+            si_max = convert_to_si(mat_prop.value_max, prop_unit)
+
+            logger.info(f"📊 Converting {prop_def.name}: {mat_prop.value} {prop_unit} -> {si_value} (SI)")
+
             # Create component property from material property
             comp_prop = ComponentProperty(
                 component_id=component.id,
                 property_definition_id=mat_prop.property_definition_id,
-                single_value=mat_prop.value,
-                min_value=mat_prop.value_min,
-                max_value=mat_prop.value_max,
+                single_value=si_value,
+                min_value=si_min,
+                max_value=si_max,
                 notes=f"From material: {material.name}",
                 source=mat_prop.source or material.data_source,
                 conditions=mat_prop.conditions,
                 updated_by=current_user["email"]
             )
             db.add(comp_prop)
-            added_properties.append(mat_prop.property_definition.name)
+            added_properties.append(prop_def.name)
     
     db.commit()
     

@@ -331,29 +331,6 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({ componentId, curren
           </button>
         )}
         
-        {/* Material properties preview */}
-        {currentMaterial && componentMaterials?.[0]?.inherited_properties && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs font-medium text-gray-700 mb-2">
-              Inherited Material Properties:
-            </p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {componentMaterials[0].inherited_properties.slice(0, 6).map((prop: MaterialPropertyValue) => (
-                <div key={prop.property_name} className="flex justify-between">
-                  <span className="text-gray-600">{prop.property_name}:</span>
-                  <span className="font-medium">
-                    {prop.value !== undefined ? prop.value : `${prop.value_min}-${prop.value_max}`} {prop.unit}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {componentMaterials[0].inherited_properties.length > 6 && (
-              <p className="text-xs text-gray-500 mt-2">
-                +{componentMaterials[0].inherited_properties.length - 6} more properties
-              </p>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Material Selection Modal */}
