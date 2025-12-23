@@ -42,7 +42,7 @@ REFERENCE_PATTERN = re.compile(r'#([a-zA-Z0-9][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0
 # Captures: number (with optional decimal), optional space, unit symbol
 LITERAL_WITH_UNIT_PATTERN = re.compile(
     r'(?<![a-zA-Z0-9_])(-?\d+\.?\d*)\s*'  # Number (negative allowed)
-    r'(nm|μm|mm|cm|m|km|'  # Length
+    r'(nm|μm|mm|cm|m|km|in|ft|'  # Length (metric + imperial)
     r'mm²|cm²|m²|km²|ha|in²|ft²|'  # Area
     r'mm³|cm³|mL|L|m³|in³|ft³|gal|'  # Volume
     r'μg|mg|g|kg|t|oz|lb|'  # Mass

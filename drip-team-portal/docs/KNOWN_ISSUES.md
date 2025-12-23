@@ -193,3 +193,26 @@ if existing_node and existing_node.node_type.value == "expression":
 ```
 
 **Key File**: `backend/app/api/v1/properties.py`
+
+---
+
+## 12. Imperial Units Not Recognized in Expressions (RESOLVED)
+
+**Issue**: Using imperial length units in expressions (e.g., `#FRAME.Height - 2ft` or `5in + 3cm`) caused a 400 Bad Request error.
+
+**Status**: RESOLVED (December 23, 2025)
+
+**Root Cause**: The `LITERAL_WITH_UNIT_PATTERN` regex in `value_engine.py` was missing `in` and `ft` from the length units pattern.
+
+**Solution**: Added imperial length units to the regex pattern:
+```python
+LITERAL_WITH_UNIT_PATTERN = re.compile(
+    r'(?<![a-zA-Z0-9_])(-?\d+\.?\d*)\s*'
+    r'(nm|μm|mm|cm|m|km|in|ft|'  # Added in|ft| for imperial
+    # ... rest of pattern
+)
+```
+
+**Key File**: `backend/app/services/value_engine.py`
+
+**Note**: Mixed metric/imperial expressions (e.g., `1m + 2ft`) now work correctly - all values are converted to SI base units during evaluation.
