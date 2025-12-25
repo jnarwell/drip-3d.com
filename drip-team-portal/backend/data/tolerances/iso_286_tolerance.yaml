@@ -1,0 +1,335 @@
+id: iso_286_tolerance
+name: "ISO 286 Tolerance Grades"
+category: tolerances
+description: "Standard tolerance grades IT01-IT18 for nominal sizes per ISO 286-1"
+source: "ISO 286-1:2010"
+source_url: "https://www.iso.org/standard/53987.html"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: table
+
+inputs:
+  - name: grade
+    unit: "none"
+    type: discrete
+    values: ["IT01", "IT0", "IT1", "IT2", "IT3", "IT4", "IT5", "IT6", "IT7", "IT8", "IT9", "IT10", "IT11", "IT12", "IT13", "IT14", "IT15", "IT16", "IT17", "IT18"]
+    description: "ISO tolerance grade"
+  - name: size_range
+    unit: "mm"
+    type: discrete
+    values: ["0-3", "3-6", "6-10", "10-18", "18-30", "30-50", "50-80", "80-120", "120-180", "180-250", "250-315", "315-400", "400-500"]
+    description: "Nominal size range"
+
+outputs:
+  - name: tolerance_um
+    unit: µm
+    description: "Tolerance value in micrometers"
+  - name: tolerance_mm
+    unit: mm
+    description: "Tolerance value in millimeters"
+
+resolution:
+  type: table
+  data:
+    IT01:
+      "0-3": {tolerance_um: 0.3, tolerance_mm: 0.0003}
+      "3-6": {tolerance_um: 0.4, tolerance_mm: 0.0004}
+      "6-10": {tolerance_um: 0.4, tolerance_mm: 0.0004}
+      "10-18": {tolerance_um: 0.5, tolerance_mm: 0.0005}
+      "18-30": {tolerance_um: 0.6, tolerance_mm: 0.0006}
+      "30-50": {tolerance_um: 0.6, tolerance_mm: 0.0006}
+      "50-80": {tolerance_um: 0.8, tolerance_mm: 0.0008}
+      "80-120": {tolerance_um: 1.0, tolerance_mm: 0.001}
+      "120-180": {tolerance_um: 1.2, tolerance_mm: 0.0012}
+      "180-250": {tolerance_um: 2.0, tolerance_mm: 0.002}
+      "250-315": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "315-400": {tolerance_um: 3.0, tolerance_mm: 0.003}
+      "400-500": {tolerance_um: 4.0, tolerance_mm: 0.004}
+    IT0:
+      "0-3": {tolerance_um: 0.5, tolerance_mm: 0.0005}
+      "3-6": {tolerance_um: 0.6, tolerance_mm: 0.0006}
+      "6-10": {tolerance_um: 0.6, tolerance_mm: 0.0006}
+      "10-18": {tolerance_um: 0.8, tolerance_mm: 0.0008}
+      "18-30": {tolerance_um: 1.0, tolerance_mm: 0.001}
+      "30-50": {tolerance_um: 1.0, tolerance_mm: 0.001}
+      "50-80": {tolerance_um: 1.2, tolerance_mm: 0.0012}
+      "80-120": {tolerance_um: 1.5, tolerance_mm: 0.0015}
+      "120-180": {tolerance_um: 2.0, tolerance_mm: 0.002}
+      "180-250": {tolerance_um: 3.0, tolerance_mm: 0.003}
+      "250-315": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "315-400": {tolerance_um: 5.0, tolerance_mm: 0.005}
+      "400-500": {tolerance_um: 6.0, tolerance_mm: 0.006}
+    IT1:
+      "0-3": {tolerance_um: 0.8, tolerance_mm: 0.0008}
+      "3-6": {tolerance_um: 1.0, tolerance_mm: 0.001}
+      "6-10": {tolerance_um: 1.0, tolerance_mm: 0.001}
+      "10-18": {tolerance_um: 1.2, tolerance_mm: 0.0012}
+      "18-30": {tolerance_um: 1.5, tolerance_mm: 0.0015}
+      "30-50": {tolerance_um: 1.5, tolerance_mm: 0.0015}
+      "50-80": {tolerance_um: 2.0, tolerance_mm: 0.002}
+      "80-120": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "120-180": {tolerance_um: 3.5, tolerance_mm: 0.0035}
+      "180-250": {tolerance_um: 4.5, tolerance_mm: 0.0045}
+      "250-315": {tolerance_um: 6.0, tolerance_mm: 0.006}
+      "315-400": {tolerance_um: 7.0, tolerance_mm: 0.007}
+      "400-500": {tolerance_um: 8.0, tolerance_mm: 0.008}
+    IT2:
+      "0-3": {tolerance_um: 1.2, tolerance_mm: 0.0012}
+      "3-6": {tolerance_um: 1.5, tolerance_mm: 0.0015}
+      "6-10": {tolerance_um: 1.5, tolerance_mm: 0.0015}
+      "10-18": {tolerance_um: 2.0, tolerance_mm: 0.002}
+      "18-30": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "30-50": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "50-80": {tolerance_um: 3.0, tolerance_mm: 0.003}
+      "80-120": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "120-180": {tolerance_um: 5.0, tolerance_mm: 0.005}
+      "180-250": {tolerance_um: 7.0, tolerance_mm: 0.007}
+      "250-315": {tolerance_um: 8.0, tolerance_mm: 0.008}
+      "315-400": {tolerance_um: 9.0, tolerance_mm: 0.009}
+      "400-500": {tolerance_um: 10.0, tolerance_mm: 0.01}
+    IT3:
+      "0-3": {tolerance_um: 2.0, tolerance_mm: 0.002}
+      "3-6": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "6-10": {tolerance_um: 2.5, tolerance_mm: 0.0025}
+      "10-18": {tolerance_um: 3.0, tolerance_mm: 0.003}
+      "18-30": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "30-50": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "50-80": {tolerance_um: 5.0, tolerance_mm: 0.005}
+      "80-120": {tolerance_um: 6.0, tolerance_mm: 0.006}
+      "120-180": {tolerance_um: 8.0, tolerance_mm: 0.008}
+      "180-250": {tolerance_um: 10.0, tolerance_mm: 0.01}
+      "250-315": {tolerance_um: 12.0, tolerance_mm: 0.012}
+      "315-400": {tolerance_um: 13.0, tolerance_mm: 0.013}
+      "400-500": {tolerance_um: 15.0, tolerance_mm: 0.015}
+    IT4:
+      "0-3": {tolerance_um: 3.0, tolerance_mm: 0.003}
+      "3-6": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "6-10": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "10-18": {tolerance_um: 5.0, tolerance_mm: 0.005}
+      "18-30": {tolerance_um: 6.0, tolerance_mm: 0.006}
+      "30-50": {tolerance_um: 7.0, tolerance_mm: 0.007}
+      "50-80": {tolerance_um: 8.0, tolerance_mm: 0.008}
+      "80-120": {tolerance_um: 10.0, tolerance_mm: 0.01}
+      "120-180": {tolerance_um: 12.0, tolerance_mm: 0.012}
+      "180-250": {tolerance_um: 14.0, tolerance_mm: 0.014}
+      "250-315": {tolerance_um: 16.0, tolerance_mm: 0.016}
+      "315-400": {tolerance_um: 18.0, tolerance_mm: 0.018}
+      "400-500": {tolerance_um: 20.0, tolerance_mm: 0.02}
+    IT5:
+      "0-3": {tolerance_um: 4.0, tolerance_mm: 0.004}
+      "3-6": {tolerance_um: 5.0, tolerance_mm: 0.005}
+      "6-10": {tolerance_um: 6.0, tolerance_mm: 0.006}
+      "10-18": {tolerance_um: 8.0, tolerance_mm: 0.008}
+      "18-30": {tolerance_um: 9.0, tolerance_mm: 0.009}
+      "30-50": {tolerance_um: 11.0, tolerance_mm: 0.011}
+      "50-80": {tolerance_um: 13.0, tolerance_mm: 0.013}
+      "80-120": {tolerance_um: 15.0, tolerance_mm: 0.015}
+      "120-180": {tolerance_um: 18.0, tolerance_mm: 0.018}
+      "180-250": {tolerance_um: 20.0, tolerance_mm: 0.02}
+      "250-315": {tolerance_um: 23.0, tolerance_mm: 0.023}
+      "315-400": {tolerance_um: 25.0, tolerance_mm: 0.025}
+      "400-500": {tolerance_um: 27.0, tolerance_mm: 0.027}
+    IT6:
+      "0-3": {tolerance_um: 6, tolerance_mm: 0.006}
+      "3-6": {tolerance_um: 8, tolerance_mm: 0.008}
+      "6-10": {tolerance_um: 9, tolerance_mm: 0.009}
+      "10-18": {tolerance_um: 11, tolerance_mm: 0.011}
+      "18-30": {tolerance_um: 13, tolerance_mm: 0.013}
+      "30-50": {tolerance_um: 16, tolerance_mm: 0.016}
+      "50-80": {tolerance_um: 19, tolerance_mm: 0.019}
+      "80-120": {tolerance_um: 22, tolerance_mm: 0.022}
+      "120-180": {tolerance_um: 25, tolerance_mm: 0.025}
+      "180-250": {tolerance_um: 29, tolerance_mm: 0.029}
+      "250-315": {tolerance_um: 32, tolerance_mm: 0.032}
+      "315-400": {tolerance_um: 36, tolerance_mm: 0.036}
+      "400-500": {tolerance_um: 40, tolerance_mm: 0.040}
+    IT7:
+      "0-3": {tolerance_um: 10, tolerance_mm: 0.01}
+      "3-6": {tolerance_um: 12, tolerance_mm: 0.012}
+      "6-10": {tolerance_um: 15, tolerance_mm: 0.015}
+      "10-18": {tolerance_um: 18, tolerance_mm: 0.018}
+      "18-30": {tolerance_um: 21, tolerance_mm: 0.021}
+      "30-50": {tolerance_um: 25, tolerance_mm: 0.025}
+      "50-80": {tolerance_um: 30, tolerance_mm: 0.03}
+      "80-120": {tolerance_um: 35, tolerance_mm: 0.035}
+      "120-180": {tolerance_um: 40, tolerance_mm: 0.04}
+      "180-250": {tolerance_um: 46, tolerance_mm: 0.046}
+      "250-315": {tolerance_um: 52, tolerance_mm: 0.052}
+      "315-400": {tolerance_um: 57, tolerance_mm: 0.057}
+      "400-500": {tolerance_um: 63, tolerance_mm: 0.063}
+    IT8:
+      "0-3": {tolerance_um: 14, tolerance_mm: 0.014}
+      "3-6": {tolerance_um: 18, tolerance_mm: 0.018}
+      "6-10": {tolerance_um: 22, tolerance_mm: 0.022}
+      "10-18": {tolerance_um: 27, tolerance_mm: 0.027}
+      "18-30": {tolerance_um: 33, tolerance_mm: 0.033}
+      "30-50": {tolerance_um: 39, tolerance_mm: 0.039}
+      "50-80": {tolerance_um: 46, tolerance_mm: 0.046}
+      "80-120": {tolerance_um: 54, tolerance_mm: 0.054}
+      "120-180": {tolerance_um: 63, tolerance_mm: 0.063}
+      "180-250": {tolerance_um: 72, tolerance_mm: 0.072}
+      "250-315": {tolerance_um: 81, tolerance_mm: 0.081}
+      "315-400": {tolerance_um: 89, tolerance_mm: 0.089}
+      "400-500": {tolerance_um: 97, tolerance_mm: 0.097}
+    IT9:
+      "0-3": {tolerance_um: 25, tolerance_mm: 0.025}
+      "3-6": {tolerance_um: 30, tolerance_mm: 0.03}
+      "6-10": {tolerance_um: 36, tolerance_mm: 0.036}
+      "10-18": {tolerance_um: 43, tolerance_mm: 0.043}
+      "18-30": {tolerance_um: 52, tolerance_mm: 0.052}
+      "30-50": {tolerance_um: 62, tolerance_mm: 0.062}
+      "50-80": {tolerance_um: 74, tolerance_mm: 0.074}
+      "80-120": {tolerance_um: 87, tolerance_mm: 0.087}
+      "120-180": {tolerance_um: 100, tolerance_mm: 0.1}
+      "180-250": {tolerance_um: 115, tolerance_mm: 0.115}
+      "250-315": {tolerance_um: 130, tolerance_mm: 0.13}
+      "315-400": {tolerance_um: 140, tolerance_mm: 0.14}
+      "400-500": {tolerance_um: 155, tolerance_mm: 0.155}
+    IT10:
+      "0-3": {tolerance_um: 40, tolerance_mm: 0.04}
+      "3-6": {tolerance_um: 48, tolerance_mm: 0.048}
+      "6-10": {tolerance_um: 58, tolerance_mm: 0.058}
+      "10-18": {tolerance_um: 70, tolerance_mm: 0.07}
+      "18-30": {tolerance_um: 84, tolerance_mm: 0.084}
+      "30-50": {tolerance_um: 100, tolerance_mm: 0.1}
+      "50-80": {tolerance_um: 120, tolerance_mm: 0.12}
+      "80-120": {tolerance_um: 140, tolerance_mm: 0.14}
+      "120-180": {tolerance_um: 160, tolerance_mm: 0.16}
+      "180-250": {tolerance_um: 185, tolerance_mm: 0.185}
+      "250-315": {tolerance_um: 210, tolerance_mm: 0.21}
+      "315-400": {tolerance_um: 230, tolerance_mm: 0.23}
+      "400-500": {tolerance_um: 250, tolerance_mm: 0.25}
+    IT11:
+      "0-3": {tolerance_um: 60, tolerance_mm: 0.06}
+      "3-6": {tolerance_um: 75, tolerance_mm: 0.075}
+      "6-10": {tolerance_um: 90, tolerance_mm: 0.09}
+      "10-18": {tolerance_um: 110, tolerance_mm: 0.11}
+      "18-30": {tolerance_um: 130, tolerance_mm: 0.13}
+      "30-50": {tolerance_um: 160, tolerance_mm: 0.16}
+      "50-80": {tolerance_um: 190, tolerance_mm: 0.19}
+      "80-120": {tolerance_um: 220, tolerance_mm: 0.22}
+      "120-180": {tolerance_um: 250, tolerance_mm: 0.25}
+      "180-250": {tolerance_um: 290, tolerance_mm: 0.29}
+      "250-315": {tolerance_um: 320, tolerance_mm: 0.32}
+      "315-400": {tolerance_um: 360, tolerance_mm: 0.36}
+      "400-500": {tolerance_um: 400, tolerance_mm: 0.4}
+    IT12:
+      "0-3": {tolerance_um: 100, tolerance_mm: 0.1}
+      "3-6": {tolerance_um: 120, tolerance_mm: 0.12}
+      "6-10": {tolerance_um: 150, tolerance_mm: 0.15}
+      "10-18": {tolerance_um: 180, tolerance_mm: 0.18}
+      "18-30": {tolerance_um: 210, tolerance_mm: 0.21}
+      "30-50": {tolerance_um: 250, tolerance_mm: 0.25}
+      "50-80": {tolerance_um: 300, tolerance_mm: 0.3}
+      "80-120": {tolerance_um: 350, tolerance_mm: 0.35}
+      "120-180": {tolerance_um: 400, tolerance_mm: 0.4}
+      "180-250": {tolerance_um: 460, tolerance_mm: 0.46}
+      "250-315": {tolerance_um: 520, tolerance_mm: 0.52}
+      "315-400": {tolerance_um: 570, tolerance_mm: 0.57}
+      "400-500": {tolerance_um: 630, tolerance_mm: 0.63}
+    IT13:
+      "0-3": {tolerance_um: 140, tolerance_mm: 0.14}
+      "3-6": {tolerance_um: 180, tolerance_mm: 0.18}
+      "6-10": {tolerance_um: 220, tolerance_mm: 0.22}
+      "10-18": {tolerance_um: 270, tolerance_mm: 0.27}
+      "18-30": {tolerance_um: 330, tolerance_mm: 0.33}
+      "30-50": {tolerance_um: 390, tolerance_mm: 0.39}
+      "50-80": {tolerance_um: 460, tolerance_mm: 0.46}
+      "80-120": {tolerance_um: 540, tolerance_mm: 0.54}
+      "120-180": {tolerance_um: 630, tolerance_mm: 0.63}
+      "180-250": {tolerance_um: 720, tolerance_mm: 0.72}
+      "250-315": {tolerance_um: 810, tolerance_mm: 0.81}
+      "315-400": {tolerance_um: 890, tolerance_mm: 0.89}
+      "400-500": {tolerance_um: 970, tolerance_mm: 0.97}
+    IT14:
+      "0-3": {tolerance_um: 250, tolerance_mm: 0.25}
+      "3-6": {tolerance_um: 300, tolerance_mm: 0.3}
+      "6-10": {tolerance_um: 360, tolerance_mm: 0.36}
+      "10-18": {tolerance_um: 430, tolerance_mm: 0.43}
+      "18-30": {tolerance_um: 520, tolerance_mm: 0.52}
+      "30-50": {tolerance_um: 620, tolerance_mm: 0.62}
+      "50-80": {tolerance_um: 740, tolerance_mm: 0.74}
+      "80-120": {tolerance_um: 870, tolerance_mm: 0.87}
+      "120-180": {tolerance_um: 1000, tolerance_mm: 1.0}
+      "180-250": {tolerance_um: 1150, tolerance_mm: 1.15}
+      "250-315": {tolerance_um: 1300, tolerance_mm: 1.3}
+      "315-400": {tolerance_um: 1400, tolerance_mm: 1.4}
+      "400-500": {tolerance_um: 1550, tolerance_mm: 1.55}
+    IT15:
+      "0-3": {tolerance_um: 400, tolerance_mm: 0.4}
+      "3-6": {tolerance_um: 480, tolerance_mm: 0.48}
+      "6-10": {tolerance_um: 580, tolerance_mm: 0.58}
+      "10-18": {tolerance_um: 700, tolerance_mm: 0.7}
+      "18-30": {tolerance_um: 840, tolerance_mm: 0.84}
+      "30-50": {tolerance_um: 1000, tolerance_mm: 1.0}
+      "50-80": {tolerance_um: 1200, tolerance_mm: 1.2}
+      "80-120": {tolerance_um: 1400, tolerance_mm: 1.4}
+      "120-180": {tolerance_um: 1600, tolerance_mm: 1.6}
+      "180-250": {tolerance_um: 1850, tolerance_mm: 1.85}
+      "250-315": {tolerance_um: 2100, tolerance_mm: 2.1}
+      "315-400": {tolerance_um: 2300, tolerance_mm: 2.3}
+      "400-500": {tolerance_um: 2500, tolerance_mm: 2.5}
+    IT16:
+      "0-3": {tolerance_um: 600, tolerance_mm: 0.6}
+      "3-6": {tolerance_um: 750, tolerance_mm: 0.75}
+      "6-10": {tolerance_um: 900, tolerance_mm: 0.9}
+      "10-18": {tolerance_um: 1100, tolerance_mm: 1.1}
+      "18-30": {tolerance_um: 1300, tolerance_mm: 1.3}
+      "30-50": {tolerance_um: 1600, tolerance_mm: 1.6}
+      "50-80": {tolerance_um: 1900, tolerance_mm: 1.9}
+      "80-120": {tolerance_um: 2200, tolerance_mm: 2.2}
+      "120-180": {tolerance_um: 2500, tolerance_mm: 2.5}
+      "180-250": {tolerance_um: 2900, tolerance_mm: 2.9}
+      "250-315": {tolerance_um: 3200, tolerance_mm: 3.2}
+      "315-400": {tolerance_um: 3600, tolerance_mm: 3.6}
+      "400-500": {tolerance_um: 4000, tolerance_mm: 4.0}
+    IT17:
+      "0-3": {tolerance_um: 1000, tolerance_mm: 1.0}
+      "3-6": {tolerance_um: 1200, tolerance_mm: 1.2}
+      "6-10": {tolerance_um: 1500, tolerance_mm: 1.5}
+      "10-18": {tolerance_um: 1800, tolerance_mm: 1.8}
+      "18-30": {tolerance_um: 2100, tolerance_mm: 2.1}
+      "30-50": {tolerance_um: 2500, tolerance_mm: 2.5}
+      "50-80": {tolerance_um: 3000, tolerance_mm: 3.0}
+      "80-120": {tolerance_um: 3500, tolerance_mm: 3.5}
+      "120-180": {tolerance_um: 4000, tolerance_mm: 4.0}
+      "180-250": {tolerance_um: 4600, tolerance_mm: 4.6}
+      "250-315": {tolerance_um: 5200, tolerance_mm: 5.2}
+      "315-400": {tolerance_um: 5700, tolerance_mm: 5.7}
+      "400-500": {tolerance_um: 6300, tolerance_mm: 6.3}
+    IT18:
+      "0-3": {tolerance_um: 1400, tolerance_mm: 1.4}
+      "3-6": {tolerance_um: 1800, tolerance_mm: 1.8}
+      "6-10": {tolerance_um: 2200, tolerance_mm: 2.2}
+      "10-18": {tolerance_um: 2700, tolerance_mm: 2.7}
+      "18-30": {tolerance_um: 3300, tolerance_mm: 3.3}
+      "30-50": {tolerance_um: 3900, tolerance_mm: 3.9}
+      "50-80": {tolerance_um: 4600, tolerance_mm: 4.6}
+      "80-120": {tolerance_um: 5400, tolerance_mm: 5.4}
+      "120-180": {tolerance_um: 6300, tolerance_mm: 6.3}
+      "180-250": {tolerance_um: 7200, tolerance_mm: 7.2}
+      "250-315": {tolerance_um: 8100, tolerance_mm: 8.1}
+      "315-400": {tolerance_um: 8900, tolerance_mm: 8.9}
+      "400-500": {tolerance_um: 9700, tolerance_mm: 9.7}
+
+views:
+  - id: default
+    name: "ISO Tolerance Grades"
+    description: "Standard tolerance values by grade and size range (IT01 to IT18)"
+    grid:
+      grade:
+        type: list
+        values: ["IT01", "IT0", "IT1", "IT2", "IT3", "IT4", "IT5", "IT6", "IT7", "IT8", "IT9", "IT10", "IT11", "IT12", "IT13", "IT14", "IT15", "IT16", "IT17", "IT18"]
+      size_range:
+        type: list
+        values: ["0-3", "3-6", "6-10", "10-18", "18-30", "30-50", "50-80", "80-120", "120-180", "180-250", "250-315", "315-400", "400-500"]
+        unit: "mm"
+    columns:
+      - output: tolerance_um
+        header: "Tolerance"
+        unit: "µm"
+      - output: tolerance_mm
+        header: "Tolerance"
+        unit: "mm"
+    layout: nested

@@ -1,178 +1,396 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import CreatePropertyTableModal from '../../components/resources/CreatePropertyTableModal';
-import PropertyTablesList from '../../components/resources/PropertyTablesList';
-import { PropertyTableSummary, VerificationStatus } from '../../types/resources';
+import { PropertySourceSummary, PropertyViewData } from '../../types/resources';
+
+// Category display names
+const CATEGORY_INFO: Record<string, { name: string }> = {
+  electrical: { name: 'Electrical' },
+  finishes: { name: 'Surface Finishes' },
+  tolerances: { name: 'Tolerances' },
+  fasteners: { name: 'Fasteners' },
+  process: { name: 'Process/Fluids' },
+  structural: { name: 'Structural' },
+  material: { name: 'Materials' },
+  mechanical: { name: 'Mechanical' },
+};
+
+// Type badge colors
+const TYPE_COLORS: Record<string, string> = {
+  table: 'bg-blue-100 text-blue-800',
+  equation: 'bg-purple-100 text-purple-800',
+  library: 'bg-green-100 text-green-800',
+};
+
+// Format snake_case strings to Title Case (e.g., "flame_cutting" → "Flame Cutting")
+const formatDisplayValue = (value: unknown): string | number => {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'number') return Number(value.toPrecision(6));
+  if (typeof value === 'string') {
+    // Check if it looks like a snake_case identifier (lowercase with underscores)
+    if (/^[a-z][a-z0-9_]*$/.test(value)) {
+      return value
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+  }
+  return String(value);
+};
 
 const PropertyTables: React.FC = () => {
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<VerificationStatus | 'all'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSource, setSelectedSource] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Fetch property tables
-  const { data: tables, isLoading, error } = useQuery<PropertyTableSummary[]>({
-    queryKey: ['property-tables', selectedFilter, searchTerm],
+  // Handle escape key to close fullscreen
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && isFullscreen) {
+      setIsFullscreen(false);
+    }
+  }, [isFullscreen]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
+
+  // Fetch all property sources
+  const { data: sources, isLoading, error } = useQuery<PropertySourceSummary[]>({
+    queryKey: ['eng-property-sources'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedFilter !== 'all') {
-        params.append('verification_status', selectedFilter);
-      }
-      if (searchTerm) {
-        params.append('search', searchTerm);
-      }
-      const response = await api.get(`/api/v1/enhanced/property-tables?${params}`);
+      const response = await api.get('/api/v1/eng-properties/sources');
       return response.data;
     }
   });
 
-  const hasAnyTables = tables && tables.length > 0;
+  // Fetch view data when a source is selected
+  const { data: viewData, isLoading: viewLoading } = useQuery<PropertyViewData>({
+    queryKey: ['eng-property-view', selectedSource],
+    queryFn: async () => {
+      const response = await api.get(`/api/v1/eng-properties/sources/${selectedSource}/views/default`);
+      return response.data;
+    },
+    enabled: !!selectedSource,
+  });
+
+  // Group sources by category
+  const groupedSources = React.useMemo(() => {
+    if (!sources) return {};
+    const grouped: Record<string, PropertySourceSummary[]> = {};
+    for (const source of sources) {
+      if (!grouped[source.category]) {
+        grouped[source.category] = [];
+      }
+      grouped[source.category].push(source);
+    }
+    return grouped;
+  }, [sources]);
+
+  // Get unique categories
+  const categories = Object.keys(groupedSources);
+
+  // Filter sources by selected category
+  const filteredSources = selectedCategory
+    ? sources?.filter(s => s.category === selectedCategory)
+    : sources;
+
+  // Get selected source details for LOOKUP template
+  const selectedSourceData = sources?.find(s => s.id === selectedSource);
+  const lookupTemplate = React.useMemo(() => {
+    if (!selectedSourceData) return '';
+
+    // Use lookup_source_id if specified, otherwise use the source's own id
+    const lookupId = selectedSourceData.lookup_source_id || selectedSourceData.id;
+
+    const requiredInputs = selectedSourceData.inputs.filter(i => !i.optional);
+    const optionalInputs = selectedSourceData.inputs.filter(i => i.optional);
+
+    let inputParams: string;
+    if (requiredInputs.length > 0) {
+      // Show required inputs with =, then optional in brackets
+      const required = requiredInputs.map(i => `${i.name}=`).join(', ');
+      const optional = optionalInputs.length > 0
+        ? `, [${optionalInputs.map(i => `${i.name}=`).join(', ')}]`
+        : '';
+      inputParams = required + optional;
+    } else if (optionalInputs.length > 0) {
+      // All optional (like steam) - show all with =
+      inputParams = optionalInputs.map(i => `${i.name}=`).join(', ');
+    } else {
+      inputParams = '';
+    }
+    return `LOOKUP("${lookupId}", "<output>", ${inputParams})`;
+  }, [selectedSourceData]);
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="sm:flex sm:items-center sm:justify-between mb-6">
+        <div className="sm:flex sm:items-center sm:justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Property Tables</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Engineering Reference Tables</h2>
             <p className="mt-1 text-sm text-gray-600">
-              Import and manage property lookup tables for materials and calculations
+              Standard reference data for engineering calculations. Use{' '}
+              <code className="bg-gray-100 px-1 rounded">LOOKUP("source_id", "output", input=value)</code> in expressions.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Create Table
-          </button>
         </div>
 
-        {hasAnyTables && (
-          <>
-            {/* Filters */}
-            <div className="mb-4 space-y-4 sm:space-y-0 sm:flex sm:gap-4">
-              <div className="flex-1">
-                <label htmlFor="search" className="sr-only">
-                  Search tables
-                </label>
-                <input
-                  type="text"
-                  id="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name, description, or source..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div className="sm:w-48">
-                <label htmlFor="filter" className="sr-only">
-                  Filter by status
-                </label>
-                <select
-                  id="filter"
-                  value={selectedFilter}
-                  onChange={(e) => setSelectedFilter(e.target.value as VerificationStatus | 'all')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  <option value="all">All Tables</option>
-                  <option value="verified">🟢 Verified Only</option>
-                  <option value="cited">🟡 Cited Only</option>
-                  <option value="unverified">🔴 Unverified Only</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Verification Legend */}
-            <div className="bg-gray-50 rounded-md p-3 text-xs">
-              <div className="flex flex-wrap gap-4">
-                <span className="flex items-center">
-                  <span className="text-green-600 mr-1">🟢</span>
-                  <span className="font-medium">Verified:</span>
-                  <span className="ml-1 text-gray-600">Imported from authoritative source</span>
-                </span>
-                <span className="flex items-center">
-                  <span className="text-yellow-600 mr-1">🟡</span>
-                  <span className="font-medium">Cited:</span>
-                  <span className="ml-1 text-gray-600">Manual entry with source</span>
-                </span>
-                <span className="flex items-center">
-                  <span className="text-red-600 mr-1">🔴</span>
-                  <span className="font-medium">Unverified:</span>
-                  <span className="ml-1 text-gray-600">No source documentation</span>
-                </span>
-              </div>
-            </div>
-          </>
+        {/* Category filter tabs */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                selectedCategory === null
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All ({sources?.length || 0})
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${
+                  selectedCategory === cat
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {CATEGORY_INFO[cat]?.name || cat} ({groupedSources[cat]?.length || 0})
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Table List or Empty State */}
-      {isLoading ? (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-4 bg-gray-200 rounded"></div>
-            </div>
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Source List */}
+        <div className="lg:col-span-1 bg-white shadow rounded-lg overflow-hidden">
+          <div className="px-4 py-3 bg-gray-50 border-b">
+            <h3 className="text-sm font-medium text-gray-700">Available Tables</h3>
           </div>
-        </div>
-      ) : error ? (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="text-red-600">
-            <h3 className="text-lg font-semibold mb-2">Error</h3>
-            <p>Failed to load property tables</p>
-          </div>
-        </div>
-      ) : hasAnyTables ? (
-        <PropertyTablesList tables={tables} />
-      ) : (
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="text-center py-12">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No property tables yet</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating your first property table.
-            </p>
-            <div className="mt-6">
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Create your first table
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Create Table Modal */}
-      {isCreateModalOpen && (
-        <CreatePropertyTableModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-        />
+          {isLoading ? (
+            <div className="p-4">
+              <div className="animate-pulse space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-16 bg-gray-100 rounded"></div>
+                ))}
+              </div>
+            </div>
+          ) : error ? (
+            <div className="p-4 text-red-600">Failed to load tables</div>
+          ) : (
+            <div className="divide-y divide-gray-100 max-h-[600px] overflow-y-auto">
+              {filteredSources?.map(source => (
+                <button
+                  key={source.id}
+                  onClick={() => setSelectedSource(source.id)}
+                  className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                    selectedSource === source.id ? 'bg-indigo-50 border-l-4 border-indigo-600' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {source.name}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {source.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[source.type]}`}>
+                          {source.type}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {source.column_count || source.outputs.length} columns
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Table View */}
+        <div className="lg:col-span-2 bg-white shadow rounded-lg overflow-hidden">
+          {selectedSource && viewData ? (
+            <>
+              <div className="px-4 py-3 bg-gray-50 border-b">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">{viewData.metadata.view_name}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Source: {viewData.metadata.source_name}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 max-w-md truncate" title={lookupTemplate}>
+                      {lookupTemplate}
+                    </code>
+                    <button
+                      onClick={() => setIsFullscreen(true)}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+                      title="Expand table"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                {viewLoading ? (
+                  <div className="p-4 animate-pulse">
+                    <div className="h-64 bg-gray-100 rounded"></div>
+                  </div>
+                ) : (
+                  <table className="min-w-full divide-y divide-gray-200 table-auto">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        {viewData.headers.map((header, idx) => (
+                          <th
+                            key={idx}
+                            className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                          >
+                            <div>{header.label}</div>
+                            {header.unit && (
+                              <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
+                                ({header.unit})
+                              </div>
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {viewData.rows.map((row, rowIdx) => (
+                        <tr key={rowIdx} className="hover:bg-gray-50">
+                          {viewData.headers.map((header, colIdx) => {
+                            const value = row.values[header.key];
+                            const isInput = header.is_input;
+
+                            return (
+                              <td
+                                key={colIdx}
+                                className={`px-3 py-1.5 text-sm whitespace-nowrap ${
+                                  isInput
+                                    ? 'font-medium text-gray-900'
+                                    : 'text-gray-600 font-mono'
+                                }`}
+                              >
+                                {formatDisplayValue(value)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="mt-2 text-sm">Select a table to view its data</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Fullscreen Modal - rendered via portal to ensure proper z-index stacking */}
+      {isFullscreen && viewData && createPortal(
+        <div className="fixed inset-0 z-[100] bg-black bg-opacity-50 flex items-center justify-center p-2">
+          <div className="bg-gray-50 rounded-lg shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-4 py-3 bg-gray-50 border-b flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900">{viewData.metadata.view_name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Source: {viewData.metadata.source_name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 max-w-lg truncate" title={lookupTemplate}>
+                    {lookupTemplate}
+                  </code>
+                  <button
+                    onClick={() => setIsFullscreen(false)}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+                    title="Close (Esc)"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Table Content */}
+            <div className="overflow-auto flex-1">
+              <table className="min-w-full divide-y divide-gray-200 table-auto">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    {viewData.headers.map((header, idx) => (
+                      <th
+                        key={idx}
+                        className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        <div>{header.label}</div>
+                        {header.unit && (
+                          <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
+                            ({header.unit})
+                          </div>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {viewData.rows.map((row, rowIdx) => (
+                    <tr key={rowIdx} className="hover:bg-gray-50">
+                      {viewData.headers.map((header, colIdx) => {
+                        const value = row.values[header.key];
+                        const isInput = header.is_input;
+
+                        return (
+                          <td
+                            key={colIdx}
+                            className={`px-3 py-1.5 text-sm whitespace-nowrap ${
+                              isInput
+                                ? 'font-medium text-gray-900'
+                                : 'text-gray-600 font-mono'
+                            }`}
+                          >
+                            {formatDisplayValue(value)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

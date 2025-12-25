@@ -35,7 +35,7 @@ const Layout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[1400px] px-1 sm:px-1.5 lg:px-2">
           <div className="flex h-16 justify-between">
             <div className="flex">
               <div className="flex flex-shrink-0 items-center">
@@ -108,7 +108,7 @@ const Layout: React.FC = () => {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto max-w-[1400px] px-2.5 sm:px-4 lg:px-5 py-8">
         <Outlet />
       </main>
     </div>

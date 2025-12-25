@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { TestStatus } from '../types';
@@ -225,8 +226,8 @@ const TestCampaign: React.FC = () => {
       )}
 
       {/* Test Result Form Modal */}
-      {showResultForm && selectedTest && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+      {showResultForm && selectedTest && createPortal(
+        <div className="fixed inset-0 z-[100] bg-gray-500 bg-opacity-75 flex items-center justify-center p-2">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -247,12 +248,13 @@ const TestCampaign: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Create Test Modal */}
-      {showCreateForm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      {showCreateForm && createPortal(
+        <div className="fixed inset-0 z-[100] bg-gray-500 bg-opacity-75 flex items-center justify-center p-2">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -273,12 +275,13 @@ const TestCampaign: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Edit Test Modal */}
-      {editingTest && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      {editingTest && createPortal(
+        <div className="fixed inset-0 z-[100] bg-gray-500 bg-opacity-75 flex items-center justify-center p-2">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -297,7 +300,8 @@ const TestCampaign: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

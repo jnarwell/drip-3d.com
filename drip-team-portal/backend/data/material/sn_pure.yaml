@@ -1,0 +1,128 @@
+id: sn_pure
+name: "Pure Tin"
+category: material
+description: "Temperature-dependent properties for pure Sn (99.9%)"
+source: "ASM Handbook Vol 2"
+source_url: "https://www.asminternational.org/"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: equation
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [200, 500]
+    description: "Temperature (valid range: -73°C to 227°C, melting 232°C)"
+
+outputs:
+  - name: E
+    unit: Pa
+    description: "Young's modulus"
+    format: "scientific"
+  - name: Sy
+    unit: Pa
+    description: "Yield strength"
+    format: "scientific"
+  - name: Su
+    unit: Pa
+    description: "Ultimate tensile strength"
+    format: "scientific"
+  - name: alpha
+    unit: 1/K
+    description: "Coefficient of thermal expansion"
+  - name: k
+    unit: W/(m·K)
+    description: "Thermal conductivity"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat capacity"
+  - name: nu
+    unit: "none"
+    description: "Poisson's ratio"
+
+resolution:
+  type: equation
+
+  formulas:
+    E: "E_ref * (1 - E_slope * (T - T_ref))"
+    Sy: "Sy_ref * (1 - Sy_slope * (T - T_ref)) if T < T_crit else Sy_ref * (1 - Sy_slope * (T_crit - T_ref)) * exp(-Sy_decay * (T - T_crit))"
+    Su: "Su_ref * (1 - Su_slope * (T - T_ref)) if T < T_crit else Su_ref * (1 - Su_slope * (T_crit - T_ref)) * exp(-Su_decay * (T - T_crit))"
+    alpha: "alpha_0 + alpha_1 * (T - T_ref)"
+    k: "k_ref * (1 - k_slope * (T - T_ref))"
+    rho: "rho_ref * (1 - 3 * alpha_0 * (T - T_ref))"
+    cp: "cp_ref + cp_slope * (T - T_ref)"
+    nu: "nu_ref"
+
+  constants:
+    T_ref: 298.15
+    T_crit: 373.15         # 100°C
+    T_melt: 505.05         # 231.9°C
+
+    # Young's modulus - Sn is soft
+    E_ref: 50e9
+    E_slope: 0.0008
+
+    # Yield strength - very soft
+    Sy_ref: 11e6
+    Sy_slope: 0.0008
+    Sy_decay: 0.012
+
+    # Ultimate strength
+    Su_ref: 15e6
+    Su_slope: 0.0007
+    Su_decay: 0.010
+
+    # Thermal expansion - high
+    alpha_0: 22.0e-6
+    alpha_1: 0.012e-6
+
+    # Thermal conductivity
+    k_ref: 66.8
+    k_slope: 0.0002
+
+    # Density
+    rho_ref: 7265
+
+    # Specific heat
+    cp_ref: 228
+    cp_slope: 0.10
+
+    nu_ref: 0.36
+
+views:
+  - id: default
+    name: "Pure Sn Properties vs Temperature"
+    description: "Pure tin properties approaching melt"
+    grid:
+      T:
+        type: list
+        values: [200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500]
+        unit: K
+    columns:
+      - output: E
+        header: "E"
+        unit: "GPa"
+      - output: Sy
+        header: "Sy"
+        unit: "MPa"
+      - output: Su
+        header: "Su"
+        unit: "MPa"
+      - output: alpha
+        header: "α"
+        unit: "µm/(m·K)"
+      - output: k
+        header: "k"
+        unit: "W/(m·K)"
+      - output: cp
+        header: "cp"
+        unit: "J/(kg·K)"
+      - output: rho
+        header: "ρ"
+        unit: "kg/m³"
+    layout: flat

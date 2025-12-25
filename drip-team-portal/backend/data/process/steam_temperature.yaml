@@ -1,0 +1,118 @@
+id: steam_temperature
+name: "Steam — Temperature"
+category: process
+description: "Saturation properties of water/steam indexed by temperature (IAPWS-IF97)"
+source: "CoolProp (IAPWS-IF97)"
+source_url: "http://www.coolprop.org/"
+version: "6.5.0"
+last_updated: "2024-12-24"
+
+# For LOOKUP(), use the unified steam source which supports T, P, Q
+lookup_source_id: steam
+
+type: library
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [273.15, 647.096]
+    optional: true
+    description: "Temperature (saturation range: 0.01°C to 373.95°C / 647.096 K)"
+  - name: Q
+    unit: "none"
+    type: continuous
+    range: [0, 1]
+    optional: true
+    description: "Vapor quality (0=saturated liquid, 1=saturated vapor)"
+
+outputs:
+  - name: P_sat
+    unit: Pa
+    description: "Saturation pressure"
+  - name: h
+    unit: J/kg
+    description: "Specific enthalpy"
+  - name: s
+    unit: J/(kg·K)
+    description: "Specific entropy"
+  - name: u
+    unit: J/kg
+    description: "Specific internal energy"
+  - name: v
+    unit: m³/kg
+    description: "Specific volume"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+
+resolution:
+  type: library
+  library: coolprop
+  fluid: Water
+
+  output_mapping:
+    P_sat: P
+    h: H
+    s: S
+    u: U
+    v: "1/D"
+    rho: D
+
+  input_mapping:
+    T: T
+    Q: Q
+
+views:
+  - id: default
+    name: "Saturation by Temperature"
+    description: "Saturation properties indexed by temperature"
+    grid:
+      T:
+        type: list
+        # Temperatures from triple point (0.01°C) to 300°C in useful increments
+        values: [273.16, 278.15, 283.15, 288.15, 293.15, 298.15, 303.15, 313.15, 323.15, 333.15, 343.15, 353.15, 363.15, 373.15, 383.15, 393.15, 403.15, 413.15, 423.15, 433.15, 443.15, 453.15, 463.15, 473.15, 483.15, 493.15, 503.15, 513.15, 523.15, 533.15, 543.15, 553.15, 563.15, 573.15]
+        unit: K
+    columns:
+      # Saturation pressure
+      - output: P_sat
+        header: "Psat"
+        phase: liquid
+        unit: "kPa"
+      # Specific volume
+      - output: v
+        header: "vf"
+        phase: liquid
+        unit: "m³/kg"
+      - output: v
+        header: "vg"
+        phase: vapor
+        unit: "m³/kg"
+      # Internal energy
+      - output: u
+        header: "uf"
+        phase: liquid
+        unit: "kJ/kg"
+      - output: u
+        header: "ug"
+        phase: vapor
+        unit: "kJ/kg"
+      # Enthalpy
+      - output: h
+        header: "hf"
+        phase: liquid
+        unit: "kJ/kg"
+      - output: h
+        header: "hg"
+        phase: vapor
+        unit: "kJ/kg"
+      # Entropy
+      - output: s
+        header: "sf"
+        phase: liquid
+        unit: "kJ/(kg·K)"
+      - output: s
+        header: "sg"
+        phase: vapor
+        unit: "kJ/(kg·K)"
+    layout: flat

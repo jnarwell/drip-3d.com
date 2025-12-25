@@ -17,7 +17,10 @@ requests-toolbelt==0.10.1
 pandas==2.1.4
 openpyxl==3.1.2
 reportlab==4.0.8
+camelot-py[cv]>=1.0.0  # For PDF table extraction (better for borderless tables)
 pytest==7.4.3
 pytest-asyncio==0.21.1
 sympy==1.12  # For mathematical expression parsing and evaluation
+CoolProp>=6.5.0  # Thermodynamic property calculations
+PyYAML>=6.0  # YAML file parsing for property sources
 # mp-api==0.37.2  # Removed - using direct REST API instead

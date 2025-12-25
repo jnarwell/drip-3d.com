@@ -216,3 +216,97 @@ LITERAL_WITH_UNIT_PATTERN = re.compile(
 **Key File**: `backend/app/services/value_engine.py`
 
 **Note**: Mixed metric/imperial expressions (e.g., `1m + 2ft`) now work correctly - all values are converted to SI base units during evaluation.
+
+---
+
+## 13. Modal Overlays Not Covering Navbar (RESOLVED)
+
+**Issue**: Modal popups (Component Detail, Test Campaign modals, PropertyTables fullscreen) had a thin unshaded stripe at the top where the navbar was visible through the overlay.
+
+**Status**: RESOLVED (December 24, 2025)
+
+**Root Cause**: Modals rendered within a React component tree inherited stacking context from their parent elements. Even with `z-index: 100`, the overlay couldn't escape the stacking context to fully cover fixed elements like the navbar.
+
+**Solution**: Used React Portal (`createPortal` from 'react-dom') to render all modals directly into `document.body`, bypassing stacking context issues:
+
+```typescript
+import { createPortal } from 'react-dom';
+
+// Modal rendered via portal
+{isOpen && createPortal(
+  <div className="fixed inset-0 z-[100] bg-black bg-opacity-50 ...">
+    {/* Modal content */}
+  </div>,
+  document.body
+)}
+```
+
+**Files Updated**:
+- `frontend/src/pages/resources/PropertyTables.tsx` - Fullscreen table modal
+- `frontend/src/components/ComponentDetailModal.tsx` - Component detail popup
+- `frontend/src/pages/TestCampaign.tsx` - Create/Edit/Result modals (3 total)
+
+**Pattern**: All future modals should use the portal pattern to ensure proper overlay stacking.
+
+---
+
+## 14. Snake_case Values Not Formatted for Display (RESOLVED)
+
+**Issue**: Reference table values like "flame_cutting" or "mild_steel" were displayed with underscores instead of readable "Flame Cutting" or "Mild Steel".
+
+**Status**: RESOLVED (December 24, 2025)
+
+**Solution**: Added `formatDisplayValue()` function in PropertyTables.tsx that detects snake_case strings and converts to Title Case:
+
+```typescript
+const formatDisplayValue = (value: unknown): string | number => {
+  if (typeof value === 'string' && /^[a-z][a-z0-9_]*$/.test(value)) {
+    return value.split('_').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  }
+  return String(value);
+};
+```
+
+**Key File**: `frontend/src/pages/resources/PropertyTables.tsx`
+
+---
+
+## 15. LOOKUP Function Not Working in Component Expressions (RESOLVED)
+
+**Issue**: Using `LOOKUP("metric_bolt_dimensions", "clearance_loose", size="M5")` in a component property expression returned a 400 error.
+
+**Status**: RESOLVED (December 24, 2025)
+
+**Root Cause**: The `value_engine.py` was importing outdated function names (`resolve_lookup`, `get_registry`) that no longer existed after the properties system refactor.
+
+**Solution**:
+1. Updated `lookup_table()` method to import from `app.services.properties.router` instead
+2. Changed to use the `lookup()` function directly with keyword arguments
+3. Added proper handling for quoted string values in LOOKUP expressions
+
+**Key File**: `backend/app/services/value_engine.py`
+
+---
+
+## 16. Case-Sensitive LOOKUP Inputs (RESOLVED)
+
+**Issue**: LOOKUP with `size="m5"` (lowercase) failed, even though the source data used `"M5"` (uppercase). Users had to match exact case.
+
+**Status**: RESOLVED (December 24, 2025)
+
+**Solution**: Added case-insensitive matching for discrete string inputs in `_validate_inputs()`:
+
+```python
+if isinstance(value, str):
+    value_lower = value.lower()
+    for v in input_def.values:
+        if isinstance(v, str) and v.lower() == value_lower:
+            normalized[name] = v  # Use canonical case
+            break
+```
+
+**Key File**: `backend/app/services/properties/router.py`
+
+**Result**: Both `LOOKUP(..., size="m5")` and `LOOKUP(..., size="M5")` now work correctly.

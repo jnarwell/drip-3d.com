@@ -14,7 +14,6 @@ import Settings from './pages/Settings';
 import Resources from './pages/Resources';
 import PropertyTables from './pages/resources/PropertyTables';
 import Constants from './pages/resources/Constants';
-import Templates from './pages/resources/Templates';
 
 // Company pages
 import HomePage from './pages/company/HomePage';
@@ -73,7 +72,6 @@ function AppRoutes() {
             <Route index element={<Navigate to="/resources/property-tables" />} />
             <Route path="property-tables" element={<PropertyTables />} />
             <Route path="constants" element={<Constants />} />
-            <Route path="templates" element={<Templates />} />
           </Route>
         </Route>
       </Routes>

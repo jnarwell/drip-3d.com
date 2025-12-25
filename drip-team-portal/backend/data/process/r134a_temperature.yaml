@@ -1,0 +1,101 @@
+id: r134a_temperature
+name: "R-134a — Temperature"
+category: process
+description: "Saturation properties of R-134a indexed by temperature"
+source: "CoolProp"
+source_url: "http://www.coolprop.org/"
+version: "6.5.0"
+last_updated: "2024-12-24"
+
+# For LOOKUP(), use the unified r134a source
+lookup_source_id: r134a
+
+type: library
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [233.15, 374.21]
+    optional: true
+    description: "Temperature (saturation range: -40°C to 101°C critical)"
+  - name: Q
+    unit: "none"
+    type: continuous
+    range: [0, 1]
+    optional: true
+    description: "Vapor quality (0=saturated liquid, 1=saturated vapor)"
+
+outputs:
+  - name: P_sat
+    unit: Pa
+    description: "Saturation pressure"
+  - name: h
+    unit: J/kg
+    description: "Specific enthalpy"
+  - name: s
+    unit: J/(kg·K)
+    description: "Specific entropy"
+  - name: v
+    unit: m³/kg
+    description: "Specific volume"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+
+resolution:
+  type: library
+  library: coolprop
+  fluid: R134a
+
+  output_mapping:
+    P_sat: P
+    h: H
+    s: S
+    v: "1/D"
+    rho: D
+
+  input_mapping:
+    T: T
+    Q: Q
+
+views:
+  - id: default
+    name: "R-134a Saturation by Temperature"
+    description: "Saturation properties indexed by temperature"
+    grid:
+      T:
+        type: list
+        # Common refrigeration temperatures: -40°C to 70°C
+        values: [233.15, 238.15, 243.15, 248.15, 253.15, 258.15, 263.15, 268.15, 273.15, 278.15, 283.15, 288.15, 293.15, 298.15, 303.15, 308.15, 313.15, 318.15, 323.15, 328.15, 333.15, 338.15, 343.15]
+        unit: K
+    columns:
+      - output: P_sat
+        header: "Psat"
+        phase: liquid
+        unit: "kPa"
+      - output: v
+        header: "vf"
+        phase: liquid
+        unit: "m³/kg"
+      - output: v
+        header: "vg"
+        phase: vapor
+        unit: "m³/kg"
+      - output: h
+        header: "hf"
+        phase: liquid
+        unit: "kJ/kg"
+      - output: h
+        header: "hg"
+        phase: vapor
+        unit: "kJ/kg"
+      - output: s
+        header: "sf"
+        phase: liquid
+        unit: "kJ/(kg·K)"
+      - output: s
+        header: "sg"
+        phase: vapor
+        unit: "kJ/(kg·K)"
+    layout: flat

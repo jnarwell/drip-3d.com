@@ -72,6 +72,15 @@ BARE_LITERAL_PATTERN = re.compile(
     re.UNICODE
 )
 
+# Regex for LOOKUP function calls
+# LOOKUP("TableCode", "Column", KeyColumn=value)
+# LOOKUP("STEAM", "Pressure", Temperature=150)
+# LOOKUP("STEAM", "Pressure", Temperature=#PART.temp)
+LOOKUP_PATTERN = re.compile(
+    r'LOOKUP\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*([^)]+)\s*\)',
+    re.UNICODE
+)
+
 
 class ExpressionError(Exception):
     """Error during expression parsing or evaluation."""
@@ -123,6 +132,41 @@ class ValueEngine:
                     self._user_unit_prefs[pref.quantity_type] = unit.symbol
 
         return self._user_unit_prefs.get(dimension)
+
+    # ==================== TABLE LOOKUP ====================
+
+    def lookup_table(
+        self,
+        table_code: str,
+        output_column: str,
+        key_column: str,
+        key_value: Any
+    ) -> Tuple[Optional[float], bool, Optional[str]]:
+        """
+        Look up a value using the Engineering Properties API.
+
+        Args:
+            table_code: The source ID (e.g., "steam", "wire_gauge_awg")
+            output_column: The output property name (e.g., "h", "diameter")
+            key_column: The input name (e.g., "T", "gauge")
+            key_value: The value to look up (number or string for discrete inputs)
+
+        Returns:
+            (value, interpolated, error_message)
+        """
+        try:
+            from app.services.properties.router import lookup
+
+            # Perform the lookup
+            inputs = {key_column: key_value}
+            result = lookup(table_code, output_column, **inputs)
+
+            # The new API always returns interpolated values for continuous inputs
+            return (result, True, None)
+
+        except Exception as e:
+            logger.error(f"LOOKUP error for {table_code}.{output_column}: {e}")
+            return (None, False, str(e))
 
     # ==================== VALUE CREATION ====================
 
@@ -373,6 +417,22 @@ class ValueEngine:
             # Replace #ref with placeholder (handle the # prefix)
             modified_expr = modified_expr.replace(f"#{ref}", placeholder)
 
+        # Process LOOKUP() function calls
+        # LOOKUP("TableCode", "Column", KeyColumn=value)
+        lookup_calls = {}
+        lookup_matches = LOOKUP_PATTERN.findall(modified_expr)
+        for m, (table_code, output_col, key_col, key_val) in enumerate(lookup_matches):
+            original_call = f'LOOKUP("{table_code}", "{output_col}", {key_col}={key_val})'
+            placeholder = f"__lookup_{m}__"
+            lookup_calls[placeholder] = {
+                'original': original_call,
+                'table_code': table_code,
+                'output_column': output_col,
+                'key_column': key_col,
+                'key_value_expr': key_val.strip(),  # May be a reference like #PART.temp or a literal
+            }
+            modified_expr = modified_expr.replace(original_call, placeholder, 1)
+
         # Replace literal values with units (e.g., 12mm -> converted SI value)
         literal_matches = LITERAL_WITH_UNIT_PATTERN.findall(modified_expr)
         for j, (value_str, unit) in enumerate(literal_matches):
@@ -449,6 +509,8 @@ class ValueEngine:
                 local_dict[p] = Symbol(p)
             for p in bare_literals:
                 local_dict[p] = Symbol(p)
+            for p in lookup_calls:
+                local_dict[p] = Symbol(p)
 
             parsed = sympify(modified_expr, locals=local_dict)
 
@@ -459,6 +521,7 @@ class ValueEngine:
                 "ref_units": ref_units,  # Unit symbols for each reference placeholder
                 "literal_values": literal_values,
                 "bare_literals": bare_literals,  # Unitless numbers that need user unit conversion
+                "lookup_calls": lookup_calls,  # LOOKUP() function calls
                 "sympy_repr": str(parsed),
                 "references": refs,
                 "valid": True
@@ -850,6 +913,49 @@ class ValueEngine:
                     dimension = self.UNIT_TO_DIMENSION.get(lit_unit)
                     if dimension:
                         dimensions_used.add(dimension)
+
+            # Evaluate LOOKUP() function calls
+            for p, lookup_info in parsed.get("lookup_calls", {}).items():
+                # Get the key value - could be a literal or a reference
+                key_val_expr = lookup_info['key_value_expr']
+
+                # Check if the key value is a reference (starts with #)
+                if key_val_expr.startswith('#'):
+                    # It's a reference - look it up in values dict
+                    ref_name = key_val_expr[1:]  # Remove # prefix
+                    key_val = None
+                    for placeholder, ref in parsed.get("placeholders", {}).items():
+                        if ref == ref_name:
+                            key_val = values.get(placeholder)
+                            break
+                    if key_val is None:
+                        return (None, None, False, f"LOOKUP key reference '{key_val_expr}' could not be resolved", None)
+                elif key_val_expr.startswith('"') and key_val_expr.endswith('"'):
+                    # It's a quoted string (for discrete inputs like "M5")
+                    key_val = key_val_expr[1:-1]  # Remove quotes
+                elif key_val_expr.startswith("'") and key_val_expr.endswith("'"):
+                    # Also support single quotes
+                    key_val = key_val_expr[1:-1]  # Remove quotes
+                else:
+                    # It's a literal number
+                    try:
+                        key_val = float(key_val_expr)
+                    except ValueError:
+                        return (None, None, False, f"LOOKUP key value '{key_val_expr}' is not a valid number or string", None)
+
+                # Perform the lookup
+                lookup_result, interpolated, lookup_error = self.lookup_table(
+                    lookup_info['table_code'],
+                    lookup_info['output_column'],
+                    lookup_info['key_column'],
+                    key_val
+                )
+
+                if lookup_error:
+                    return (None, None, False, f"LOOKUP error: {lookup_error}", None)
+
+                local_dict[p] = lookup_result
+                logger.debug(f"LOOKUP({lookup_info['table_code']}, {lookup_info['output_column']}, {lookup_info['key_column']}={key_val}) = {lookup_result} (interpolated: {interpolated})")
 
             # Handle bare literals (numbers without units)
             # Only convert them using user's preferred unit for ADDITIVE expressions

@@ -87,9 +87,33 @@ backend/
 |---------|---------|
 | `value_engine.py` | Expression parsing, evaluation, dependency management |
 | `unit_engine.py` | Unit conversions, dimensional analysis |
+| `properties/` | Engineering properties LOOKUP system |
 | `materials_project.py` | Materials Project API integration |
 | `linear.py` | Linear GraphQL client for progress tracking |
 | `nist_webbook.py` | NIST material property lookup |
+
+### Engineering Properties System
+
+The `properties/` service provides standardized engineering data lookups:
+
+```
+backend/app/services/properties/
+├── __init__.py          # Public API exports
+├── router.py            # LOOKUP dispatcher, input validation
+├── registry.py          # YAML source loader, view generator
+├── schemas.py           # Pydantic models for sources
+└── backends/
+    ├── table.py         # Static table lookups
+    ├── equation.py      # Equation-based calculations
+    └── coolprop.py      # CoolProp library integration
+```
+
+**Key Features:**
+- YAML-based property source definitions in `backend/data/`
+- Case-insensitive discrete input matching
+- CoolProp integration for thermodynamic properties (IAPWS-IF97)
+- `lookup_source_id` pattern for unified LOOKUP across display views
+- Unit conversion for grid display values
 
 ## Frontend Architecture
 
@@ -122,6 +146,27 @@ frontend/src/
 - **React Query** for server state (API data)
 - **React Context** for global state (units, auth)
 - **Local state** for component-specific state
+
+### Modal Pattern (React Portal)
+
+All modals use React Portal to render at `document.body` level, ensuring proper z-index stacking above the navbar:
+
+```typescript
+import { createPortal } from 'react-dom';
+
+// Modal rendered via portal
+{isOpen && createPortal(
+  <div className="fixed inset-0 z-[100] bg-black bg-opacity-50 ...">
+    <div className="modal-content">...</div>
+  </div>,
+  document.body
+)}
+```
+
+Key files using this pattern:
+- `components/ComponentDetailModal.tsx`
+- `pages/resources/PropertyTables.tsx` (fullscreen mode)
+- `pages/TestCampaign.tsx` (create/edit/result modals)
 
 ## Data Models
 
@@ -247,4 +292,4 @@ VITE_API_URL=https://backend-production-aa29.up.railway.app
 
 ---
 
-*Last Updated: December 19, 2025*
+*Last Updated: December 24, 2025*

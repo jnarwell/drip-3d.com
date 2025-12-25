@@ -1,0 +1,84 @@
+id: steam
+name: "Water / Steam"
+category: process
+description: "Thermodynamic properties of water and steam (IAPWS-IF97). Use T+P, T+Q, or P+Q."
+source: "CoolProp (IAPWS-IF97)"
+source_url: "http://www.coolprop.org/"
+version: "6.5.0"
+last_updated: "2024-12-24"
+
+type: library
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [273.15, 2273.15]
+    optional: true
+    description: "Temperature. Use with P for single-phase, or with Q for saturation."
+  - name: P
+    unit: Pa
+    type: continuous
+    range: [611.657, 100000000]
+    optional: true
+    description: "Pressure. Use with T for single-phase, or with Q for saturation."
+  - name: Q
+    unit: "none"
+    type: continuous
+    range: [0, 1]
+    optional: true
+    description: "Vapor quality (0=saturated liquid, 1=saturated vapor). Use with T or P."
+
+outputs:
+  - name: h
+    unit: J/kg
+    description: "Specific enthalpy"
+  - name: s
+    unit: J/(kg·K)
+    description: "Specific entropy"
+  - name: u
+    unit: J/kg
+    description: "Specific internal energy"
+  - name: v
+    unit: m³/kg
+    description: "Specific volume"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat at constant pressure"
+  - name: cv
+    unit: J/(kg·K)
+    description: "Specific heat at constant volume"
+  - name: P_sat
+    unit: Pa
+    description: "Saturation pressure (at given T)"
+  - name: T_sat
+    unit: K
+    description: "Saturation temperature (at given P)"
+
+resolution:
+  type: library
+  library: coolprop
+  fluid: Water
+
+  output_mapping:
+    h: H
+    s: S
+    u: U
+    v: "1/D"
+    rho: D
+    cp: C
+    cv: CVMASS
+    P_sat: P
+    T_sat: T
+
+  input_mapping:
+    T: T
+    P: P
+    Q: Q
+
+# No views - this source is for LOOKUP only
+# Use steam_temperature or steam_pressure for table display
+views: []

@@ -1,0 +1,541 @@
+id: pipe_schedules
+name: "Steel Pipe Schedules"
+category: mechanical
+description: "Dimensions for carbon steel pipe per ASME B36.10M"
+source: "ASME B36.10M-2018"
+source_url: "https://www.asme.org/codes-standards/find-codes-standards/b36-10m-welded-seamless-wrought-steel-pipe"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: table
+
+inputs:
+  - name: nps
+    unit: "none"
+    type: discrete
+    values: ["1/8", "1/4", "3/8", "1/2", "3/4", "1", "1-1/4", "1-1/2", "2", "2-1/2", "3", "3-1/2", "4", "5", "6", "8", "10", "12", "14", "16", "18", "20", "24"]
+    description: "Nominal Pipe Size"
+  - name: schedule
+    unit: "none"
+    type: discrete
+    values: ["5", "10", "40", "80", "160", "STD", "XS", "XXS"]
+    description: "Pipe schedule"
+
+outputs:
+  - name: od_in
+    unit: in
+    description: "Outside diameter (inches)"
+  - name: od_mm
+    unit: mm
+    description: "Outside diameter (mm)"
+  - name: wall_in
+    unit: in
+    description: "Wall thickness (inches)"
+  - name: wall_mm
+    unit: mm
+    description: "Wall thickness (mm)"
+  - name: id_in
+    unit: in
+    description: "Inside diameter (inches)"
+  - name: id_mm
+    unit: mm
+    description: "Inside diameter (mm)"
+  - name: weight_lb_ft
+    unit: lb/ft
+    description: "Weight per foot (lb/ft)"
+
+resolution:
+  type: table
+  data:
+    # NPS 1/2"
+    "1/2|40":
+      od_in: 0.840
+      od_mm: 21.34
+      wall_in: 0.109
+      wall_mm: 2.77
+      id_in: 0.622
+      id_mm: 15.80
+      weight_lb_ft: 0.85
+    "1/2|80":
+      od_in: 0.840
+      od_mm: 21.34
+      wall_in: 0.147
+      wall_mm: 3.73
+      id_in: 0.546
+      id_mm: 13.87
+      weight_lb_ft: 1.09
+    "1/2|STD":
+      od_in: 0.840
+      od_mm: 21.34
+      wall_in: 0.109
+      wall_mm: 2.77
+      id_in: 0.622
+      id_mm: 15.80
+      weight_lb_ft: 0.85
+    "1/2|XS":
+      od_in: 0.840
+      od_mm: 21.34
+      wall_in: 0.147
+      wall_mm: 3.73
+      id_in: 0.546
+      id_mm: 13.87
+      weight_lb_ft: 1.09
+    # NPS 3/4"
+    "3/4|40":
+      od_in: 1.050
+      od_mm: 26.67
+      wall_in: 0.113
+      wall_mm: 2.87
+      id_in: 0.824
+      id_mm: 20.93
+      weight_lb_ft: 1.13
+    "3/4|80":
+      od_in: 1.050
+      od_mm: 26.67
+      wall_in: 0.154
+      wall_mm: 3.91
+      id_in: 0.742
+      id_mm: 18.85
+      weight_lb_ft: 1.47
+    "3/4|STD":
+      od_in: 1.050
+      od_mm: 26.67
+      wall_in: 0.113
+      wall_mm: 2.87
+      id_in: 0.824
+      id_mm: 20.93
+      weight_lb_ft: 1.13
+    "3/4|XS":
+      od_in: 1.050
+      od_mm: 26.67
+      wall_in: 0.154
+      wall_mm: 3.91
+      id_in: 0.742
+      id_mm: 18.85
+      weight_lb_ft: 1.47
+    # NPS 1"
+    "1|40":
+      od_in: 1.315
+      od_mm: 33.40
+      wall_in: 0.133
+      wall_mm: 3.38
+      id_in: 1.049
+      id_mm: 26.64
+      weight_lb_ft: 1.68
+    "1|80":
+      od_in: 1.315
+      od_mm: 33.40
+      wall_in: 0.179
+      wall_mm: 4.55
+      id_in: 0.957
+      id_mm: 24.31
+      weight_lb_ft: 2.17
+    "1|STD":
+      od_in: 1.315
+      od_mm: 33.40
+      wall_in: 0.133
+      wall_mm: 3.38
+      id_in: 1.049
+      id_mm: 26.64
+      weight_lb_ft: 1.68
+    "1|XS":
+      od_in: 1.315
+      od_mm: 33.40
+      wall_in: 0.179
+      wall_mm: 4.55
+      id_in: 0.957
+      id_mm: 24.31
+      weight_lb_ft: 2.17
+    # NPS 1-1/4"
+    "1-1/4|40":
+      od_in: 1.660
+      od_mm: 42.16
+      wall_in: 0.140
+      wall_mm: 3.56
+      id_in: 1.380
+      id_mm: 35.05
+      weight_lb_ft: 2.27
+    "1-1/4|80":
+      od_in: 1.660
+      od_mm: 42.16
+      wall_in: 0.191
+      wall_mm: 4.85
+      id_in: 1.278
+      id_mm: 32.46
+      weight_lb_ft: 3.00
+    "1-1/4|STD":
+      od_in: 1.660
+      od_mm: 42.16
+      wall_in: 0.140
+      wall_mm: 3.56
+      id_in: 1.380
+      id_mm: 35.05
+      weight_lb_ft: 2.27
+    "1-1/4|XS":
+      od_in: 1.660
+      od_mm: 42.16
+      wall_in: 0.191
+      wall_mm: 4.85
+      id_in: 1.278
+      id_mm: 32.46
+      weight_lb_ft: 3.00
+    # NPS 1-1/2"
+    "1-1/2|40":
+      od_in: 1.900
+      od_mm: 48.26
+      wall_in: 0.145
+      wall_mm: 3.68
+      id_in: 1.610
+      id_mm: 40.89
+      weight_lb_ft: 2.72
+    "1-1/2|80":
+      od_in: 1.900
+      od_mm: 48.26
+      wall_in: 0.200
+      wall_mm: 5.08
+      id_in: 1.500
+      id_mm: 38.10
+      weight_lb_ft: 3.63
+    "1-1/2|STD":
+      od_in: 1.900
+      od_mm: 48.26
+      wall_in: 0.145
+      wall_mm: 3.68
+      id_in: 1.610
+      id_mm: 40.89
+      weight_lb_ft: 2.72
+    "1-1/2|XS":
+      od_in: 1.900
+      od_mm: 48.26
+      wall_in: 0.200
+      wall_mm: 5.08
+      id_in: 1.500
+      id_mm: 38.10
+      weight_lb_ft: 3.63
+    # NPS 2"
+    "2|40":
+      od_in: 2.375
+      od_mm: 60.33
+      wall_in: 0.154
+      wall_mm: 3.91
+      id_in: 2.067
+      id_mm: 52.50
+      weight_lb_ft: 3.65
+    "2|80":
+      od_in: 2.375
+      od_mm: 60.33
+      wall_in: 0.218
+      wall_mm: 5.54
+      id_in: 1.939
+      id_mm: 49.25
+      weight_lb_ft: 5.02
+    "2|STD":
+      od_in: 2.375
+      od_mm: 60.33
+      wall_in: 0.154
+      wall_mm: 3.91
+      id_in: 2.067
+      id_mm: 52.50
+      weight_lb_ft: 3.65
+    "2|XS":
+      od_in: 2.375
+      od_mm: 60.33
+      wall_in: 0.218
+      wall_mm: 5.54
+      id_in: 1.939
+      id_mm: 49.25
+      weight_lb_ft: 5.02
+    # NPS 2-1/2"
+    "2-1/2|40":
+      od_in: 2.875
+      od_mm: 73.03
+      wall_in: 0.203
+      wall_mm: 5.16
+      id_in: 2.469
+      id_mm: 62.71
+      weight_lb_ft: 5.79
+    "2-1/2|80":
+      od_in: 2.875
+      od_mm: 73.03
+      wall_in: 0.276
+      wall_mm: 7.01
+      id_in: 2.323
+      id_mm: 59.00
+      weight_lb_ft: 7.66
+    "2-1/2|STD":
+      od_in: 2.875
+      od_mm: 73.03
+      wall_in: 0.203
+      wall_mm: 5.16
+      id_in: 2.469
+      id_mm: 62.71
+      weight_lb_ft: 5.79
+    "2-1/2|XS":
+      od_in: 2.875
+      od_mm: 73.03
+      wall_in: 0.276
+      wall_mm: 7.01
+      id_in: 2.323
+      id_mm: 59.00
+      weight_lb_ft: 7.66
+    # NPS 3"
+    "3|40":
+      od_in: 3.500
+      od_mm: 88.90
+      wall_in: 0.216
+      wall_mm: 5.49
+      id_in: 3.068
+      id_mm: 77.93
+      weight_lb_ft: 7.58
+    "3|80":
+      od_in: 3.500
+      od_mm: 88.90
+      wall_in: 0.300
+      wall_mm: 7.62
+      id_in: 2.900
+      id_mm: 73.66
+      weight_lb_ft: 10.25
+    "3|STD":
+      od_in: 3.500
+      od_mm: 88.90
+      wall_in: 0.216
+      wall_mm: 5.49
+      id_in: 3.068
+      id_mm: 77.93
+      weight_lb_ft: 7.58
+    "3|XS":
+      od_in: 3.500
+      od_mm: 88.90
+      wall_in: 0.300
+      wall_mm: 7.62
+      id_in: 2.900
+      id_mm: 73.66
+      weight_lb_ft: 10.25
+    # NPS 4"
+    "4|40":
+      od_in: 4.500
+      od_mm: 114.30
+      wall_in: 0.237
+      wall_mm: 6.02
+      id_in: 4.026
+      id_mm: 102.26
+      weight_lb_ft: 10.79
+    "4|80":
+      od_in: 4.500
+      od_mm: 114.30
+      wall_in: 0.337
+      wall_mm: 8.56
+      id_in: 3.826
+      id_mm: 97.18
+      weight_lb_ft: 14.98
+    "4|STD":
+      od_in: 4.500
+      od_mm: 114.30
+      wall_in: 0.237
+      wall_mm: 6.02
+      id_in: 4.026
+      id_mm: 102.26
+      weight_lb_ft: 10.79
+    "4|XS":
+      od_in: 4.500
+      od_mm: 114.30
+      wall_in: 0.337
+      wall_mm: 8.56
+      id_in: 3.826
+      id_mm: 97.18
+      weight_lb_ft: 14.98
+    # NPS 6"
+    "6|40":
+      od_in: 6.625
+      od_mm: 168.28
+      wall_in: 0.280
+      wall_mm: 7.11
+      id_in: 6.065
+      id_mm: 154.05
+      weight_lb_ft: 18.97
+    "6|80":
+      od_in: 6.625
+      od_mm: 168.28
+      wall_in: 0.432
+      wall_mm: 10.97
+      id_in: 5.761
+      id_mm: 146.33
+      weight_lb_ft: 28.57
+    "6|STD":
+      od_in: 6.625
+      od_mm: 168.28
+      wall_in: 0.280
+      wall_mm: 7.11
+      id_in: 6.065
+      id_mm: 154.05
+      weight_lb_ft: 18.97
+    "6|XS":
+      od_in: 6.625
+      od_mm: 168.28
+      wall_in: 0.432
+      wall_mm: 10.97
+      id_in: 5.761
+      id_mm: 146.33
+      weight_lb_ft: 28.57
+    # NPS 8"
+    "8|40":
+      od_in: 8.625
+      od_mm: 219.08
+      wall_in: 0.322
+      wall_mm: 8.18
+      id_in: 7.981
+      id_mm: 202.72
+      weight_lb_ft: 28.55
+    "8|80":
+      od_in: 8.625
+      od_mm: 219.08
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 7.625
+      id_mm: 193.68
+      weight_lb_ft: 43.39
+    "8|STD":
+      od_in: 8.625
+      od_mm: 219.08
+      wall_in: 0.322
+      wall_mm: 8.18
+      id_in: 7.981
+      id_mm: 202.72
+      weight_lb_ft: 28.55
+    "8|XS":
+      od_in: 8.625
+      od_mm: 219.08
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 7.625
+      id_mm: 193.68
+      weight_lb_ft: 43.39
+    # NPS 10"
+    "10|40":
+      od_in: 10.750
+      od_mm: 273.05
+      wall_in: 0.365
+      wall_mm: 9.27
+      id_in: 10.020
+      id_mm: 254.51
+      weight_lb_ft: 40.48
+    "10|80":
+      od_in: 10.750
+      od_mm: 273.05
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 9.750
+      id_mm: 247.65
+      weight_lb_ft: 54.74
+    "10|STD":
+      od_in: 10.750
+      od_mm: 273.05
+      wall_in: 0.365
+      wall_mm: 9.27
+      id_in: 10.020
+      id_mm: 254.51
+      weight_lb_ft: 40.48
+    "10|XS":
+      od_in: 10.750
+      od_mm: 273.05
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 9.750
+      id_mm: 247.65
+      weight_lb_ft: 54.74
+    # NPS 12"
+    "12|40":
+      od_in: 12.750
+      od_mm: 323.85
+      wall_in: 0.406
+      wall_mm: 10.31
+      id_in: 11.938
+      id_mm: 303.23
+      weight_lb_ft: 53.52
+    "12|80":
+      od_in: 12.750
+      od_mm: 323.85
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 11.750
+      id_mm: 298.45
+      weight_lb_ft: 65.42
+    "12|STD":
+      od_in: 12.750
+      od_mm: 323.85
+      wall_in: 0.375
+      wall_mm: 9.53
+      id_in: 12.000
+      id_mm: 304.80
+      weight_lb_ft: 49.56
+    "12|XS":
+      od_in: 12.750
+      od_mm: 323.85
+      wall_in: 0.500
+      wall_mm: 12.70
+      id_in: 11.750
+      id_mm: 298.45
+      weight_lb_ft: 65.42
+
+views:
+  - id: schedule_40
+    name: "Schedule 40 Pipe Dimensions"
+    description: "Common Schedule 40 pipe dimensions (equals STD for sizes ≤10\")"
+    grid:
+      nps:
+        type: list
+        values: ["1/2", "3/4", "1", "1-1/4", "1-1/2", "2", "2-1/2", "3", "4", "6", "8", "10", "12"]
+    columns:
+      - output: od_in
+        header: "OD"
+        unit: "in"
+      - output: od_mm
+        header: "OD"
+        unit: "mm"
+      - output: wall_in
+        header: "Wall"
+        unit: "in"
+      - output: wall_mm
+        header: "Wall"
+        unit: "mm"
+      - output: id_in
+        header: "ID"
+        unit: "in"
+      - output: id_mm
+        header: "ID"
+        unit: "mm"
+      - output: weight_lb_ft
+        header: "Weight"
+        unit: "lb/ft"
+    layout: flat
+
+  - id: schedule_80
+    name: "Schedule 80 Pipe Dimensions"
+    description: "Schedule 80 (extra strong) pipe dimensions"
+    grid:
+      nps:
+        type: list
+        values: ["1/2", "3/4", "1", "1-1/4", "1-1/2", "2", "2-1/2", "3", "4", "6", "8", "10", "12"]
+    columns:
+      - output: od_in
+        header: "OD"
+        unit: "in"
+      - output: od_mm
+        header: "OD"
+        unit: "mm"
+      - output: wall_in
+        header: "Wall"
+        unit: "in"
+      - output: wall_mm
+        header: "Wall"
+        unit: "mm"
+      - output: id_in
+        header: "ID"
+        unit: "in"
+      - output: id_mm
+        header: "ID"
+        unit: "mm"
+      - output: weight_lb_ft
+        header: "Weight"
+        unit: "lb/ft"
+    layout: flat

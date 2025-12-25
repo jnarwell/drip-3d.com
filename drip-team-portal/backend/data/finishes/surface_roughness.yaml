@@ -1,0 +1,264 @@
+id: surface_roughness
+name: "Surface Roughness by Process"
+category: finishes
+description: "Typical surface roughness (Ra) values achievable by various manufacturing processes"
+source: "Machinery's Handbook / Engineering Toolbox"
+source_url: "https://www.engineeringtoolbox.com/surface-roughness-machining-d_1130.html"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: table
+
+inputs:
+  - name: process
+    unit: "none"
+    type: discrete
+    values:
+      - flame_cutting
+      - snagging
+      - sawing
+      - planing_shaping
+      - drilling
+      - milling_rough
+      - milling_finish
+      - boring_rough
+      - boring_finish
+      - turning_rough
+      - turning_finish
+      - reaming
+      - broaching
+      - grinding_rough
+      - grinding_finish
+      - honing
+      - lapping
+      - polishing
+      - superfinishing
+      - sand_casting
+      - die_casting
+      - investment_casting
+      - forging
+      - cold_rolling
+      - extruding
+    description: "Manufacturing process"
+
+outputs:
+  - name: Ra_min_um
+    unit: µm
+    description: "Minimum achievable Ra (µm)"
+  - name: Ra_max_um
+    unit: µm
+    description: "Maximum typical Ra (µm)"
+  - name: Ra_typical_um
+    unit: µm
+    description: "Typical Ra (µm)"
+  - name: Ra_min_uin
+    unit: µin
+    description: "Minimum achievable Ra (µin)"
+  - name: Ra_max_uin
+    unit: µin
+    description: "Maximum typical Ra (µin)"
+
+resolution:
+  type: table
+  data:
+    flame_cutting:
+      Ra_min_um: 12.5
+      Ra_max_um: 25
+      Ra_typical_um: 20
+      Ra_min_uin: 500
+      Ra_max_uin: 1000
+    snagging:
+      Ra_min_um: 6.3
+      Ra_max_um: 25
+      Ra_typical_um: 12.5
+      Ra_min_uin: 250
+      Ra_max_uin: 1000
+    sawing:
+      Ra_min_um: 3.2
+      Ra_max_um: 25
+      Ra_typical_um: 6.3
+      Ra_min_uin: 125
+      Ra_max_uin: 1000
+    planing_shaping:
+      Ra_min_um: 1.6
+      Ra_max_um: 12.5
+      Ra_typical_um: 3.2
+      Ra_min_uin: 63
+      Ra_max_uin: 500
+    drilling:
+      Ra_min_um: 1.6
+      Ra_max_um: 6.3
+      Ra_typical_um: 3.2
+      Ra_min_uin: 63
+      Ra_max_uin: 250
+    milling_rough:
+      Ra_min_um: 3.2
+      Ra_max_um: 12.5
+      Ra_typical_um: 6.3
+      Ra_min_uin: 125
+      Ra_max_uin: 500
+    milling_finish:
+      Ra_min_um: 0.8
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 32
+      Ra_max_uin: 125
+    boring_rough:
+      Ra_min_um: 1.6
+      Ra_max_um: 6.3
+      Ra_typical_um: 3.2
+      Ra_min_uin: 63
+      Ra_max_uin: 250
+    boring_finish:
+      Ra_min_um: 0.4
+      Ra_max_um: 1.6
+      Ra_typical_um: 0.8
+      Ra_min_uin: 16
+      Ra_max_uin: 63
+    turning_rough:
+      Ra_min_um: 3.2
+      Ra_max_um: 12.5
+      Ra_typical_um: 6.3
+      Ra_min_uin: 125
+      Ra_max_uin: 500
+    turning_finish:
+      Ra_min_um: 0.4
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 16
+      Ra_max_uin: 125
+    reaming:
+      Ra_min_um: 0.8
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 32
+      Ra_max_uin: 125
+    broaching:
+      Ra_min_um: 0.8
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 32
+      Ra_max_uin: 125
+    grinding_rough:
+      Ra_min_um: 0.8
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 32
+      Ra_max_uin: 125
+    grinding_finish:
+      Ra_min_um: 0.1
+      Ra_max_um: 0.8
+      Ra_typical_um: 0.4
+      Ra_min_uin: 4
+      Ra_max_uin: 32
+    honing:
+      Ra_min_um: 0.1
+      Ra_max_um: 0.8
+      Ra_typical_um: 0.2
+      Ra_min_uin: 4
+      Ra_max_uin: 32
+    lapping:
+      Ra_min_um: 0.025
+      Ra_max_um: 0.4
+      Ra_typical_um: 0.1
+      Ra_min_uin: 1
+      Ra_max_uin: 16
+    polishing:
+      Ra_min_um: 0.012
+      Ra_max_um: 0.1
+      Ra_typical_um: 0.05
+      Ra_min_uin: 0.5
+      Ra_max_uin: 4
+    superfinishing:
+      Ra_min_um: 0.012
+      Ra_max_um: 0.05
+      Ra_typical_um: 0.025
+      Ra_min_uin: 0.5
+      Ra_max_uin: 2
+    sand_casting:
+      Ra_min_um: 12.5
+      Ra_max_um: 50
+      Ra_typical_um: 25
+      Ra_min_uin: 500
+      Ra_max_uin: 2000
+    die_casting:
+      Ra_min_um: 0.8
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 32
+      Ra_max_uin: 125
+    investment_casting:
+      Ra_min_um: 1.6
+      Ra_max_um: 6.3
+      Ra_typical_um: 3.2
+      Ra_min_uin: 63
+      Ra_max_uin: 250
+    forging:
+      Ra_min_um: 3.2
+      Ra_max_um: 12.5
+      Ra_typical_um: 6.3
+      Ra_min_uin: 125
+      Ra_max_uin: 500
+    cold_rolling:
+      Ra_min_um: 0.4
+      Ra_max_um: 3.2
+      Ra_typical_um: 1.6
+      Ra_min_uin: 16
+      Ra_max_uin: 125
+    extruding:
+      Ra_min_um: 0.8
+      Ra_max_um: 6.3
+      Ra_typical_um: 3.2
+      Ra_min_uin: 32
+      Ra_max_uin: 250
+
+views:
+  - id: default
+    name: "Surface Roughness by Process"
+    description: "Achievable surface finish by manufacturing process"
+    grid:
+      process:
+        type: list
+        values:
+          - flame_cutting
+          - snagging
+          - sawing
+          - planing_shaping
+          - drilling
+          - milling_rough
+          - milling_finish
+          - boring_rough
+          - boring_finish
+          - turning_rough
+          - turning_finish
+          - reaming
+          - broaching
+          - grinding_rough
+          - grinding_finish
+          - honing
+          - lapping
+          - polishing
+          - superfinishing
+          - sand_casting
+          - die_casting
+          - investment_casting
+          - forging
+          - cold_rolling
+          - extruding
+    columns:
+      - output: Ra_min_um
+        header: "Ra Min"
+        unit: "µm"
+      - output: Ra_max_um
+        header: "Ra Max"
+        unit: "µm"
+      - output: Ra_typical_um
+        header: "Ra Typical"
+        unit: "µm"
+      - output: Ra_min_uin
+        header: "Ra Min"
+        unit: "µin"
+      - output: Ra_max_uin
+        header: "Ra Max"
+        unit: "µin"
+    layout: flat

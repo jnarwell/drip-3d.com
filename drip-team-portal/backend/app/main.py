@@ -15,9 +15,6 @@ from app.api.v1.reports import router as reports_router
 from app.api.v1.properties import router as properties_router
 from app.api.v1.materials import router as materials_router
 from app.api.v1.materials_project import router as materials_project_router
-from app.api.v1.templates import router as templates_router
-from app.api.v1.property_table_templates import router as property_table_templates_router
-from app.api.v1.property_tables_enhanced import router as property_tables_enhanced_router
 from app.api.v1.linear import router as linear_router
 from app.api.v1.linear_enhanced import router as linear_enhanced_router
 from app.api.v1.constants import router as constants_router
@@ -25,6 +22,7 @@ from app.api.v1.units import router as units_router
 from app.api.v1.values import router as values_router
 from app.api.v1.search import router as search_router
 from app.api.v1.user_preferences import router as user_preferences_router
+from app.api.v1.engineering_properties import router as eng_properties_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -41,7 +39,7 @@ async def startup_event():
             from app.models.audit import AuditLog
             from app.models.component import Component
             from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
-            from app.models.resources import PropertyTableTemplate, PropertyTable, SystemConstant, CalculationTemplate
+            from app.models.resources import SystemConstant
             from app.models.user import User
             from app.models.test import Test, TestResult
             from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
@@ -105,15 +103,13 @@ app.include_router(properties_router, tags=["properties"])
 app.include_router(materials_router, tags=["materials"])
 app.include_router(materials_project_router, tags=["materials-project"])
 app.include_router(constants_router, tags=["constants"])
-app.include_router(templates_router, tags=["templates"])
-app.include_router(property_table_templates_router, prefix="/api/v1/property-table-templates", tags=["property-table-templates"])
-app.include_router(property_tables_enhanced_router, prefix="/api/v1/enhanced/property-tables", tags=["property-tables-enhanced"])
 app.include_router(linear_router, tags=["linear"])
 app.include_router(linear_enhanced_router, tags=["linear-enhanced"])
 app.include_router(units_router, tags=["units"])
 app.include_router(values_router, tags=["values"])
 app.include_router(search_router, tags=["search"])
 app.include_router(user_preferences_router, tags=["user-preferences"])
+app.include_router(eng_properties_router, tags=["engineering-properties"])
 
 @app.get("/")
 async def root():

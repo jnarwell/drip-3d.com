@@ -6,10 +6,7 @@ from app.models.user_preferences import UserUnitPreference
 from app.models.audit import AuditLog
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType, ValueType, UnitSystem
 from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
-from app.models.resources import (
-    PropertyTable, PropertyTableTemplate, SystemConstant, CalculationTemplate,
-    TableType, InterpolationType, ImportMethod, VerificationStatus, SourceType, TemplateType
-)
+from app.models.resources import SystemConstant
 
 __all__ = [
     "Base",
@@ -29,14 +26,5 @@ __all__ = [
     "Material",
     "MaterialProperty",
     "MaterialPropertyTemplate",
-    "PropertyTable",
-    "PropertyTableTemplate",
     "SystemConstant",
-    "CalculationTemplate",
-    "TableType",
-    "InterpolationType",
-    "ImportMethod",
-    "VerificationStatus",
-    "SourceType",
-    "TemplateType",
 ]

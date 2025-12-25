@@ -1,0 +1,327 @@
+id: metric_bolt_dimensions
+name: "Metric Bolt Dimensions"
+category: fasteners
+description: "Standard dimensions for metric hex bolts per ISO 4014/4017"
+source: "ISO 4014:2011 / ISO 4017:2014"
+source_url: "https://www.iso.org/standard/56445.html"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: table
+
+inputs:
+  - name: size
+    unit: "none"
+    type: discrete
+    values: ["M3", "M4", "M5", "M6", "M8", "M10", "M12", "M14", "M16", "M18", "M20", "M22", "M24", "M27", "M30", "M33", "M36"]
+    description: "Metric thread size designation"
+
+outputs:
+  - name: thread_pitch_coarse
+    unit: mm
+    description: "Coarse thread pitch"
+  - name: thread_pitch_fine
+    unit: mm
+    description: "Fine thread pitch"
+  - name: head_height
+    unit: mm
+    description: "Head height (k)"
+  - name: head_width_af
+    unit: mm
+    description: "Width across flats (s)"
+  - name: head_width_ac
+    unit: mm
+    description: "Width across corners (e)"
+  - name: thread_major_d
+    unit: mm
+    description: "Thread major diameter (d)"
+  - name: thread_minor_d
+    unit: mm
+    description: "Thread minor diameter (d3) - coarse"
+  - name: tap_drill_coarse
+    unit: mm
+    description: "Tap drill size for coarse thread"
+  - name: tap_drill_fine
+    unit: mm
+    description: "Tap drill size for fine thread"
+  - name: clearance_close
+    unit: mm
+    description: "Close fit clearance hole"
+  - name: clearance_medium
+    unit: mm
+    description: "Medium fit clearance hole"
+  - name: clearance_loose
+    unit: mm
+    description: "Loose fit clearance hole"
+
+resolution:
+  type: table
+  data:
+    M3:
+      thread_pitch_coarse: 0.5
+      thread_pitch_fine: 0.35
+      head_height: 2.0
+      head_width_af: 5.5
+      head_width_ac: 6.01
+      thread_major_d: 3.0
+      thread_minor_d: 2.387
+      tap_drill_coarse: 2.5
+      tap_drill_fine: 2.65
+      clearance_close: 3.2
+      clearance_medium: 3.4
+      clearance_loose: 3.6
+    M4:
+      thread_pitch_coarse: 0.7
+      thread_pitch_fine: 0.5
+      head_height: 2.8
+      head_width_af: 7.0
+      head_width_ac: 7.66
+      thread_major_d: 4.0
+      thread_minor_d: 3.141
+      tap_drill_coarse: 3.3
+      tap_drill_fine: 3.5
+      clearance_close: 4.3
+      clearance_medium: 4.5
+      clearance_loose: 4.8
+    M5:
+      thread_pitch_coarse: 0.8
+      thread_pitch_fine: 0.5
+      head_height: 3.5
+      head_width_af: 8.0
+      head_width_ac: 8.79
+      thread_major_d: 5.0
+      thread_minor_d: 4.019
+      tap_drill_coarse: 4.2
+      tap_drill_fine: 4.5
+      clearance_close: 5.3
+      clearance_medium: 5.5
+      clearance_loose: 5.8
+    M6:
+      thread_pitch_coarse: 1.0
+      thread_pitch_fine: 0.75
+      head_height: 4.0
+      head_width_af: 10.0
+      head_width_ac: 10.89
+      thread_major_d: 6.0
+      thread_minor_d: 4.773
+      tap_drill_coarse: 5.0
+      tap_drill_fine: 5.25
+      clearance_close: 6.4
+      clearance_medium: 6.6
+      clearance_loose: 7.0
+    M8:
+      thread_pitch_coarse: 1.25
+      thread_pitch_fine: 1.0
+      head_height: 5.3
+      head_width_af: 13.0
+      head_width_ac: 14.2
+      thread_major_d: 8.0
+      thread_minor_d: 6.466
+      tap_drill_coarse: 6.8
+      tap_drill_fine: 7.0
+      clearance_close: 8.4
+      clearance_medium: 9.0
+      clearance_loose: 10.0
+    M10:
+      thread_pitch_coarse: 1.5
+      thread_pitch_fine: 1.25
+      head_height: 6.4
+      head_width_af: 17.0
+      head_width_ac: 18.48
+      thread_major_d: 10.0
+      thread_minor_d: 8.160
+      tap_drill_coarse: 8.5
+      tap_drill_fine: 8.75
+      clearance_close: 10.5
+      clearance_medium: 11.0
+      clearance_loose: 12.0
+    M12:
+      thread_pitch_coarse: 1.75
+      thread_pitch_fine: 1.5
+      head_height: 7.5
+      head_width_af: 19.0
+      head_width_ac: 20.78
+      thread_major_d: 12.0
+      thread_minor_d: 9.853
+      tap_drill_coarse: 10.2
+      tap_drill_fine: 10.5
+      clearance_close: 13.0
+      clearance_medium: 13.5
+      clearance_loose: 14.5
+    M14:
+      thread_pitch_coarse: 2.0
+      thread_pitch_fine: 1.5
+      head_height: 8.8
+      head_width_af: 22.0
+      head_width_ac: 24.00
+      thread_major_d: 14.0
+      thread_minor_d: 11.546
+      tap_drill_coarse: 12.0
+      tap_drill_fine: 12.5
+      clearance_close: 15.0
+      clearance_medium: 15.5
+      clearance_loose: 16.5
+    M16:
+      thread_pitch_coarse: 2.0
+      thread_pitch_fine: 1.5
+      head_height: 10.0
+      head_width_af: 24.0
+      head_width_ac: 26.17
+      thread_major_d: 16.0
+      thread_minor_d: 13.546
+      tap_drill_coarse: 14.0
+      tap_drill_fine: 14.5
+      clearance_close: 17.0
+      clearance_medium: 17.5
+      clearance_loose: 18.5
+    M18:
+      thread_pitch_coarse: 2.5
+      thread_pitch_fine: 1.5
+      head_height: 11.5
+      head_width_af: 27.0
+      head_width_ac: 29.44
+      thread_major_d: 18.0
+      thread_minor_d: 14.933
+      tap_drill_coarse: 15.5
+      tap_drill_fine: 16.5
+      clearance_close: 19.0
+      clearance_medium: 20.0
+      clearance_loose: 21.0
+    M20:
+      thread_pitch_coarse: 2.5
+      thread_pitch_fine: 1.5
+      head_height: 12.5
+      head_width_af: 30.0
+      head_width_ac: 32.95
+      thread_major_d: 20.0
+      thread_minor_d: 16.933
+      tap_drill_coarse: 17.5
+      tap_drill_fine: 18.5
+      clearance_close: 21.0
+      clearance_medium: 22.0
+      clearance_loose: 24.0
+    M22:
+      thread_pitch_coarse: 2.5
+      thread_pitch_fine: 1.5
+      head_height: 14.0
+      head_width_af: 32.0
+      head_width_ac: 35.03
+      thread_major_d: 22.0
+      thread_minor_d: 18.933
+      tap_drill_coarse: 19.5
+      tap_drill_fine: 20.5
+      clearance_close: 23.0
+      clearance_medium: 24.0
+      clearance_loose: 26.0
+    M24:
+      thread_pitch_coarse: 3.0
+      thread_pitch_fine: 2.0
+      head_height: 15.0
+      head_width_af: 36.0
+      head_width_ac: 39.55
+      thread_major_d: 24.0
+      thread_minor_d: 20.319
+      tap_drill_coarse: 21.0
+      tap_drill_fine: 22.0
+      clearance_close: 25.0
+      clearance_medium: 26.0
+      clearance_loose: 28.0
+    M27:
+      thread_pitch_coarse: 3.0
+      thread_pitch_fine: 2.0
+      head_height: 17.0
+      head_width_af: 41.0
+      head_width_ac: 45.20
+      thread_major_d: 27.0
+      thread_minor_d: 23.319
+      tap_drill_coarse: 24.0
+      tap_drill_fine: 25.0
+      clearance_close: 28.0
+      clearance_medium: 30.0
+      clearance_loose: 32.0
+    M30:
+      thread_pitch_coarse: 3.5
+      thread_pitch_fine: 2.0
+      head_height: 18.7
+      head_width_af: 46.0
+      head_width_ac: 50.85
+      thread_major_d: 30.0
+      thread_minor_d: 25.706
+      tap_drill_coarse: 26.5
+      tap_drill_fine: 28.0
+      clearance_close: 31.0
+      clearance_medium: 33.0
+      clearance_loose: 35.0
+    M33:
+      thread_pitch_coarse: 3.5
+      thread_pitch_fine: 2.0
+      head_height: 21.0
+      head_width_af: 50.0
+      head_width_ac: 55.37
+      thread_major_d: 33.0
+      thread_minor_d: 28.706
+      tap_drill_coarse: 29.5
+      tap_drill_fine: 31.0
+      clearance_close: 34.0
+      clearance_medium: 36.0
+      clearance_loose: 38.0
+    M36:
+      thread_pitch_coarse: 4.0
+      thread_pitch_fine: 3.0
+      head_height: 22.5
+      head_width_af: 55.0
+      head_width_ac: 60.79
+      thread_major_d: 36.0
+      thread_minor_d: 31.093
+      tap_drill_coarse: 32.0
+      tap_drill_fine: 33.0
+      clearance_close: 37.0
+      clearance_medium: 39.0
+      clearance_loose: 42.0
+
+views:
+  - id: default
+    name: "Metric Bolt Dimensions"
+    description: "Complete metric bolt dimensions and drill sizes"
+    grid:
+      size:
+        type: list
+        values: ["M3", "M4", "M5", "M6", "M8", "M10", "M12", "M14", "M16", "M18", "M20", "M22", "M24", "M27", "M30", "M33", "M36"]
+    columns:
+      - output: thread_pitch_coarse
+        header: "Pitch Coarse"
+        unit: "mm"
+      - output: thread_pitch_fine
+        header: "Pitch Fine"
+        unit: "mm"
+      - output: thread_major_d
+        header: "Major D"
+        unit: "mm"
+      - output: thread_minor_d
+        header: "Minor D"
+        unit: "mm"
+      - output: head_height
+        header: "Head H"
+        unit: "mm"
+      - output: head_width_af
+        header: "Wrench AF"
+        unit: "mm"
+      - output: head_width_ac
+        header: "Wrench AC"
+        unit: "mm"
+      - output: tap_drill_coarse
+        header: "Tap Coarse"
+        unit: "mm"
+      - output: tap_drill_fine
+        header: "Tap Fine"
+        unit: "mm"
+      - output: clearance_close
+        header: "Clr Close"
+        unit: "mm"
+      - output: clearance_medium
+        header: "Clr Med"
+        unit: "mm"
+      - output: clearance_loose
+        header: "Clr Loose"
+        unit: "mm"
+    layout: flat

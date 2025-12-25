@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { Component } from '../types';
 import PropertyList from './PropertyList';
@@ -24,9 +25,9 @@ const ComponentDetailModal: React.FC<ComponentDetailModalProps> = ({ component, 
     navigate(`/components/${component.component_id}`);
   };
 
-  return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50 p-2"
       onClick={handleBackdropClick}
     >
       <div className="relative w-full max-w-6xl h-[90vh] bg-white rounded-lg shadow-xl overflow-hidden">
@@ -65,7 +66,8 @@ const ComponentDetailModal: React.FC<ComponentDetailModalProps> = ({ component, 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

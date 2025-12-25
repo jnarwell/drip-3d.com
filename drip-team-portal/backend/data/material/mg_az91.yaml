@@ -1,0 +1,125 @@
+id: mg_az91
+name: "Magnesium AZ91"
+category: material
+description: "Temperature-dependent properties for AZ91 (Mg-9Al-1Zn, die cast)"
+source: "ASM Handbook Vol 2 / Die Casting refs"
+source_url: "https://www.asminternational.org/"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: equation
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [200, 825]
+    description: "Temperature (valid range: -73°C to 552°C, melting ~595°C)"
+
+outputs:
+  - name: E
+    unit: Pa
+    description: "Young's modulus"
+    format: "scientific"
+  - name: Sy
+    unit: Pa
+    description: "Yield strength"
+    format: "scientific"
+  - name: Su
+    unit: Pa
+    description: "Ultimate tensile strength"
+    format: "scientific"
+  - name: alpha
+    unit: 1/K
+    description: "Coefficient of thermal expansion"
+  - name: k
+    unit: W/(m·K)
+    description: "Thermal conductivity"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat capacity"
+  - name: nu
+    unit: "none"
+    description: "Poisson's ratio"
+
+resolution:
+  type: equation
+
+  formulas:
+    E: "E_ref * (1 - E_slope * (T - T_ref))"
+    Sy: "Sy_ref * (1 - Sy_slope * (T - T_ref)) if T < T_crit else Sy_ref * (1 - Sy_slope * (T_crit - T_ref)) * exp(-Sy_decay * (T - T_crit))"
+    Su: "Su_ref * (1 - Su_slope * (T - T_ref)) if T < T_crit else Su_ref * (1 - Su_slope * (T_crit - T_ref)) * exp(-Su_decay * (T - T_crit))"
+    alpha: "alpha_0 + alpha_1 * (T - T_ref)"
+    k: "k_ref * (1 - k_slope * (T - T_ref))"
+    rho: "rho_ref * (1 - 3 * alpha_0 * (T - T_ref))"
+    cp: "cp_ref + cp_slope * (T - T_ref)"
+    nu: "nu_ref"
+
+  constants:
+    T_ref: 298.15
+    T_crit: 398.15         # 125°C - AZ91 softens earlier
+    T_melt: 868.15         # ~595°C solidus
+
+    # Young's modulus - highest Al content
+    E_ref: 45e9
+    E_slope: 0.00050
+
+    # Yield strength (die cast)
+    Sy_ref: 150e6
+    Sy_slope: 0.00045
+    Sy_decay: 0.006
+
+    # Ultimate strength
+    Su_ref: 230e6
+    Su_slope: 0.0004
+    Su_decay: 0.0055
+
+    # Thermal expansion
+    alpha_0: 26.0e-6
+    alpha_1: 0.007e-6
+
+    # Thermal conductivity (lowest of AZ series due to Al)
+    k_ref: 72
+    k_slope: 0.0001
+
+    # Density (highest of AZ series)
+    rho_ref: 1810
+
+    # Specific heat
+    cp_ref: 1000
+    cp_slope: 0.25
+
+    nu_ref: 0.35
+
+views:
+  - id: default
+    name: "AZ91 Properties vs Temperature"
+    description: "Mg-9Al-1Zn die cast alloy properties"
+    grid:
+      T:
+        type: list
+        values: [200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650, 660, 670, 680, 690, 700, 710, 720, 730, 740, 750, 760, 770, 780, 790, 800, 810, 820, 830, 840, 850, 860]
+        unit: K
+    columns:
+      - output: E
+        header: "E"
+        unit: "GPa"
+      - output: Sy
+        header: "Sy"
+        unit: "MPa"
+      - output: Su
+        header: "Su"
+        unit: "MPa"
+      - output: alpha
+        header: "α"
+        unit: "µm/(m·K)"
+      - output: k
+        header: "k"
+        unit: "W/(m·K)"
+      - output: cp
+        header: "cp"
+        unit: "J/(kg·K)"
+    layout: flat

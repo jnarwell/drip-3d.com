@@ -1,0 +1,141 @@
+id: al_6061_t6
+name: "Aluminum 6061-T6"
+category: material
+description: "Temperature-dependent mechanical and thermal properties for Al 6061-T6"
+source: "MIL-HDBK-5J / ASM Handbook"
+source_url: "https://www.asminternational.org/"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: equation
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [200, 600]
+    description: "Temperature (valid range: -73°C to 327°C)"
+
+outputs:
+  - name: E
+    unit: Pa
+    description: "Young's modulus"
+    format: "scientific"
+  - name: Sy
+    unit: Pa
+    description: "Yield strength (0.2% offset)"
+    format: "scientific"
+  - name: Su
+    unit: Pa
+    description: "Ultimate tensile strength"
+    format: "scientific"
+  - name: alpha
+    unit: 1/K
+    description: "Coefficient of thermal expansion"
+  - name: k
+    unit: W/(m·K)
+    description: "Thermal conductivity"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat capacity"
+  - name: nu
+    unit: "none"
+    description: "Poisson's ratio"
+
+resolution:
+  type: equation
+
+  formulas:
+    # Young's modulus decreases ~4% per 100K above room temp
+    E: "E_ref * (1 - E_slope * (T - T_ref))"
+
+    # Yield strength with exponential decay at elevated temps
+    Sy: "Sy_ref * exp(-((T - T_ref) / Sy_scale)^2) * (1 if T < T_crit else Sy_decay)"
+
+    # Ultimate strength similar pattern
+    Su: "Su_ref * exp(-((T - T_ref) / Su_scale)^2) * (1 if T < T_crit else Su_decay)"
+
+    # Thermal expansion (approximately linear with T)
+    alpha: "alpha_0 + alpha_1 * (T - T_ref)"
+
+    # Thermal conductivity (relatively flat)
+    k: "k_ref * (1 + k_slope * (T - T_ref))"
+
+    # Density (constant for solid)
+    rho: "rho_ref"
+
+    # Specific heat (slight increase with T)
+    cp: "cp_ref + cp_slope * (T - T_ref)"
+
+    # Poisson's ratio (nearly constant)
+    nu: "nu_ref"
+
+  constants:
+    T_ref: 298.15          # Reference temp (25°C) in K
+
+    # Young's modulus
+    E_ref: 68.9e9          # Pa at room temp
+    E_slope: 0.0004        # Fractional decrease per K
+
+    # Yield strength
+    Sy_ref: 276e6          # Pa at room temp
+    Sy_scale: 180          # K - controls width of decline
+    T_crit: 423.15         # ~150°C - onset of rapid decline
+    Sy_decay: 0.6          # Multiplier above T_crit
+
+    # Ultimate strength
+    Su_ref: 310e6          # Pa at room temp
+    Su_scale: 200          # K
+    Su_decay: 0.65
+
+    # Thermal expansion
+    alpha_0: 23.6e-6       # 1/K at room temp
+    alpha_1: 0.01e-6       # Increase per K
+
+    # Thermal conductivity
+    k_ref: 167             # W/(m·K) at room temp
+    k_slope: 0.0001        # Slight increase with T
+
+    # Density
+    rho_ref: 2700          # kg/m³
+
+    # Specific heat
+    cp_ref: 896            # J/(kg·K) at room temp
+    cp_slope: 0.3          # J/(kg·K) per K
+
+    # Poisson's ratio
+    nu_ref: 0.33
+
+views:
+  - id: default
+    name: "Al 6061-T6 Properties vs Temperature"
+    description: "Mechanical and thermal properties as a function of temperature"
+    grid:
+      T:
+        type: list
+        # Temperatures from -50°C to 300°C
+        values: [200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500]
+        unit: K
+    columns:
+      - output: E
+        header: "E"
+        unit: "GPa"
+      - output: Sy
+        header: "Sy"
+        unit: "MPa"
+      - output: Su
+        header: "Su"
+        unit: "MPa"
+      - output: alpha
+        header: "α"
+        unit: "µm/(m·K)"
+      - output: k
+        header: "k"
+        unit: "W/(m·K)"
+      - output: cp
+        header: "cp"
+        unit: "J/(kg·K)"
+    layout: flat

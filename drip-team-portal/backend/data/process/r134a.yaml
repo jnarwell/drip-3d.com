@@ -1,0 +1,83 @@
+id: r134a
+name: "R-134a Refrigerant"
+category: process
+description: "Thermodynamic properties of R-134a (1,1,1,2-Tetrafluoroethane). Use T+P, T+Q, or P+Q."
+source: "CoolProp"
+source_url: "http://www.coolprop.org/"
+version: "6.5.0"
+last_updated: "2024-12-24"
+
+type: library
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [169.85, 455.0]
+    optional: true
+    description: "Temperature. Triple point: -103.3°C (169.85K), Critical: 101.06°C (374.21K)"
+  - name: P
+    unit: Pa
+    type: continuous
+    range: [389.56, 4059280]
+    optional: true
+    description: "Pressure. Triple point: 389 Pa, Critical: 4.059 MPa"
+  - name: Q
+    unit: "none"
+    type: continuous
+    range: [0, 1]
+    optional: true
+    description: "Vapor quality (0=saturated liquid, 1=saturated vapor)"
+
+outputs:
+  - name: h
+    unit: J/kg
+    description: "Specific enthalpy"
+  - name: s
+    unit: J/(kg·K)
+    description: "Specific entropy"
+  - name: u
+    unit: J/kg
+    description: "Specific internal energy"
+  - name: v
+    unit: m³/kg
+    description: "Specific volume"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat at constant pressure"
+  - name: cv
+    unit: J/(kg·K)
+    description: "Specific heat at constant volume"
+  - name: P_sat
+    unit: Pa
+    description: "Saturation pressure (at given T)"
+  - name: T_sat
+    unit: K
+    description: "Saturation temperature (at given P)"
+
+resolution:
+  type: library
+  library: coolprop
+  fluid: R134a
+
+  output_mapping:
+    h: H
+    s: S
+    u: U
+    v: "1/D"
+    rho: D
+    cp: C
+    cv: CVMASS
+    P_sat: P
+    T_sat: T
+
+  input_mapping:
+    T: T
+    P: P
+    Q: Q
+
+# No views - use r134a_temperature or r134a_pressure for display
+views: []

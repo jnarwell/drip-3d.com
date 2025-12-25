@@ -5,9 +5,8 @@ const Resources: React.FC = () => {
   const location = useLocation();
   
   const navigation = [
-    { name: 'Property Tables', href: '/resources/property-tables' },
+    { name: 'Data Tables', href: '/resources/property-tables' },
     { name: 'Constants', href: '/resources/constants' },
-    { name: 'Templates', href: '/resources/templates' },
   ];
 
   const isActive = (path: string) => {

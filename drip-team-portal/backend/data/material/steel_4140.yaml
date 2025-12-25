@@ -1,0 +1,140 @@
+id: steel_4140
+name: "Steel 4140"
+category: material
+description: "Temperature-dependent properties for AISI 4140 alloy steel (quenched & tempered)"
+source: "ASM Handbook Vol 1 / ASME BPVC"
+source_url: "https://www.asminternational.org/"
+version: "1.0"
+last_updated: "2024-12-24"
+
+type: equation
+
+inputs:
+  - name: T
+    unit: K
+    type: continuous
+    range: [200, 900]
+    description: "Temperature (valid range: -73°C to 627°C)"
+
+outputs:
+  - name: E
+    unit: Pa
+    description: "Young's modulus"
+    format: "scientific"
+  - name: Sy
+    unit: Pa
+    description: "Yield strength (0.2% offset)"
+    format: "scientific"
+  - name: Su
+    unit: Pa
+    description: "Ultimate tensile strength"
+    format: "scientific"
+  - name: alpha
+    unit: 1/K
+    description: "Coefficient of thermal expansion"
+  - name: k
+    unit: W/(m·K)
+    description: "Thermal conductivity"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+  - name: cp
+    unit: J/(kg·K)
+    description: "Specific heat capacity"
+  - name: nu
+    unit: "none"
+    description: "Poisson's ratio"
+
+resolution:
+  type: equation
+
+  formulas:
+    # Young's modulus - linear decrease
+    E: "E_ref * (1 - E_slope * (T - T_ref))"
+
+    # Yield strength - Q&T 4140 maintains strength well to ~400°C
+    Sy: "Sy_ref * (1 - Sy_slope * (T - T_ref)) if T < T_crit else Sy_ref * (1 - Sy_slope * (T_crit - T_ref)) * exp(-Sy_decay * (T - T_crit))"
+
+    # Ultimate strength
+    Su: "Su_ref * (1 - Su_slope * (T - T_ref)) if T < T_crit else Su_ref * (1 - Su_slope * (T_crit - T_ref)) * exp(-Su_decay * (T - T_crit))"
+
+    # Thermal expansion
+    alpha: "alpha_0 + alpha_1 * (T - T_ref)"
+
+    # Thermal conductivity (decreases slightly with T for steel)
+    k: "k_ref * (1 - k_slope * (T - T_ref))"
+
+    # Density (constant)
+    rho: "rho_ref"
+
+    # Specific heat
+    cp: "cp_ref + cp_slope * (T - T_ref)"
+
+    # Poisson's ratio
+    nu: "nu_ref"
+
+  constants:
+    T_ref: 298.15          # Reference temp (25°C) in K
+    T_crit: 673.15         # 400°C - onset of accelerated decline
+
+    # Young's modulus
+    E_ref: 205e9           # Pa at room temp
+    E_slope: 0.00030
+
+    # Yield strength (Q&T to Rc 28-32)
+    Sy_ref: 655e6          # Pa at room temp
+    Sy_slope: 0.00015      # Gradual below T_crit
+    Sy_decay: 0.004        # Faster above T_crit
+
+    # Ultimate strength
+    Su_ref: 1020e6         # Pa at room temp
+    Su_slope: 0.00012
+    Su_decay: 0.0035
+
+    # Thermal expansion
+    alpha_0: 12.3e-6       # 1/K at room temp
+    alpha_1: 0.003e-6
+
+    # Thermal conductivity
+    k_ref: 42.6            # W/(m·K) at room temp
+    k_slope: 0.0002
+
+    # Density
+    rho_ref: 7850          # kg/m³
+
+    # Specific heat
+    cp_ref: 473            # J/(kg·K) at room temp
+    cp_slope: 0.20
+
+    # Poisson's ratio
+    nu_ref: 0.29
+
+views:
+  - id: default
+    name: "Steel 4140 Properties vs Temperature"
+    description: "Mechanical and thermal properties as a function of temperature"
+    grid:
+      T:
+        type: list
+        values: [200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640, 650, 660, 670, 680, 690, 700]
+        unit: K
+    columns:
+      - output: E
+        header: "E"
+        unit: "GPa"
+      - output: Sy
+        header: "Sy"
+        unit: "MPa"
+      - output: Su
+        header: "Su"
+        unit: "MPa"
+      - output: alpha
+        header: "α"
+        unit: "µm/(m·K)"
+      - output: k
+        header: "k"
+        unit: "W/(m·K)"
+      - output: cp
+        header: "cp"
+        unit: "J/(kg·K)"
+    layout: flat

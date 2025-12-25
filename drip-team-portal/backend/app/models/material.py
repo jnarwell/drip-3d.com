@@ -44,7 +44,6 @@ class Material(Base):
     # Relationships
     property_values = relationship("MaterialProperty", back_populates="material", cascade="all, delete-orphan")
     components = relationship("Component", secondary=component_materials, back_populates="materials")
-    property_tables = relationship("PropertyTable", back_populates="material")
 
 
 class MaterialProperty(Base):

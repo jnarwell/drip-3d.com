@@ -1,0 +1,118 @@
+id: steam_pressure
+name: "Steam — Pressure"
+category: process
+description: "Saturation properties of water/steam indexed by pressure (IAPWS-IF97)"
+source: "CoolProp (IAPWS-IF97)"
+source_url: "http://www.coolprop.org/"
+version: "6.5.0"
+last_updated: "2024-12-24"
+
+# For LOOKUP(), use the unified steam source which supports T, P, Q
+lookup_source_id: steam
+
+type: library
+
+inputs:
+  - name: P
+    unit: Pa
+    type: continuous
+    range: [611.657, 22064000]
+    optional: true
+    description: "Pressure (saturation range: 611 Pa to 22.064 MPa critical point)"
+  - name: Q
+    unit: "none"
+    type: continuous
+    range: [0, 1]
+    optional: true
+    description: "Vapor quality (0=saturated liquid, 1=saturated vapor)"
+
+outputs:
+  - name: T_sat
+    unit: K
+    description: "Saturation temperature"
+  - name: h
+    unit: J/kg
+    description: "Specific enthalpy"
+  - name: s
+    unit: J/(kg·K)
+    description: "Specific entropy"
+  - name: u
+    unit: J/kg
+    description: "Specific internal energy"
+  - name: v
+    unit: m³/kg
+    description: "Specific volume"
+  - name: rho
+    unit: kg/m³
+    description: "Density"
+
+resolution:
+  type: library
+  library: coolprop
+  fluid: Water
+
+  output_mapping:
+    T_sat: T
+    h: H
+    s: S
+    u: U
+    v: "1/D"
+    rho: D
+
+  input_mapping:
+    P: P
+    Q: Q
+
+views:
+  - id: default
+    name: "Saturation by Pressure"
+    description: "Saturation properties indexed by pressure"
+    grid:
+      P:
+        type: list
+        # Pressures from ~0.01 bar to 100 bar in useful increments (in Pa)
+        values: [1000, 2000, 5000, 10000, 20000, 50000, 75000, 101325, 150000, 200000, 300000, 400000, 500000, 600000, 800000, 1000000, 1500000, 2000000, 3000000, 4000000, 5000000, 6000000, 8000000, 10000000]
+        unit: kPa
+    columns:
+      # Saturation temperature
+      - output: T_sat
+        header: "Tsat"
+        phase: liquid
+        unit: "K"
+      # Specific volume
+      - output: v
+        header: "vf"
+        phase: liquid
+        unit: "m³/kg"
+      - output: v
+        header: "vg"
+        phase: vapor
+        unit: "m³/kg"
+      # Internal energy
+      - output: u
+        header: "uf"
+        phase: liquid
+        unit: "kJ/kg"
+      - output: u
+        header: "ug"
+        phase: vapor
+        unit: "kJ/kg"
+      # Enthalpy
+      - output: h
+        header: "hf"
+        phase: liquid
+        unit: "kJ/kg"
+      - output: h
+        header: "hg"
+        phase: vapor
+        unit: "kJ/kg"
+      # Entropy
+      - output: s
+        header: "sf"
+        phase: liquid
+        unit: "kJ/(kg·K)"
+      - output: s
+        header: "sg"
+        phase: vapor
+        unit: "kJ/(kg·K)"
+    layout: flat

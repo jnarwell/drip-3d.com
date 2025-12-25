@@ -52,147 +52,145 @@ PATCH  /api/v1/constants/{id}          # Update (custom only)
 DELETE /api/v1/constants/{id}          # Delete (custom only)
 ```
 
-### 2. Property Table Templates
+### 2. Engineering Reference Tables (YAML-based)
 
 #### Overview
-Templates define reusable structures for engineering data tables without containing actual data.
+Engineering reference tables provide standardized property lookups for calculations. Data is defined in YAML files in `backend/data/` and exposed via the Engineering Properties API.
 
-#### Table Types
+#### Source Types
 
-**SINGLE_VAR_LOOKUP**
-- One independent variable (e.g., temperature)
-- Multiple dependent properties
-- Example: Water properties vs. temperature
+**table**
+- Static lookup tables with discrete inputs
+- Example: ISO 286 tolerance grades, metric bolt dimensions
 
-**MULTI_VAR_LOOKUP**
-- Two or more independent variables
-- 2D/3D property surfaces
-- Example: Steam properties vs. pressure and temperature
+**equation**
+- Mathematical expressions with continuous inputs
+- Example: Material stress-strain relationships
 
-**RANGE_BASED_LOOKUP**
-- Property varies within ranges
-- Step functions or correlations
-- Example: Heat transfer coefficients by Reynolds number
+**library**
+- External library integration (CoolProp for thermodynamic properties)
+- Example: Steam/water properties via IAPWS-IF97
 
-**REFERENCE_ONLY**
-- Documentation tables
-- No interpolation
-- Example: Material composition tables
+#### YAML Data Model
 
-#### Data Model
-```python
-PropertyTableTemplate:
-  name: str
-  description: str
-  table_type: enum
-  independent_vars: JSON  # {"temperature": {"unit": "K", "min": 273, "max": 373}}
-  dependent_vars: JSON    # {"density": {"unit": "kg/m³"}, "viscosity": {"unit": "Pa⋅s"}}
-  interpolation_type: enum  # LINEAR, LOGARITHMIC, POLYNOMIAL
-  extrapolation_allowed: bool
-  require_monotonic: bool
-  usage_count: int
-  scope: enum  # PUBLIC, WORKSPACE, PRIVATE
+```yaml
+id: iso_286_tolerance
+name: "ISO 286 Tolerance Grades"
+category: tolerances
+description: "Standard tolerance grades IT01-IT18"
+source: "ISO 286-1:2010"
+source_url: "https://www.iso.org/standard/53987.html"
+type: table  # table | equation | library
+
+inputs:
+  - name: grade
+    unit: "none"
+    type: discrete
+    values: ["IT01", "IT0", "IT1", ...]
+  - name: size_range
+    unit: "mm"
+    type: discrete
+    values: ["0-3", "3-6", ...]
+
+outputs:
+  - name: tolerance_um
+    unit: µm
+    description: "Tolerance in micrometers"
+
+resolution:
+  type: table
+  data:
+    IT01:
+      "0-3": {tolerance_um: 0.3, tolerance_mm: 0.0003}
+      ...
+
+views:
+  - id: default
+    name: "ISO Tolerance Grades"
+    grid:
+      grade: {type: list, values: [...]}
+      size_range: {type: list, values: [...]}
+    columns:
+      - output: tolerance_um
+        header: "Tolerance"
+        unit: "µm"
 ```
 
-#### Template Creation Process
+#### Categories
 
-1. **Manual Definition**
-   - Define variables and units
-   - Set interpolation rules
-   - Configure validation
+| Category | Examples |
+|----------|----------|
+| `tolerances` | ISO 286 tolerance grades |
+| `fasteners` | Metric bolt dimensions |
+| `finishes` | Surface finish Ra values |
+| `process` | Steam tables (CoolProp) |
+| `material` | Material property lookups |
 
-2. **Document Analysis**
-   ```
-   POST /api/v1/property-table-templates/analyze-document
-   {
-     "file": <PDF/Excel file>,
-     "analysis_hints": {
-       "table_location": "page 5",
-       "expected_vars": ["temperature", "pressure"]
-     }
-   }
-   ```
+#### API Endpoints
 
-### 3. Property Tables
-
-#### Overview
-Property tables contain actual engineering data with comprehensive verification and source tracking.
-
-#### Verification System
-
-**🟢 Verified**
-- Imported from authoritative sources
-- IAPWS, NIST, ASME standards
-- Automated validation passed
-
-**🟡 Cited**
-- Manual entry with source
-- Peer-reviewed publications
-- Industry handbooks
-
-**🔴 Unverified**
-- No source documentation
-- Internal measurements
-- Preliminary data
-
-#### Data Model
-```python
-PropertyTable:
-  template_id: ForeignKey
-  name: str
-  data: JSON  # Actual table data
-  material_id: Optional[int]
-  component_id: Optional[int]
-  
-  # Import tracking
-  import_method: enum  # MANUAL, API, DOCUMENT
-  extracted_via_ocr: bool
-  ocr_confidence: float
-  manual_corrections: int
-  
-  # Verification
-  verification_status: enum
-  source_citation: str
-  source_authority: str  # IAPWS, NIST, ASME, etc.
-  source_url: Optional[str]
-  data_quality: str  # A-F rating
-  
-  # Metadata
-  temperature_range: Optional[JSON]
-  pressure_range: Optional[JSON]
-  notes: str
+```
+GET  /api/v1/eng-properties/sources              # List all sources
+GET  /api/v1/eng-properties/sources/{id}         # Get source metadata
+GET  /api/v1/eng-properties/sources/{id}/views/{view}  # Get table view data
+POST /api/v1/eng-properties/lookup              # LOOKUP() function resolution
 ```
 
-#### Import Methods
+#### Using in Expressions
 
-**Document Import**
-```python
-POST /api/v1/enhanced/property-tables/import-from-document
-{
-  "file": <PDF/Excel>,
-  "template_id": 123,
-  "extraction_settings": {
-    "ocr_enabled": true,
-    "page_range": "5-7",
-    "table_detection": "automatic"
-  }
-}
+```
+# LOOKUP syntax
+LOOKUP("source_id", "output_name", input1=value1, input2=value2)
+
+# Examples
+LOOKUP("iso_286_tolerance", "tolerance_mm", grade="IT7", size_range="10-18")
+LOOKUP("metric_bolt_dimensions", "tap_drill_coarse", size="M8")
+LOOKUP("steam", "h", T=373.15, Q=1)  # Saturated steam enthalpy
 ```
 
-**API Import** (Future)
-```python
-POST /api/v1/enhanced/property-tables/import-from-api
-{
-  "source": "NIST_WEBBOOK",
-  "query": {
-    "material": "water",
-    "property": "density",
-    "conditions": "1atm"
-  }
-}
+#### Case-Insensitive Inputs
+
+Discrete string inputs are matched case-insensitively:
+
+```
+# Both work - internally normalized to canonical "M8"
+LOOKUP("metric_bolt_dimensions", "tap_drill_coarse", size="M8")
+LOOKUP("metric_bolt_dimensions", "tap_drill_coarse", size="m8")
 ```
 
-### 4. Integration with Formula System
+#### Unified Sources with lookup_source_id
+
+Some tables have separate display views (e.g., steam by temperature, steam by pressure) but use a unified source for LOOKUP:
+
+```yaml
+# steam_temperature.yaml
+id: steam_temperature
+name: "Steam — Temperature"
+lookup_source_id: steam  # LOOKUP uses unified "steam" source
+
+# steam_pressure.yaml
+id: steam_pressure
+name: "Steam — Pressure"
+lookup_source_id: steam  # Same unified source
+
+# steam.yaml (no views, LOOKUP only)
+id: steam
+inputs: [T, P, Q]  # All optional, supports any combination
+views: []  # Display only via steam_temperature and steam_pressure
+```
+
+This pattern allows:
+- Different display views indexed by different variables
+- Single LOOKUP syntax: `LOOKUP("steam", "h", T=373, Q=1)`
+
+#### Frontend Display
+
+The PropertyTables page (`/resources/tables`) displays:
+- Source list with category filtering
+- Type badges (table, equation, library)
+- Interactive data grid with fullscreen mode
+- Snake_case values auto-formatted to Title Case
+
+### 3. Integration with Formula System
 
 #### Constant References in Formulas
 
@@ -424,6 +422,6 @@ const StressCalculator = () => {
 
 ---
 
-*Last Updated: December 2, 2025*
-*System Version: 1.0.0*
+*Last Updated: December 24, 2025*
+*System Version: 2.0.0*
 *Priority: HIGH - Core data foundation for engineering calculations*
