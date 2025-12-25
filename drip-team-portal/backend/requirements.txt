@@ -17,7 +17,7 @@ requests-toolbelt==0.10.1
 pandas==2.1.4
 openpyxl==3.1.2
 reportlab==4.0.8
-camelot-py[cv]>=1.0.0  # For PDF table extraction (better for borderless tables)
+# camelot-py[cv]>=1.0.0  # Removed - not used, conflicts with pandas version
 pytest==7.4.3
 pytest-asyncio==0.21.1
 sympy==1.12  # For mathematical expression parsing and evaluation
