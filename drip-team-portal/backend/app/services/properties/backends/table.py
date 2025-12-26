@@ -113,7 +113,7 @@ def resolve_table(
     source: PropertySource,
     output_name: str,
     inputs: Dict[str, Any]
-) -> float:
+) -> Union[float, str]:
     """
     Resolve a table-based lookup.
 
@@ -151,7 +151,11 @@ def resolve_table(
         if output_name not in row:
             raise TableLookupError(f"Output '{output_name}' not found for {key_str}")
 
-        return float(row[output_name])
+        value = row[output_name]
+        # Return string values as-is, convert numeric values to float
+        if isinstance(value, str):
+            return value
+        return float(value)
 
     # Case 2: Two discrete inputs (e.g., pipe schedules, tolerance grades)
     if len(discrete_inputs) == 2 and len(continuous_inputs) == 0:
@@ -168,7 +172,10 @@ def resolve_table(
             row = data[key_str]
             if output_name not in row:
                 raise TableLookupError(f"Output '{output_name}' not found")
-            return float(row[output_name])
+            value = row[output_name]
+            if isinstance(value, str):
+                return value
+            return float(value)
 
         # Try nested lookup (e.g., data["IT7"]["10-18"])
         key1, key2 = key_parts
@@ -177,7 +184,10 @@ def resolve_table(
                 row = data[key1][key2]
                 if output_name not in row:
                     raise TableLookupError(f"Output '{output_name}' not found")
-                return float(row[output_name])
+                value = row[output_name]
+                if isinstance(value, str):
+                    return value
+                return float(value)
 
         raise TableLookupError(f"No match for {discrete_inputs[0].name}='{key1}', {discrete_inputs[1].name}='{key2}'")
 

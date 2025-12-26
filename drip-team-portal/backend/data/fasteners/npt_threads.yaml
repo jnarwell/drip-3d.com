@@ -1,0 +1,182 @@
+# ASME B1.20.1 NPT (National Pipe Taper) Thread Dimensions
+# 60° thread angle, 3/4" per foot taper (1:16 or 0.0625 in/in)
+# Calculated from standard formulas
+id: npt_threads
+name: NPT Pipe Thread Dimensions
+category: fasteners
+description: National Pipe Taper thread dimensions per ASME B1.20.1
+type: table
+source: ASME B1.20.1 (calculated)
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Nominal pipe size
+  values:
+  - '1/16'
+  - '1/8'
+  - '1/4'
+  - '3/8'
+  - '1/2'
+  - '3/4'
+  - '1'
+  - '1-1/4'
+  - '1-1/2'
+  - '2'
+  - '2-1/2'
+  - '3'
+  - '4'
+  - '6'
+outputs:
+- name: TPI
+  unit: '1'
+  description: Threads per inch
+- name: pitch
+  unit: m
+  description: Thread pitch
+- name: od
+  unit: m
+  description: Outside diameter at hand-tight plane
+- name: pitch_dia
+  unit: m
+  description: Pitch diameter at hand-tight plane
+- name: minor_dia
+  unit: m
+  description: Minor diameter at hand-tight plane
+- name: taper
+  unit: '1'
+  description: Taper ratio (in/in)
+resolution:
+  type: table
+  data:
+    '1/16':
+      TPI: 27
+      pitch: 0.000941
+      od: 0.007938
+      pitch_dia: 0.007286
+      minor_dia: 0.006634
+      taper: 0.0625
+    '1/8':
+      TPI: 27
+      pitch: 0.000941
+      od: 0.010287
+      pitch_dia: 0.009635
+      minor_dia: 0.008983
+      taper: 0.0625
+    '1/4':
+      TPI: 18
+      pitch: 0.001411
+      od: 0.013716
+      pitch_dia: 0.012738
+      minor_dia: 0.011761
+      taper: 0.0625
+    '3/8':
+      TPI: 18
+      pitch: 0.001411
+      od: 0.017145
+      pitch_dia: 0.016167
+      minor_dia: 0.015190
+      taper: 0.0625
+    '1/2':
+      TPI: 14
+      pitch: 0.001814
+      od: 0.021336
+      pitch_dia: 0.020079
+      minor_dia: 0.018822
+      taper: 0.0625
+    '3/4':
+      TPI: 14
+      pitch: 0.001814
+      od: 0.026670
+      pitch_dia: 0.025413
+      minor_dia: 0.024156
+      taper: 0.0625
+    '1':
+      TPI: 11.5
+      pitch: 0.002209
+      od: 0.033401
+      pitch_dia: 0.031871
+      minor_dia: 0.030341
+      taper: 0.0625
+    '1-1/4':
+      TPI: 11.5
+      pitch: 0.002209
+      od: 0.042164
+      pitch_dia: 0.040634
+      minor_dia: 0.039104
+      taper: 0.0625
+    '1-1/2':
+      TPI: 11.5
+      pitch: 0.002209
+      od: 0.048260
+      pitch_dia: 0.046730
+      minor_dia: 0.045200
+      taper: 0.0625
+    '2':
+      TPI: 11.5
+      pitch: 0.002209
+      od: 0.060325
+      pitch_dia: 0.058795
+      minor_dia: 0.057265
+      taper: 0.0625
+    '2-1/2':
+      TPI: 8
+      pitch: 0.003175
+      od: 0.073025
+      pitch_dia: 0.070825
+      minor_dia: 0.068626
+      taper: 0.0625
+    '3':
+      TPI: 8
+      pitch: 0.003175
+      od: 0.088900
+      pitch_dia: 0.086700
+      minor_dia: 0.084501
+      taper: 0.0625
+    '4':
+      TPI: 8
+      pitch: 0.003175
+      od: 0.114300
+      pitch_dia: 0.112100
+      minor_dia: 0.109901
+      taper: 0.0625
+    '6':
+      TPI: 8
+      pitch: 0.003175
+      od: 0.168275
+      pitch_dia: 0.166075
+      minor_dia: 0.163876
+      taper: 0.0625
+views:
+- id: default
+  name: NPT Pipe Thread Dimensions
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - '1/8'
+      - '1/4'
+      - '3/8'
+      - '1/2'
+      - '3/4'
+      - '1'
+      - '1-1/4'
+      - '1-1/2'
+      - '2'
+      - '3'
+      - '4'
+  columns:
+  - output: TPI
+    header: TPI
+    unit: '1'
+  - output: od
+    header: OD
+    unit: mm
+  - output: pitch_dia
+    header: Pitch Ø
+    unit: mm
+  - output: minor_dia
+    header: Minor Ø
+    unit: mm

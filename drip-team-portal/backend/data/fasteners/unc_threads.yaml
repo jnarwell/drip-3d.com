@@ -1,0 +1,273 @@
+# Source: ASME B1.1 via AmesWeb (https://amesweb.info/screws/unc-thread-chart.aspx)
+# External thread dimensions (Class 2A)
+id: unc_threads
+name: UNC Thread Dimensions
+category: fasteners
+description: Unified National Coarse thread dimensions per ASME B1.1
+type: table
+source: ASME B1.1
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Thread size designation
+  values:
+  - '#1-64'
+  - '#2-56'
+  - '#3-48'
+  - '#4-40'
+  - '#5-40'
+  - '#6-32'
+  - '#8-32'
+  - '#10-24'
+  - '#12-24'
+  - 1/4-20
+  - 5/16-18
+  - 3/8-16
+  - 7/16-14
+  - 1/2-13
+  - 9/16-12
+  - 5/8-11
+  - 3/4-10
+  - 7/8-9
+  - 1-8
+  - 1-1/8-7
+  - 1-1/4-7
+  - 1-1/2-6
+outputs:
+- name: TPI
+  unit: '1'
+  description: Threads per inch
+- name: pitch
+  unit: m
+  description: Thread pitch
+- name: major_dia_max
+  unit: m
+  description: Major diameter maximum (Class 2A)
+- name: major_dia_min
+  unit: m
+  description: Major diameter minimum (Class 2A)
+- name: pitch_dia_max
+  unit: m
+  description: Pitch diameter maximum (Class 2A)
+- name: pitch_dia_min
+  unit: m
+  description: Pitch diameter minimum (Class 2A)
+- name: minor_dia_max
+  unit: m
+  description: Minor diameter maximum (Class 2A)
+resolution:
+  type: table
+  data:
+    # Data from ASME B1.1 via AmesWeb - converted from inches to meters
+    '#1-64':
+      TPI: 64
+      pitch: 0.000397  # 1/64 inch
+      major_dia_max: 0.001839  # 0.0724"
+      major_dia_min: 0.001742  # 0.0686"
+      pitch_dia_max: 0.001582  # 0.0623"
+      pitch_dia_min: 0.001532  # 0.0603"
+      minor_dia_max: 0.001367  # 0.0538"
+    '#2-56':
+      TPI: 56
+      pitch: 0.000454  # 1/56 inch
+      major_dia_max: 0.002169  # 0.0854"
+      major_dia_min: 0.002065  # 0.0813"
+      pitch_dia_max: 0.001875  # 0.0738"
+      pitch_dia_min: 0.001821  # 0.0717"
+      minor_dia_max: 0.001631  # 0.0642"
+    '#3-48':
+      TPI: 48
+      pitch: 0.000529  # 1/48 inch
+      major_dia_max: 0.002497  # 0.0983"
+      major_dia_min: 0.002383  # 0.0938"
+      pitch_dia_max: 0.002154  # 0.0848"
+      pitch_dia_min: 0.002096  # 0.0825"
+      minor_dia_max: 0.001864  # 0.0734"
+    '#4-40':
+      TPI: 40
+      pitch: 0.000635  # 1/40 inch
+      major_dia_max: 0.002824  # 0.1112"
+      major_dia_min: 0.002695  # 0.1061"
+      pitch_dia_max: 0.002413  # 0.0950"
+      pitch_dia_min: 0.002350  # 0.0925"
+      minor_dia_max: 0.002068  # 0.0814"
+    '#5-40':
+      TPI: 40
+      pitch: 0.000635
+      major_dia_max: 0.003155  # 0.1242"
+      major_dia_min: 0.003025  # 0.1191"
+      pitch_dia_max: 0.002743  # 0.1080"
+      pitch_dia_min: 0.002677  # 0.1054"
+      minor_dia_max: 0.002398  # 0.0944"
+    '#6-32':
+      TPI: 32
+      pitch: 0.000794  # 1/32 inch
+      major_dia_max: 0.003485  # 0.1372"
+      major_dia_min: 0.003332  # 0.1312"
+      pitch_dia_max: 0.002969  # 0.1169"
+      pitch_dia_min: 0.002898  # 0.1141"
+      minor_dia_max: 0.002540  # 0.1000"
+    '#8-32':
+      TPI: 32
+      pitch: 0.000794
+      major_dia_max: 0.004143  # 0.1631"
+      major_dia_min: 0.003990  # 0.1571"
+      pitch_dia_max: 0.003627  # 0.1428"
+      pitch_dia_min: 0.003553  # 0.1399"
+      minor_dia_max: 0.003198  # 0.1259"
+    '#10-24':
+      TPI: 24
+      pitch: 0.001058  # 1/24 inch
+      major_dia_max: 0.004801  # 0.1890"
+      major_dia_min: 0.004618  # 0.1818"
+      pitch_dia_max: 0.004112  # 0.1619"
+      pitch_dia_min: 0.004028  # 0.1586"
+      minor_dia_max: 0.003541  # 0.1394"
+    '#12-24':
+      TPI: 24
+      pitch: 0.001058
+      major_dia_max: 0.005461  # 0.2150"
+      major_dia_min: 0.005278  # 0.2078"
+      pitch_dia_max: 0.004773  # 0.1879"
+      pitch_dia_min: 0.004686  # 0.1845"
+      minor_dia_max: 0.004201  # 0.1654"
+    1/4-20:
+      TPI: 20
+      pitch: 0.001270  # 1/20 inch
+      major_dia_max: 0.006322  # 0.2489"
+      major_dia_min: 0.006116  # 0.2408"
+      pitch_dia_max: 0.005497  # 0.2164"
+      pitch_dia_min: 0.005403  # 0.2127"
+      minor_dia_max: 0.004811  # 0.1894"
+    5/16-18:
+      TPI: 18
+      pitch: 0.001411  # 1/18 inch
+      major_dia_max: 0.007907  # 0.3113"
+      major_dia_min: 0.007686  # 0.3026"
+      pitch_dia_max: 0.006990  # 0.2752"
+      pitch_dia_min: 0.006888  # 0.2712"
+      minor_dia_max: 0.006228  # 0.2452"
+    3/8-16:
+      TPI: 16
+      pitch: 0.001588  # 1/16 inch
+      major_dia_max: 0.009492  # 0.3737"
+      major_dia_min: 0.009253  # 0.3643"
+      pitch_dia_max: 0.008461  # 0.3331"
+      pitch_dia_min: 0.008349  # 0.3287"
+      minor_dia_max: 0.007600  # 0.2992"
+    7/16-14:
+      TPI: 14
+      pitch: 0.001814  # 1/14 inch
+      major_dia_max: 0.011077  # 0.4361"
+      major_dia_min: 0.010815  # 0.4258"
+      pitch_dia_max: 0.009898  # 0.3897"
+      pitch_dia_min: 0.009779  # 0.3850"
+      minor_dia_max: 0.008918  # 0.3511"
+    1/2-13:
+      TPI: 13
+      pitch: 0.001954  # 1/13 inch
+      major_dia_max: 0.012662  # 0.4985"
+      major_dia_min: 0.012385  # 0.4876"
+      pitch_dia_max: 0.011392  # 0.4485"
+      pitch_dia_min: 0.011265  # 0.4435"
+      minor_dia_max: 0.010335  # 0.4069"
+    9/16-12:
+      TPI: 12
+      pitch: 0.002117  # 1/12 inch
+      major_dia_max: 0.014247  # 0.5609"
+      major_dia_min: 0.013957  # 0.5495"
+      pitch_dia_max: 0.012873  # 0.5068"
+      pitch_dia_min: 0.012741  # 0.5016"
+      minor_dia_max: 0.011727  # 0.4617"
+    5/8-11:
+      TPI: 11
+      pitch: 0.002309  # 1/11 inch
+      major_dia_max: 0.015834  # 0.6234"
+      major_dia_min: 0.015527  # 0.6113"
+      pitch_dia_max: 0.014336  # 0.5644"
+      pitch_dia_min: 0.014196  # 0.5589"
+      minor_dia_max: 0.013086  # 0.5152"
+    3/4-10:
+      TPI: 10
+      pitch: 0.002540  # 1/10 inch
+      major_dia_max: 0.019004  # 0.7482"
+      major_dia_min: 0.018677  # 0.7353"
+      pitch_dia_max: 0.017353  # 0.6832"
+      pitch_dia_min: 0.017203  # 0.6773"
+      minor_dia_max: 0.015979  # 0.6291"
+    7/8-9:
+      TPI: 9
+      pitch: 0.002822  # 1/9 inch
+      major_dia_max: 0.022177  # 0.8731"
+      major_dia_min: 0.021824  # 0.8592"
+      pitch_dia_max: 0.020343  # 0.8009"
+      pitch_dia_min: 0.020183  # 0.7946"
+      minor_dia_max: 0.018816  # 0.7408"
+    1-8:
+      TPI: 8
+      pitch: 0.003175  # 1/8 inch
+      major_dia_max: 0.025349  # 0.9980"
+      major_dia_min: 0.024968  # 0.9830"
+      pitch_dia_max: 0.023287  # 0.9168"
+      pitch_dia_min: 0.023114  # 0.9100"
+      minor_dia_max: 0.021570  # 0.8492"
+    1-1/8-7:
+      TPI: 7
+      pitch: 0.003629  # 1/7 inch
+      major_dia_max: 0.028519  # 1.1228"
+      major_dia_min: 0.028103  # 1.1064"
+      pitch_dia_max: 0.026162  # 1.0300"
+      pitch_dia_min: 0.025979  # 1.0228"
+      minor_dia_max: 0.024199  # 0.9527"
+    1-1/4-7:
+      TPI: 7
+      pitch: 0.003629
+      major_dia_max: 0.031694  # 1.2478"
+      major_dia_min: 0.031278  # 1.2314"
+      pitch_dia_max: 0.029337  # 1.1550"
+      pitch_dia_min: 0.029149  # 1.1476"
+      minor_dia_max: 0.027374  # 1.0777"
+    1-1/2-6:
+      TPI: 6
+      pitch: 0.004233  # 1/6 inch
+      major_dia_max: 0.038039  # 1.4976"
+      major_dia_min: 0.037577  # 1.4794"
+      pitch_dia_max: 0.035288  # 1.3893"
+      pitch_dia_min: 0.035082  # 1.3812"
+      minor_dia_max: 0.033000  # 1.2992"
+views:
+- id: default
+  name: UNC Thread Dimensions
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - '#4-40'
+      - '#6-32'
+      - '#8-32'
+      - '#10-24'
+      - 1/4-20
+      - 5/16-18
+      - 3/8-16
+      - 7/16-14
+      - 1/2-13
+      - 5/8-11
+      - 3/4-10
+      - 7/8-9
+      - 1-8
+  columns:
+  - output: TPI
+    header: TPI
+    unit: '1'
+  - output: major_dia_max
+    header: Major Ø
+    unit: mm
+  - output: pitch_dia_max
+    header: Pitch Ø
+    unit: mm
+  - output: minor_dia_max
+    header: Minor Ø
+    unit: mm

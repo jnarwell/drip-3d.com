@@ -48,7 +48,7 @@ LITERAL_WITH_UNIT_PATTERN = re.compile(
     r'μg|mg|g|kg|t|oz|lb|'  # Mass
     r'μN|mN|N|kN|MN|lbf|'  # Force
     r'Pa|kPa|MPa|GPa|bar|mbar|psi|ksi|'  # Pressure
-    r'K|°C|°F|'  # Temperature
+    r'K|kelvin|°C|℃|degC|celsius|°F|℉|degF|fahrenheit|°R|rankine|'  # Temperature (with aliases)
     r'ps|ns|μs|ms|s|min|h|d|yr|'  # Time
     r'Hz|kHz|MHz|GHz|'  # Frequency
     r'J|kJ|MJ|Wh|kWh|BTU|'  # Energy
@@ -313,8 +313,11 @@ class ValueEngine:
         # Pressure
         'Pa': 'pressure', 'kPa': 'pressure', 'MPa': 'pressure', 'GPa': 'pressure',
         'bar': 'pressure', 'mbar': 'pressure', 'psi': 'pressure', 'ksi': 'pressure',
-        # Temperature
-        'K': 'temperature', '°C': 'temperature', '°F': 'temperature',
+        # Temperature (with common aliases)
+        'K': 'temperature', 'kelvin': 'temperature',
+        '°C': 'temperature', '℃': 'temperature', 'degC': 'temperature', 'celsius': 'temperature',
+        '°F': 'temperature', '℉': 'temperature', 'degF': 'temperature', 'fahrenheit': 'temperature',
+        '°R': 'temperature', 'rankine': 'temperature',
         # Time
         'ps': 'time', 'ns': 'time', 'μs': 'time', 'ms': 'time', 's': 'time',
         'min': 'time', 'h': 'time', 'd': 'time', 'yr': 'time',
@@ -360,8 +363,12 @@ class ValueEngine:
         # Pressure -> Pa
         'Pa': 1, 'kPa': 1000, 'MPa': 1e6, 'GPa': 1e9,
         'bar': 1e5, 'mbar': 100, 'psi': 6894.76, 'ksi': 6.89476e6,
-        # Temperature -> K (special handling needed for offset)
-        'K': 1, '°C': 1, '°F': 5/9,  # Note: offset conversion handled separately
+        # Temperature -> K (special handling needed for offset, not just multiplication)
+        # Note: actual conversion with offset is handled in _evaluate_expression for LOOKUP
+        'K': 1, 'kelvin': 1,
+        '°C': 1, '℃': 1, 'degC': 1, 'celsius': 1,
+        '°F': 1, '℉': 1, 'degF': 1, 'fahrenheit': 1,  # Factor not used - offset conversion
+        '°R': 1, 'rankine': 1,  # Factor not used - offset conversion
         # Time -> seconds
         'ps': 1e-12, 'ns': 1e-9, 'μs': 1e-6, 'ms': 0.001, 's': 1,
         'min': 60, 'h': 3600, 'd': 86400, 'yr': 3.154e7,
@@ -937,11 +944,43 @@ class ValueEngine:
                     # Also support single quotes
                     key_val = key_val_expr[1:-1]  # Remove quotes
                 else:
-                    # It's a literal number
-                    try:
-                        key_val = float(key_val_expr)
-                    except ValueError:
-                        return (None, None, False, f"LOOKUP key value '{key_val_expr}' is not a valid number or string", None)
+                    # It's a literal number - possibly with a unit suffix
+                    # First check if it matches a literal with unit (e.g., "100°C", "373K")
+                    unit_match = LITERAL_WITH_UNIT_PATTERN.match(key_val_expr.strip())
+                    if unit_match:
+                        # Parse value and unit, convert to SI
+                        numeric_str = unit_match.group(1)
+                        unit_str = unit_match.group(2)
+                        try:
+                            raw_value = float(numeric_str)
+                        except ValueError:
+                            return (None, None, False, f"LOOKUP key value '{key_val_expr}' has invalid numeric part", None)
+
+                        # Convert to SI using the unit conversion table
+                        if unit_str in self.UNIT_TO_SI:
+                            # Handle temperature specially (needs offset conversion, not just scaling)
+                            if unit_str in ['K', 'kelvin']:
+                                key_val = raw_value  # Already in Kelvin
+                            elif unit_str in ['°C', '℃', 'degC', 'celsius']:
+                                key_val = raw_value + 273.15  # Convert °C to K
+                            elif unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
+                                key_val = (raw_value - 32) * 5/9 + 273.15  # Convert °F to K
+                            elif unit_str in ['°R', 'rankine']:
+                                key_val = raw_value * 5/9  # Convert °R to K
+                            else:
+                                # Standard multiplicative conversion
+                                key_val = raw_value * self.UNIT_TO_SI[unit_str]
+                            logger.debug(f"LOOKUP input converted: {raw_value}{unit_str} -> {key_val} (SI)")
+                        else:
+                            # Unknown unit - just use the raw value
+                            key_val = raw_value
+                            logger.warning(f"LOOKUP input has unknown unit '{unit_str}', using raw value {raw_value}")
+                    else:
+                        # No unit suffix - try parsing as plain number
+                        try:
+                            key_val = float(key_val_expr)
+                        except ValueError:
+                            return (None, None, False, f"LOOKUP key value '{key_val_expr}' is not a valid number or string", None)
 
                 # Perform the lookup
                 lookup_result, interpolated, lookup_error = self.lookup_table(

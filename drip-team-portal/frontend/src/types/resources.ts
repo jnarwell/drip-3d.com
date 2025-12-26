@@ -64,6 +64,7 @@ export interface PropertyViewHeader {
   key: string;
   label: string;
   unit: string;
+  si_unit?: string;  // Base SI unit for user preference conversion
   subscript?: string;
   is_input?: boolean;
 }

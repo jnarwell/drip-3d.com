@@ -1,0 +1,252 @@
+# Source: Imperial Supplies Fastener Torque Charts PDF
+# SAE Grade 5 and Grade 8 bolt torque specifications
+id: bolt_torque
+name: Bolt Torque Specs (SAE Grade 5 & 8)
+category: fasteners
+description: Suggested assembly torque values for USS/SAE Grade 5 and Grade 8 bolts
+type: table
+source: Imperial Supplies (IFI-100, SAE J-429)
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Bolt size (diameter-TPI)
+  values:
+  - 1/4-20
+  - 1/4-28
+  - 5/16-18
+  - 5/16-24
+  - 3/8-16
+  - 3/8-24
+  - 7/16-14
+  - 7/16-20
+  - 1/2-13
+  - 1/2-20
+  - 9/16-12
+  - 9/16-18
+  - 5/8-11
+  - 5/8-18
+  - 3/4-10
+  - 3/4-16
+  - 7/8-9
+  - 7/8-14
+  - 1-8
+  - 1-14
+outputs:
+- name: grade5_clamp_load
+  unit: N
+  description: Clamp load for Grade 5 (75% of proof load)
+- name: grade5_torque_dry
+  unit: N·m
+  description: Torque for Grade 5, dry (ft-lb converted to N·m)
+- name: grade5_torque_lubed
+  unit: N·m
+  description: Torque for Grade 5, lubricated
+- name: grade8_clamp_load
+  unit: N
+  description: Clamp load for Grade 8 (75% of proof load)
+- name: grade8_torque_dry
+  unit: N·m
+  description: Torque for Grade 8, dry
+- name: grade8_torque_lubed
+  unit: N·m
+  description: Torque for Grade 8, lubricated
+resolution:
+  type: table
+  data:
+    # From Imperial PDF - Clamp load in lb converted to N (*4.448)
+    # Torque in ft-lb converted to N·m (*1.356)
+    1/4-20:
+      grade5_clamp_load: 8985    # 2020 lb
+      grade5_torque_dry: 10.8    # 8 ft-lb
+      grade5_torque_lubed: 8.5   # 6.3 ft-lb
+      grade8_clamp_load: 12677   # 2850 lb
+      grade8_torque_dry: 16.3    # 12 ft-lb
+      grade8_torque_lubed: 12.2  # 9 ft-lb
+    1/4-28:
+      grade5_clamp_load: 10320   # 2320 lb
+      grade5_torque_dry: 13.6    # 10 ft-lb
+      grade5_torque_lubed: 9.8   # 7.2 ft-lb
+      grade8_clamp_load: 14460   # 3250 lb
+      grade8_torque_dry: 19.0    # 14 ft-lb
+      grade8_torque_lubed: 13.6  # 10 ft-lb
+    5/16-18:
+      grade5_clamp_load: 14860   # 3340 lb
+      grade5_torque_dry: 23.0    # 17 ft-lb
+      grade5_torque_lubed: 17.6  # 13 ft-lb
+      grade8_clamp_load: 20908   # 4700 lb
+      grade8_torque_dry: 32.5    # 24 ft-lb
+      grade8_torque_lubed: 24.4  # 18 ft-lb
+    5/16-24:
+      grade5_clamp_load: 16458   # 3700 lb
+      grade5_torque_dry: 25.8    # 19 ft-lb
+      grade5_torque_lubed: 19.0  # 14 ft-lb
+      grade8_clamp_load: 23130   # 5200 lb
+      grade8_torque_dry: 36.6    # 27 ft-lb
+      grade8_torque_lubed: 27.1  # 20 ft-lb
+    3/8-16:
+      grade5_clamp_load: 22018   # 4950 lb
+      grade5_torque_dry: 40.7    # 30 ft-lb
+      grade5_torque_lubed: 31.2  # 23 ft-lb
+      grade8_clamp_load: 31047   # 6980 lb
+      grade8_torque_dry: 61.0    # 45 ft-lb
+      grade8_torque_lubed: 47.5  # 35 ft-lb
+    3/8-24:
+      grade5_clamp_load: 24909   # 5600 lb
+      grade5_torque_dry: 47.5    # 35 ft-lb
+      grade5_torque_lubed: 33.9  # 25 ft-lb
+      grade8_clamp_load: 35139   # 7900 lb
+      grade8_torque_dry: 67.8    # 50 ft-lb
+      grade8_torque_lubed: 47.5  # 35 ft-lb
+    7/16-14:
+      grade5_clamp_load: 30160   # 6780 lb
+      grade5_torque_dry: 67.8    # 50 ft-lb
+      grade5_torque_lubed: 47.5  # 35 ft-lb
+      grade8_clamp_load: 42480   # 9550 lb
+      grade8_torque_dry: 94.9    # 70 ft-lb
+      grade8_torque_lubed: 67.8  # 50 ft-lb
+    7/16-20:
+      grade5_clamp_load: 33675   # 7570 lb
+      grade5_torque_dry: 74.6    # 55 ft-lb
+      grade5_torque_lubed: 54.2  # 40 ft-lb
+      grade8_clamp_load: 47371   # 10650 lb
+      grade8_torque_dry: 108.5   # 80 ft-lb
+      grade8_torque_lubed: 81.4  # 60 ft-lb
+    1/2-13:
+      grade5_clamp_load: 40250   # 9050 lb
+      grade5_torque_dry: 101.7   # 75 ft-lb
+      grade5_torque_lubed: 74.6  # 55 ft-lb
+      grade8_clamp_load: 56723   # 12750 lb
+      grade8_torque_dry: 149.2   # 110 ft-lb
+      grade8_torque_lubed: 108.5 # 80 ft-lb
+    1/2-20:
+      grade5_clamp_load: 45370   # 10200 lb
+      grade5_torque_dry: 115.3   # 85 ft-lb
+      grade5_torque_lubed: 88.1  # 65 ft-lb
+      grade8_clamp_load: 64051   # 14400 lb
+      grade8_torque_dry: 162.7   # 120 ft-lb
+      grade8_torque_lubed: 122.0 # 90 ft-lb
+    9/16-12:
+      grade5_clamp_load: 51597   # 11600 lb
+      grade5_torque_dry: 149.2   # 110 ft-lb
+      grade5_torque_lubed: 108.5 # 80 ft-lb
+      grade8_clamp_load: 72725   # 16350 lb
+      grade8_torque_dry: 203.4   # 150 ft-lb
+      grade8_torque_lubed: 149.2 # 110 ft-lb
+    9/16-18:
+      grade5_clamp_load: 57604   # 12950 lb
+      grade5_torque_dry: 162.7   # 120 ft-lb
+      grade5_torque_lubed: 122.0 # 90 ft-lb
+      grade8_clamp_load: 81177   # 18250 lb
+      grade8_torque_dry: 230.5   # 170 ft-lb
+      grade8_torque_lubed: 176.3 # 130 ft-lb
+    5/8-11:
+      grade5_clamp_load: 64051   # 14400 lb
+      grade5_torque_dry: 203.4   # 150 ft-lb
+      grade5_torque_lubed: 149.2 # 110 ft-lb
+      grade8_clamp_load: 90517   # 20350 lb
+      grade8_torque_dry: 284.8   # 210 ft-lb
+      grade8_torque_lubed: 216.9 # 160 ft-lb
+    5/8-18:
+      grade5_clamp_load: 72725   # 16350 lb
+      grade5_torque_dry: 230.5   # 170 ft-lb
+      grade5_torque_lubed: 176.3 # 130 ft-lb
+      grade8_clamp_load: 102304  # 23000 lb
+      grade8_torque_dry: 325.4   # 240 ft-lb
+      grade8_torque_lubed: 244.1 # 180 ft-lb
+    3/4-10:
+      grade5_clamp_load: 94741   # 21300 lb
+      grade5_torque_dry: 352.5   # 260 ft-lb
+      grade5_torque_lubed: 271.2 # 200 ft-lb
+      grade8_clamp_load: 133885  # 30100 lb
+      grade8_torque_dry: 515.3   # 380 ft-lb
+      grade8_torque_lubed: 379.7 # 280 ft-lb
+    3/4-16:
+      grade5_clamp_load: 105773  # 23780 lb
+      grade5_torque_dry: 406.8   # 300 ft-lb
+      grade5_torque_lubed: 298.3 # 220 ft-lb
+      grade8_clamp_load: 149010  # 33500 lb
+      grade8_torque_dry: 569.5   # 420 ft-lb
+      grade8_torque_lubed: 420.4 # 310 ft-lb
+    7/8-9:
+      grade5_clamp_load: 131004  # 29450 lb
+      grade5_torque_dry: 583.1   # 430 ft-lb
+      grade5_torque_lubed: 433.9 # 320 ft-lb
+      grade8_clamp_load: 185037  # 41600 lb
+      grade8_torque_dry: 813.6   # 600 ft-lb
+      grade8_torque_lubed: 610.2 # 450 ft-lb
+    7/8-14:
+      grade5_clamp_load: 144337  # 32450 lb
+      grade5_torque_dry: 637.3   # 470 ft-lb
+      grade5_torque_lubed: 474.6 # 350 ft-lb
+      grade8_clamp_load: 203740  # 45800 lb
+      grade8_torque_dry: 908.5   # 670 ft-lb
+      grade8_torque_lubed: 678.0 # 500 ft-lb
+    1-8:
+      grade5_clamp_load: 171691  # 38600 lb
+      grade5_torque_dry: 867.8   # 640 ft-lb
+      grade5_torque_lubed: 650.9 # 480 ft-lb
+      grade8_clamp_load: 242416  # 54500 lb
+      grade8_torque_dry: 1233.9  # 910 ft-lb
+      grade8_torque_lubed: 922.1 # 680 ft-lb
+    1-14:
+      grade5_clamp_load: 192598  # 43300 lb
+      grade5_torque_dry: 976.3   # 720 ft-lb
+      grade5_torque_lubed: 732.2 # 540 ft-lb
+      grade8_clamp_load: 271773  # 61100 lb
+      grade8_torque_dry: 1383.1  # 1020 ft-lb
+      grade8_torque_lubed: 1030.6 # 760 ft-lb
+views:
+- id: default
+  name: Bolt Torque - Grade 5
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - 1/4-20
+      - 5/16-18
+      - 3/8-16
+      - 7/16-14
+      - 1/2-13
+      - 5/8-11
+      - 3/4-10
+      - 7/8-9
+      - 1-8
+  columns:
+  - output: grade5_clamp_load
+    header: Clamp Load
+    unit: kN
+  - output: grade5_torque_dry
+    header: Torque (dry)
+    unit: N·m
+  - output: grade5_torque_lubed
+    header: Torque (lubed)
+    unit: N·m
+- id: grade8
+  name: Bolt Torque - Grade 8
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - 1/4-20
+      - 5/16-18
+      - 3/8-16
+      - 7/16-14
+      - 1/2-13
+      - 5/8-11
+      - 3/4-10
+      - 7/8-9
+      - 1-8
+  columns:
+  - output: grade8_clamp_load
+    header: Clamp Load
+    unit: kN
+  - output: grade8_torque_dry
+    header: Torque (dry)
+    unit: N·m
+  - output: grade8_torque_lubed
+    header: Torque (lubed)
+    unit: N·m

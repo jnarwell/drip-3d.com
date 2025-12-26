@@ -118,13 +118,16 @@ views:
 
 #### Categories
 
-| Category | Examples |
-|----------|----------|
-| `tolerances` | ISO 286 tolerance grades |
-| `fasteners` | Metric bolt dimensions |
-| `finishes` | Surface finish Ra values |
-| `process` | Steam tables (CoolProp) |
-| `material` | Material property lookups |
+| Category | Tables (35 total) | Source Standards |
+|----------|-------------------|------------------|
+| `fasteners` (9) | bolt_torque, metric_bolt_torque, api6a_flange_torque, unc_threads, unf_threads, metric_threads_coarse, metric_threads_fine, npt_threads, metric_bolt_dimensions | SAE J-429, ISO 898-1, API 6A, ASME B1.1, ASME B1.20.1, ISO 68-1 |
+| `electrical` (1) | wire_gauge_awg | ASTM B258 |
+| `mechanical` (3) | oring_as568, pipe_schedules, keyway_sizes | SAE AS568, ASME B36.10 |
+| `process` (6) | gas_properties (25 gases), steam, steam_temperature, steam_pressure, r134a, r134a_temperature | CoolProp (NIST REFPROP), IAPWS-IF97 |
+| `tolerances` (2) | iso_286_tolerance, surface_roughness | ISO 286-1 |
+| `material` (14) | Temperature-dependent materials (al_6061_t6, ss_304, ss_316, steel_4140, ti_6al_4v, etc.) | CoolProp, literature |
+
+**Data Quality**: All data sourced from authoritative standards (ISO, ASME, SAE, ASTM, API) or verified computational libraries (CoolProp/NIST REFPROP). No AI-estimated values.
 
 #### API Endpoints
 
@@ -422,6 +425,6 @@ const StressCalculator = () => {
 
 ---
 
-*Last Updated: December 24, 2025*
-*System Version: 2.0.0*
+*Last Updated: December 26, 2025*
+*System Version: 2.1.0*
 *Priority: HIGH - Core data foundation for engineering calculations*

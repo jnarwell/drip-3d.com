@@ -1,0 +1,271 @@
+# Source: Apple Rubber AS568 Standard O-Rings Quick Reference Chart
+# SAE Aerospace Standard AS568
+id: oring_as568
+name: AS568 O-Ring Sizes
+category: mechanical
+description: Standard O-ring sizes per SAE AS568 aerospace standard
+type: table
+source: Apple Rubber / SAE AS568
+version: '1.0'
+inputs:
+- name: dash
+  type: discrete
+  unit: none
+  description: AS568 dash number
+  values:
+  - '-006'
+  - '-007'
+  - '-008'
+  - '-009'
+  - '-010'
+  - '-011'
+  - '-012'
+  - '-014'
+  - '-016'
+  - '-018'
+  - '-020'
+  - '-022'
+  - '-024'
+  - '-026'
+  - '-028'
+  - '-110'
+  - '-112'
+  - '-114'
+  - '-116'
+  - '-118'
+  - '-120'
+  - '-210'
+  - '-212'
+  - '-214'
+  - '-216'
+  - '-218'
+  - '-220'
+  - '-222'
+  - '-224'
+  - '-226'
+  - '-228'
+  - '-230'
+outputs:
+- name: id
+  unit: m
+  description: Inside diameter
+- name: cs
+  unit: m
+  description: Cross-section width
+- name: od
+  unit: m
+  description: Outside diameter (calculated)
+resolution:
+  type: table
+  data:
+    # 070 series (1/16" = 1.78mm cross-section)
+    '-006':
+      id: 0.002896   # 0.114" = 2.896 mm
+      cs: 0.001778   # 0.070" = 1.778 mm
+      od: 0.006452   # 0.254" = 6.452 mm
+    '-007':
+      id: 0.003683   # 0.145"
+      cs: 0.001778   # 0.070"
+      od: 0.007239
+    '-008':
+      id: 0.004470   # 0.176"
+      cs: 0.001778   # 0.070"
+      od: 0.008026
+    '-009':
+      id: 0.005283   # 0.208"
+      cs: 0.001778   # 0.070"
+      od: 0.008839
+    '-010':
+      id: 0.006071   # 0.239"
+      cs: 0.001778   # 0.070"
+      od: 0.009627
+    '-011':
+      id: 0.007645   # 0.301"
+      cs: 0.001778   # 0.070"
+      od: 0.011201
+    '-012':
+      id: 0.009246   # 0.364"
+      cs: 0.001778   # 0.070"
+      od: 0.012802
+    '-014':
+      id: 0.012421   # 0.489"
+      cs: 0.001778   # 0.070"
+      od: 0.015977
+    '-016':
+      id: 0.015596   # 0.614"
+      cs: 0.001778   # 0.070"
+      od: 0.019152
+    '-018':
+      id: 0.018771   # 0.739"
+      cs: 0.001778   # 0.070"
+      od: 0.022327
+    '-020':
+      id: 0.021946   # 0.864"
+      cs: 0.001778   # 0.070"
+      od: 0.025502
+    '-022':
+      id: 0.025121   # 0.989"
+      cs: 0.001778   # 0.070"
+      od: 0.028677
+    '-024':
+      id: 0.028296   # 1.114"
+      cs: 0.001778   # 0.070"
+      od: 0.031852
+    '-026':
+      id: 0.031471   # 1.239"
+      cs: 0.001778   # 0.070"
+      od: 0.035027
+    '-028':
+      id: 0.034646   # 1.364"
+      cs: 0.001778   # 0.070"
+      od: 0.038202
+    # 100 series (3/32" = 2.62mm cross-section)
+    '-110':
+      id: 0.009195   # 0.362"
+      cs: 0.002616   # 0.103"
+      od: 0.014427
+    '-112':
+      id: 0.012370   # 0.487"
+      cs: 0.002616   # 0.103"
+      od: 0.017602
+    '-114':
+      id: 0.015545   # 0.612"
+      cs: 0.002616   # 0.103"
+      od: 0.020777
+    '-116':
+      id: 0.018720   # 0.737"
+      cs: 0.002616   # 0.103"
+      od: 0.023952
+    '-118':
+      id: 0.021895   # 0.862"
+      cs: 0.002616   # 0.103"
+      od: 0.027127
+    '-120':
+      id: 0.025070   # 0.987"
+      cs: 0.002616   # 0.103"
+      od: 0.030302
+    # 200 series (1/8" = 3.53mm cross-section)
+    '-210':
+      id: 0.018644   # 0.734"
+      cs: 0.003531   # 0.139"
+      od: 0.025706
+    '-212':
+      id: 0.021819   # 0.859"
+      cs: 0.003531   # 0.139"
+      od: 0.028881
+    '-214':
+      id: 0.024994   # 0.984"
+      cs: 0.003531   # 0.139"
+      od: 0.032056
+    '-216':
+      id: 0.028169   # 1.109"
+      cs: 0.003531   # 0.139"
+      od: 0.035231
+    '-218':
+      id: 0.031344   # 1.234"
+      cs: 0.003531   # 0.139"
+      od: 0.038406
+    '-220':
+      id: 0.034519   # 1.359"
+      cs: 0.003531   # 0.139"
+      od: 0.041581
+    '-222':
+      id: 0.037693   # 1.484"
+      cs: 0.003531   # 0.139"
+      od: 0.044755
+    '-224':
+      id: 0.044043   # 1.734"
+      cs: 0.003531   # 0.139"
+      od: 0.051105
+    '-226':
+      id: 0.050394   # 1.984"
+      cs: 0.003531   # 0.139"
+      od: 0.057456
+    '-228':
+      id: 0.056744   # 2.234"
+      cs: 0.003531   # 0.139"
+      od: 0.063806
+    '-230':
+      id: 0.063094   # 2.484"
+      cs: 0.003531   # 0.139"
+      od: 0.070156
+views:
+- id: default
+  name: Common O-Ring Sizes (070 Series)
+  layout: flat
+  description: 1/16" cross-section O-rings
+  grid:
+    dash:
+      type: list
+      values:
+      - '-006'
+      - '-008'
+      - '-010'
+      - '-012'
+      - '-014'
+      - '-016'
+      - '-018'
+      - '-020'
+      - '-024'
+      - '-028'
+  columns:
+  - output: id
+    header: ID
+    unit: mm
+  - output: cs
+    header: CS
+    unit: mm
+  - output: od
+    header: OD
+    unit: mm
+- id: series_100
+  name: O-Ring Sizes (100 Series)
+  layout: flat
+  description: 3/32" cross-section O-rings
+  grid:
+    dash:
+      type: list
+      values:
+      - '-110'
+      - '-112'
+      - '-114'
+      - '-116'
+      - '-118'
+      - '-120'
+  columns:
+  - output: id
+    header: ID
+    unit: mm
+  - output: cs
+    header: CS
+    unit: mm
+  - output: od
+    header: OD
+    unit: mm
+- id: series_200
+  name: O-Ring Sizes (200 Series)
+  layout: flat
+  description: 1/8" cross-section O-rings
+  grid:
+    dash:
+      type: list
+      values:
+      - '-210'
+      - '-212'
+      - '-214'
+      - '-216'
+      - '-218'
+      - '-220'
+      - '-222'
+      - '-226'
+      - '-230'
+  columns:
+  - output: id
+    header: ID
+    unit: mm
+  - output: cs
+    header: CS
+    unit: mm
+  - output: od
+    header: OD
+    unit: mm

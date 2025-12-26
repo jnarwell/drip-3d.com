@@ -142,14 +142,74 @@ export const TO_BASE_CONVERSIONS: Record<string, number> = {
   'mHz': 0.001,
   'rpm': 1/60,  // revolutions per minute to Hz
   'rps': 1,     // revolutions per second
+
+  // Density - to kg/m³
+  'kg/m³': 1,
+  'g/cm³': 1000,
+  'kg/L': 1000,
+  'g/mL': 1000,
+  'lb/ft³': 16.0185,
+  'lb/in³': 27679.9,
+  'lb/gal': 119.826,
+  'oz/in³': 1729.99,
+
+  // Thermal expansion - to 1/K
+  '1/K': 1,
+  '1/°C': 1,  // Same as 1/K for coefficients
+  'ppm/K': 1e-6,
+  'ppm/°C': 1e-6,
+  'µm/(m·K)': 1e-6,  // Same as ppm/K
+  '1/°F': 1.8,  // 1/°F = 1.8 * 1/K
+  '1/°R': 1.8,
+  'ppm/°F': 1.8e-6,
+
+  // Thermal conductivity - to W/(m·K)
+  'W/(m·K)': 1,
+  'mW/(m·K)': 0.001,
+  'BTU/(h·ft·°F)': 1.731,
+  'BTU·in/(h·ft²·°F)': 0.1442,
+
+  // Specific heat - to J/(kg·K)
+  'J/(kg·K)': 1,
+  'kJ/(kg·K)': 1000,
+  'cal/(g·°C)': 4184,
+  'BTU/(lb·°F)': 4186.8,
 };
+
+// Temperature unit aliases for robust matching
+// Note: Avoiding single letters like 'C' (Coulombs), 'F' (Farads), 'R' that conflict with other units
+const TEMP_ALIASES: Record<string, string> = {
+  'K': 'K',
+  'kelvin': 'K',
+  '°C': '°C',
+  '℃': '°C',
+  'degC': '°C',
+  'celsius': '°C',
+  '°F': '°F',
+  '℉': '°F',
+  'degF': '°F',
+  'fahrenheit': '°F',
+  '°R': '°R',
+  'rankine': '°R',
+};
+
+// Normalize temperature unit to canonical form
+function normalizeTemperatureUnit(unit: string): string {
+  return TEMP_ALIASES[unit] || unit;
+}
 
 // Temperature conversions (special case)
 export function convertTemperature(value: number, fromUnit: string, toUnit: string): number {
+  // Normalize units to handle variations like 'C' vs '°C'
+  const from = normalizeTemperatureUnit(fromUnit);
+  const to = normalizeTemperatureUnit(toUnit);
+
+  if (from === to) return value;
+
   let kelvin = value;
-  
+
   // Convert to Kelvin first
-  switch (fromUnit) {
+  switch (from) {
     case 'K':
       kelvin = value;
       break;
@@ -162,10 +222,13 @@ export function convertTemperature(value: number, fromUnit: string, toUnit: stri
     case '°R':
       kelvin = value * 5/9;
       break;
+    default:
+      console.warn(`Unknown temperature unit: ${fromUnit}`);
+      return value;
   }
-  
+
   // Convert from Kelvin to target
-  switch (toUnit) {
+  switch (to) {
     case 'K':
       return kelvin;
     case '°C':
@@ -174,23 +237,29 @@ export function convertTemperature(value: number, fromUnit: string, toUnit: stri
       return (kelvin - 273.15) * 9/5 + 32;
     case '°R':
       return kelvin * 9/5;
+    default:
+      console.warn(`Unknown temperature unit: ${toUnit}`);
+      return value;
   }
-  
-  return value; // Fallback
+}
+
+// Check if a unit is a temperature unit
+function isTemperatureUnit(unit: string): boolean {
+  return unit in TEMP_ALIASES;
 }
 
 export function convertUnit(value: number, fromUnit: string, toUnit: string): number {
   if (fromUnit === toUnit) return value;
-  
-  // Handle temperature specially
-  if (['K', '°C', '°F', '°R'].includes(fromUnit) && ['K', '°C', '°F', '°R'].includes(toUnit)) {
+
+  // Handle temperature specially - check both raw and normalized forms
+  if (isTemperatureUnit(fromUnit) && isTemperatureUnit(toUnit)) {
     return convertTemperature(value, fromUnit, toUnit);
   }
-  
+
   // Convert to base unit first
   const toBase = TO_BASE_CONVERSIONS[fromUnit] || 1;
   const fromBase = TO_BASE_CONVERSIONS[toUnit] || 1;
-  
+
   return value * toBase / fromBase;
 }
 

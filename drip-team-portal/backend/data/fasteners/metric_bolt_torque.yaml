@@ -1,0 +1,369 @@
+# Source: Fastenal Technical Reference (ISO 898-1)
+# Torque-Tension Relationship for Metric Coarse Thread Fasteners
+# Clamp load = 75% of proof load
+# Torque calculated from T=KDF where K varies by surface condition
+id: metric_bolt_torque
+name: Metric Bolt Torque (ISO 898-1)
+category: fasteners
+description: Torque specifications for metric coarse thread bolts per ISO 898-1
+type: table
+source: Fastenal / ISO 898-1
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Metric bolt size
+  values:
+  - M5
+  - M6
+  - M8
+  - M10
+  - M12
+  - M14
+  - M16
+  - M18
+  - M20
+  - M22
+  - M24
+  - M27
+  - M30
+  - M33
+  - M36
+  - M39
+outputs:
+- name: pitch
+  unit: m
+  description: Thread pitch
+- name: clamp_load_88
+  unit: N
+  description: Clamp load for Class 8.8 (75% proof)
+- name: torque_88_lubed
+  unit: N·m
+  description: Torque for Class 8.8, lubricated (K=0.15)
+- name: torque_88_dry
+  unit: N·m
+  description: Torque for Class 8.8, dry (K=0.20)
+- name: clamp_load_109
+  unit: N
+  description: Clamp load for Class 10.9 (75% proof)
+- name: torque_109_lubed
+  unit: N·m
+  description: Torque for Class 10.9, lubricated (K=0.15)
+- name: torque_109_dry
+  unit: N·m
+  description: Torque for Class 10.9, dry (K=0.20)
+- name: clamp_load_129
+  unit: N
+  description: Clamp load for Class 12.9 (75% proof)
+- name: torque_129_lubed
+  unit: N·m
+  description: Torque for Class 12.9, lubricated (K=0.15)
+- name: torque_129_dry
+  unit: N·m
+  description: Torque for Class 12.9, dry (K=0.20)
+resolution:
+  type: table
+  data:
+    # Data from Fastenal ISO 898-1 chart (Jan 2016)
+    # Pitch in meters, clamp load in N, torque in N·m
+    M5:
+      pitch: 0.0008
+      clamp_load_88: 6177
+      torque_88_lubed: 4.6
+      torque_88_dry: 6.2
+      clamp_load_109: 8840
+      torque_109_lubed: 6.6
+      torque_109_dry: 8.8
+      clamp_load_129: 10331
+      torque_129_lubed: 7.7
+      torque_129_dry: 10.3
+    M6:
+      pitch: 0.001
+      clamp_load_88: 8744
+      torque_88_lubed: 7.9
+      torque_88_dry: 10.5
+      clamp_load_109: 12512
+      torque_109_lubed: 11.3
+      torque_109_dry: 15.0
+      clamp_load_129: 14623
+      torque_129_lubed: 13.2
+      torque_129_dry: 17.5
+    M8:
+      pitch: 0.00125
+      clamp_load_88: 15921
+      torque_88_lubed: 19.1
+      torque_88_dry: 25.5
+      clamp_load_109: 22784
+      torque_109_lubed: 27.3
+      torque_109_dry: 36.5
+      clamp_load_129: 26627
+      torque_129_lubed: 32.0
+      torque_129_dry: 42.6
+    M10:
+      pitch: 0.0015
+      clamp_load_88: 25230
+      torque_88_lubed: 37.8
+      torque_88_dry: 50.5
+      clamp_load_109: 36105
+      torque_109_lubed: 54.2
+      torque_109_dry: 72.2
+      clamp_load_129: 42195
+      torque_129_lubed: 63.3
+      torque_129_dry: 84.4
+    M12:
+      pitch: 0.00175
+      clamp_load_88: 36671
+      torque_88_lubed: 66.0
+      torque_88_dry: 88.0
+      clamp_load_109: 52477
+      torque_109_lubed: 94.5
+      torque_109_dry: 126
+      clamp_load_129: 61328
+      torque_129_lubed: 110
+      torque_129_dry: 147
+    M14:
+      pitch: 0.002
+      clamp_load_88: 50025
+      torque_88_lubed: 105
+      torque_88_dry: 140
+      clamp_load_109: 71588
+      torque_109_lubed: 150
+      torque_109_dry: 200
+      clamp_load_129: 83663
+      torque_129_lubed: 176
+      torque_129_dry: 234
+    M16:
+      pitch: 0.002
+      clamp_load_88: 68295
+      torque_88_lubed: 164
+      torque_88_dry: 219
+      clamp_load_109: 97733
+      torque_109_lubed: 235
+      torque_109_dry: 313
+      clamp_load_129: 114218
+      torque_129_lubed: 274
+      torque_129_dry: 365
+    M18:
+      pitch: 0.0025
+      clamp_load_88: 86400
+      torque_88_lubed: 233
+      torque_88_dry: 311
+      clamp_load_109: 119520
+      torque_109_lubed: 323
+      torque_109_dry: 430
+      clamp_load_129: 139680
+      torque_129_lubed: 377
+      torque_129_dry: 503
+    M20:
+      pitch: 0.0025
+      clamp_load_88: 110250
+      torque_88_lubed: 331
+      torque_88_dry: 441
+      clamp_load_109: 152513
+      torque_109_lubed: 458
+      torque_109_dry: 610
+      clamp_load_129: 178238
+      torque_129_lubed: 535
+      torque_129_dry: 713
+    M22:
+      pitch: 0.0025
+      clamp_load_88: 136350
+      torque_88_lubed: 450
+      torque_88_dry: 600
+      clamp_load_109: 188618
+      torque_109_lubed: 622
+      torque_109_dry: 830
+      clamp_load_129: 220433
+      torque_129_lubed: 727
+      torque_129_dry: 970
+    M24:
+      pitch: 0.003
+      clamp_load_88: 158850
+      torque_88_lubed: 572
+      torque_88_dry: 762
+      clamp_load_109: 219743
+      torque_109_lubed: 791
+      torque_109_dry: 1055
+      clamp_load_129: 256808
+      torque_129_lubed: 925
+      torque_129_dry: 1233
+    M27:
+      pitch: 0.003
+      clamp_load_88: 206550
+      torque_88_lubed: 837
+      torque_88_dry: 1115
+      clamp_load_109: 285728
+      torque_109_lubed: 1157
+      torque_109_dry: 1543
+      clamp_load_129: 333923
+      torque_129_lubed: 1352
+      torque_129_dry: 1803
+    M30:
+      pitch: 0.0035
+      clamp_load_88: 252450
+      torque_88_lubed: 1136
+      torque_88_dry: 1515
+      clamp_load_109: 349223
+      torque_109_lubed: 1572
+      torque_109_dry: 2095
+      clamp_load_129: 408128
+      torque_129_lubed: 1837
+      torque_129_dry: 2449
+    M33:
+      pitch: 0.0035
+      clamp_load_88: 312300
+      torque_88_lubed: 1546
+      torque_88_dry: 2061
+      clamp_load_109: 432015
+      torque_109_lubed: 2138
+      torque_109_dry: 2851
+      clamp_load_129: 504885
+      torque_129_lubed: 2499
+      torque_129_dry: 3332
+    M36:
+      pitch: 0.004
+      clamp_load_88: 367650
+      torque_88_lubed: 1985
+      torque_88_dry: 2647
+      clamp_load_109: 508583
+      torque_109_lubed: 2746
+      torque_109_dry: 3662
+      clamp_load_129: 594368
+      torque_129_lubed: 3210
+      torque_129_dry: 4279
+    M39:
+      pitch: 0.004
+      clamp_load_88: 439200
+      torque_88_lubed: 2569
+      torque_88_dry: 3426
+      clamp_load_109: 607560
+      torque_109_lubed: 3554
+      torque_109_dry: 4739
+      clamp_load_129: 710040
+      torque_129_lubed: 4154
+      torque_129_dry: 5538
+views:
+- id: default
+  name: Metric Bolt Torque - Class 8.8
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - M5
+      - M6
+      - M8
+      - M10
+      - M12
+      - M14
+      - M16
+      - M18
+      - M20
+      - M24
+      - M30
+      - M36
+  columns:
+  - output: pitch
+    header: Pitch
+    unit: mm
+  - output: clamp_load_88
+    header: Clamp Load
+    unit: kN
+  - output: torque_88_lubed
+    header: Torque (lubed)
+    unit: N·m
+  - output: torque_88_dry
+    header: Torque (dry)
+    unit: N·m
+- id: class_109
+  name: Metric Bolt Torque - Class 10.9
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - M5
+      - M6
+      - M8
+      - M10
+      - M12
+      - M14
+      - M16
+      - M18
+      - M20
+      - M24
+      - M30
+      - M36
+  columns:
+  - output: pitch
+    header: Pitch
+    unit: mm
+  - output: clamp_load_109
+    header: Clamp Load
+    unit: kN
+  - output: torque_109_lubed
+    header: Torque (lubed)
+    unit: N·m
+  - output: torque_109_dry
+    header: Torque (dry)
+    unit: N·m
+- id: class_129
+  name: Metric Bolt Torque - Class 12.9
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - M5
+      - M6
+      - M8
+      - M10
+      - M12
+      - M14
+      - M16
+      - M18
+      - M20
+      - M24
+      - M30
+      - M36
+  columns:
+  - output: pitch
+    header: Pitch
+    unit: mm
+  - output: clamp_load_129
+    header: Clamp Load
+    unit: kN
+  - output: torque_129_lubed
+    header: Torque (lubed)
+    unit: N·m
+  - output: torque_129_dry
+    header: Torque (dry)
+    unit: N·m
+- id: all_classes
+  name: Metric Bolt Torque - All Classes (Lubed)
+  layout: flat
+  description: Comparison of torque values across property classes
+  grid:
+    size:
+      type: list
+      values:
+      - M5
+      - M6
+      - M8
+      - M10
+      - M12
+      - M16
+      - M20
+      - M24
+      - M30
+  columns:
+  - output: torque_88_lubed
+    header: Class 8.8
+    unit: N·m
+  - output: torque_109_lubed
+    header: Class 10.9
+    unit: N·m
+  - output: torque_129_lubed
+    header: Class 12.9
+    unit: N·m

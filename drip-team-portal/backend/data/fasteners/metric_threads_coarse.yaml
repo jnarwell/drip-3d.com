@@ -1,0 +1,286 @@
+# ISO 68-1 Metric Coarse Thread Dimensions
+# Calculated from standard formulas:
+#   d2 = d - 0.6495*P (pitch diameter)
+#   d1 = d - 1.0825*P (minor diameter)
+#   As = (π/4)*((d2+d1)/2)² (stress area)
+id: metric_threads_coarse
+name: Metric Thread Dimensions (Coarse)
+category: fasteners
+description: ISO metric coarse thread dimensions per ISO 68-1
+type: table
+source: ISO 68-1 (calculated)
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Metric thread size
+  values:
+  - M1
+  - M1.2
+  - M1.4
+  - M1.6
+  - M2
+  - M2.5
+  - M3
+  - M4
+  - M5
+  - M6
+  - M8
+  - M10
+  - M12
+  - M14
+  - M16
+  - M18
+  - M20
+  - M22
+  - M24
+  - M27
+  - M30
+  - M33
+  - M36
+  - M39
+  - M42
+  - M45
+  - M48
+  - M52
+  - M56
+  - M64
+outputs:
+- name: pitch
+  unit: m
+  description: Thread pitch
+- name: major_dia
+  unit: m
+  description: Major (nominal) diameter
+- name: pitch_dia
+  unit: m
+  description: Pitch diameter
+- name: minor_dia
+  unit: m
+  description: Minor diameter
+- name: stress_area
+  unit: m²
+  description: Tensile stress area
+resolution:
+  type: table
+  data:
+    M1:
+      pitch: 0.000250
+      major_dia: 0.001000
+      pitch_dia: 0.000838
+      minor_dia: 0.000729
+      stress_area: 4.821e-07
+    M1.2:
+      pitch: 0.000250
+      major_dia: 0.001200
+      pitch_dia: 0.001038
+      minor_dia: 0.000929
+      stress_area: 7.597e-07
+    M1.4:
+      pitch: 0.000300
+      major_dia: 0.001400
+      pitch_dia: 0.001205
+      minor_dia: 0.001075
+      stress_area: 1.021e-06
+    M1.6:
+      pitch: 0.000350
+      major_dia: 0.001600
+      pitch_dia: 0.001373
+      minor_dia: 0.001221
+      stress_area: 1.321e-06
+    M2:
+      pitch: 0.000400
+      major_dia: 0.002000
+      pitch_dia: 0.001740
+      minor_dia: 0.001567
+      stress_area: 2.148e-06
+    M2.5:
+      pitch: 0.000450
+      major_dia: 0.002500
+      pitch_dia: 0.002208
+      minor_dia: 0.002013
+      stress_area: 3.498e-06
+    M3:
+      pitch: 0.000500
+      major_dia: 0.003000
+      pitch_dia: 0.002675
+      minor_dia: 0.002459
+      stress_area: 5.175e-06
+    M4:
+      pitch: 0.000700
+      major_dia: 0.004000
+      pitch_dia: 0.003545
+      minor_dia: 0.003242
+      stress_area: 9.046e-06
+    M5:
+      pitch: 0.000800
+      major_dia: 0.005000
+      pitch_dia: 0.004480
+      minor_dia: 0.004134
+      stress_area: 1.457e-05
+    M6:
+      pitch: 0.001000
+      major_dia: 0.006000
+      pitch_dia: 0.005351
+      minor_dia: 0.004917
+      stress_area: 2.070e-05
+    M8:
+      pitch: 0.001250
+      major_dia: 0.008000
+      pitch_dia: 0.007188
+      minor_dia: 0.006647
+      stress_area: 3.758e-05
+    M10:
+      pitch: 0.001500
+      major_dia: 0.010000
+      pitch_dia: 0.009026
+      minor_dia: 0.008376
+      stress_area: 5.946e-05
+    M12:
+      pitch: 0.001750
+      major_dia: 0.012000
+      pitch_dia: 0.010863
+      minor_dia: 0.010106
+      stress_area: 8.633e-05
+    M14:
+      pitch: 0.002000
+      major_dia: 0.014000
+      pitch_dia: 0.012701
+      minor_dia: 0.011835
+      stress_area: 1.182e-04
+    M16:
+      pitch: 0.002000
+      major_dia: 0.016000
+      pitch_dia: 0.014701
+      minor_dia: 0.013835
+      stress_area: 1.599e-04
+    M18:
+      pitch: 0.002500
+      major_dia: 0.018000
+      pitch_dia: 0.016376
+      minor_dia: 0.015294
+      stress_area: 1.969e-04
+    M20:
+      pitch: 0.002500
+      major_dia: 0.020000
+      pitch_dia: 0.018376
+      minor_dia: 0.017294
+      stress_area: 2.498e-04
+    M22:
+      pitch: 0.002500
+      major_dia: 0.022000
+      pitch_dia: 0.020376
+      minor_dia: 0.019294
+      stress_area: 3.090e-04
+    M24:
+      pitch: 0.003000
+      major_dia: 0.024000
+      pitch_dia: 0.022052
+      minor_dia: 0.020753
+      stress_area: 3.597e-04
+    M27:
+      pitch: 0.003000
+      major_dia: 0.027000
+      pitch_dia: 0.025052
+      minor_dia: 0.023752
+      stress_area: 4.677e-04
+    M30:
+      pitch: 0.003500
+      major_dia: 0.030000
+      pitch_dia: 0.027727
+      minor_dia: 0.026211
+      stress_area: 5.712e-04
+    M33:
+      pitch: 0.003500
+      major_dia: 0.033000
+      pitch_dia: 0.030727
+      minor_dia: 0.029211
+      stress_area: 7.054e-04
+    M36:
+      pitch: 0.004000
+      major_dia: 0.036000
+      pitch_dia: 0.033402
+      minor_dia: 0.031670
+      stress_area: 8.314e-04
+    M39:
+      pitch: 0.004000
+      major_dia: 0.039000
+      pitch_dia: 0.036402
+      minor_dia: 0.034670
+      stress_area: 9.918e-04
+    M42:
+      pitch: 0.004500
+      major_dia: 0.042000
+      pitch_dia: 0.039077
+      minor_dia: 0.037129
+      stress_area: 1.140e-03
+    M45:
+      pitch: 0.004500
+      major_dia: 0.045000
+      pitch_dia: 0.042077
+      minor_dia: 0.040129
+      stress_area: 1.327e-03
+    M48:
+      pitch: 0.005000
+      major_dia: 0.048000
+      pitch_dia: 0.044753
+      minor_dia: 0.042588
+      stress_area: 1.498e-03
+    M52:
+      pitch: 0.005000
+      major_dia: 0.052000
+      pitch_dia: 0.048752
+      minor_dia: 0.046587
+      stress_area: 1.785e-03
+    M56:
+      pitch: 0.005500
+      major_dia: 0.056000
+      pitch_dia: 0.052428
+      minor_dia: 0.050046
+      stress_area: 2.062e-03
+    M64:
+      pitch: 0.006000
+      major_dia: 0.064000
+      pitch_dia: 0.060103
+      minor_dia: 0.057505
+      stress_area: 2.716e-03
+views:
+- id: default
+  name: Metric Coarse Thread Dimensions
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - M3
+      - M4
+      - M5
+      - M6
+      - M8
+      - M10
+      - M12
+      - M14
+      - M16
+      - M20
+      - M24
+      - M30
+      - M36
+      - M42
+      - M48
+  columns:
+  - output: pitch
+    header: Pitch
+    unit: mm
+  - output: major_dia
+    header: Major Ø
+    unit: mm
+  - output: pitch_dia
+    header: Pitch Ø
+    unit: mm
+  - output: minor_dia
+    header: Minor Ø
+    unit: mm
+  - output: stress_area
+    header: Stress Area
+    unit: mm²

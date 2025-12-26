@@ -485,6 +485,8 @@ views:
       nps:
         type: list
         values: ["1/2", "3/4", "1", "1-1/4", "1-1/2", "2", "2-1/2", "3", "4", "6", "8", "10", "12"]
+    constraints:
+      schedule: "40"
     columns:
       - output: od_in
         header: "OD"
@@ -516,6 +518,8 @@ views:
       nps:
         type: list
         values: ["1/2", "3/4", "1", "1-1/4", "1-1/2", "2", "2-1/2", "3", "4", "6", "8", "10", "12"]
+    constraints:
+      schedule: "80"
     columns:
       - output: od_in
         header: "OD"

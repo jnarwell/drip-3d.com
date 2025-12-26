@@ -1,0 +1,198 @@
+# Source: API 6-A, 19th Edition Appendix D, Table D1 & D2
+# ANSI / API 6A / ISO 10423:2003
+# For ASTM A193 Grade B7 and ASTM A320 L7 studs
+id: api6a_flange_torque
+name: API 6A Flange Bolt Torque (B7/L7 Studs)
+category: fasteners
+description: Torque specifications for API 6A flange bolting with B7/L7 studs
+type: table
+source: API 6-A, 19th Edition Appendix D
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Stud diameter (inches)
+  values:
+  - '1/2'
+  - '5/8'
+  - '3/4'
+  - '7/8'
+  - '1'
+  - '1-1/8'
+  - '1-1/4'
+  - '1-3/8'
+  - '1-1/2'
+  - '1-5/8'
+  - '1-3/4'
+  - '1-7/8'
+  - '2'
+  - '2-1/4'
+  - '2-1/2'
+  - '2-5/8'
+  - '2-3/4'
+  - '3'
+  - '3-1/4'
+  - '3-3/4'
+  - '3-7/8'
+  - '4'
+outputs:
+- name: tension
+  unit: N
+  description: Target stud tension (75% of proof load)
+- name: torque_ptfe
+  unit: N·m
+  description: Torque for PTFE coated bolts (f=0.07)
+- name: torque_plain
+  unit: N·m
+  description: Torque for plain/uncoated bolts (f=0.13)
+resolution:
+  type: table
+  data:
+    # Data from API 6-A Appendix D - tension converted from lbf to N (*4.44822)
+    # Torque values already in Nm from source
+    '1/2':
+      tension: 33139    # 7450 lbf
+      torque_ptfe: 48
+      torque_plain: 80
+    '5/8':
+      tension: 52774    # 11865 lbf
+      torque_ptfe: 92
+      torque_plain: 155
+    '3/4':
+      tension: 78105    # 17559 lbf
+      torque_ptfe: 160
+      torque_plain: 270
+    '7/8':
+      tension: 107829   # 24241 lbf
+      torque_ptfe: 253
+      torque_plain: 429
+    '1':
+      tension: 141469   # 31802 lbf
+      torque_ptfe: 376
+      torque_plain: 639
+    '1-1/8':
+      tension: 184596   # 41499 lbf
+      torque_ptfe: 540
+      torque_plain: 925
+    '1-1/4':
+      tension: 233451   # 52484 lbf
+      torque_ptfe: 745
+      torque_plain: 1285
+    '1-3/8':
+      tension: 288060   # 64759 lbf
+      torque_ptfe: 996
+      torque_plain: 1727
+    '1-1/2':
+      tension: 348383   # 78322 lbf
+      torque_ptfe: 1297
+      torque_plain: 2261
+    '1-5/8':
+      tension: 414449   # 93173 lbf
+      torque_ptfe: 1653
+      torque_plain: 2894
+    '1-3/4':
+      tension: 486258   # 109313 lbf
+      torque_ptfe: 2069
+      torque_plain: 3636
+    '1-7/8':
+      tension: 563803   # 126741 lbf
+      torque_ptfe: 2549
+      torque_plain: 4493
+    '2':
+      tension: 647067   # 145458 lbf
+      torque_ptfe: 3097
+      torque_plain: 5476
+    '2-1/4':
+      tension: 830826   # 186758 lbf
+      torque_ptfe: 4418
+      torque_plain: 7851
+    '2-1/2':
+      tension: 1037467  # 233212 lbf
+      torque_ptfe: 6068
+      torque_plain: 10828
+    '2-5/8':
+      tension: 1039928  # 233765 lbf
+      torque_ptfe: 6394
+      torque_plain: 11429
+    '2-3/4':
+      tension: 1146337  # 257694 lbf
+      torque_ptfe: 7354
+      torque_plain: 13168
+    '3':
+      tension: 1374770  # 309050 lbf
+      torque_ptfe: 9555
+      torque_plain: 17156
+    '3-1/4':
+      tension: 1623970  # 365070 lbf
+      torque_ptfe: 12154
+      torque_plain: 21878
+    '3-3/4':
+      tension: 2184309  # 491099 lbf
+      torque_ptfe: 18685
+      torque_plain: 33766
+    '3-7/8':
+      tension: 2337499  # 525521 lbf
+      torque_ptfe: 20620
+      torque_plain: 37293
+    '4':
+      tension: 2495802  # 561108 lbf
+      torque_ptfe: 22683
+      torque_plain: 41057
+views:
+- id: default
+  name: API 6A Flange Torque (PTFE Coated)
+  layout: flat
+  description: For PTFE coated bolts (f=0.07)
+  grid:
+    size:
+      type: list
+      values:
+      - '1/2'
+      - '5/8'
+      - '3/4'
+      - '7/8'
+      - '1'
+      - '1-1/8'
+      - '1-1/4'
+      - '1-1/2'
+      - '1-3/4'
+      - '2'
+      - '2-1/2'
+      - '3'
+      - '4'
+  columns:
+  - output: tension
+    header: Tension
+    unit: kN
+  - output: torque_ptfe
+    header: Torque (PTFE)
+    unit: N·m
+- id: plain
+  name: API 6A Flange Torque (Plain Bolts)
+  layout: flat
+  description: For plain/uncoated bolts (f=0.13)
+  grid:
+    size:
+      type: list
+      values:
+      - '1/2'
+      - '5/8'
+      - '3/4'
+      - '7/8'
+      - '1'
+      - '1-1/8'
+      - '1-1/4'
+      - '1-1/2'
+      - '1-3/4'
+      - '2'
+      - '2-1/2'
+      - '3'
+      - '4'
+  columns:
+  - output: tension
+    header: Tension
+    unit: kN
+  - output: torque_plain
+    header: Torque (Plain)
+    unit: N·m

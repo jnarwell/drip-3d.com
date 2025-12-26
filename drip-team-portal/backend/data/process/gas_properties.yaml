@@ -1,0 +1,523 @@
+# Source: CoolProp library (NIST-based thermophysical property data)
+# Conditions: T = 298.15 K (25°C), P = 101325 Pa (1 atm)
+# Generated programmatically from CoolProp
+# Note: Some thermal conductivity values from Engineering Toolbox where CoolProp lacks models
+id: gas_properties
+name: Industrial Gas Properties
+category: process
+description: Thermophysical properties of industrial gases at STP (25°C, 1 atm)
+type: table
+source: CoolProp (NIST REFPROP data)
+version: '2.0'
+inputs:
+- name: gas
+  type: discrete
+  unit: none
+  description: Gas name
+  values:
+  # Common industrial
+  - air
+  - nitrogen
+  - oxygen
+  - argon
+  - helium
+  - hydrogen
+  - carbon_dioxide
+  - methane
+  - ethane
+  - propane
+  - ammonia
+  # Noble gases
+  - neon
+  - krypton
+  - xenon
+  # Industrial/process
+  - carbon_monoxide
+  - ethylene
+  - nitrous_oxide
+  - hydrogen_sulfide
+  - sulfur_hexafluoride
+  # Refrigerants
+  - r410a
+  - r22
+  - r134a
+  - r404a
+  - r507a
+outputs:
+- name: M
+  unit: kg/mol
+  description: Molar mass
+- name: rho
+  unit: kg/m³
+  description: Density at 25°C, 1 atm
+- name: cp
+  unit: J/(kg·K)
+  description: Specific heat at constant pressure
+- name: cv
+  unit: J/(kg·K)
+  description: Specific heat at constant volume
+- name: gamma
+  unit: '1'
+  description: Specific heat ratio (cp/cv)
+- name: k
+  unit: W/(m·K)
+  description: Thermal conductivity
+- name: mu
+  unit: Pa·s
+  description: Dynamic viscosity
+- name: R_specific
+  unit: J/(kg·K)
+  description: Specific gas constant
+- name: T_boil
+  unit: K
+  description: Boiling point at 1 atm
+- name: T_crit
+  unit: K
+  description: Critical temperature
+- name: P_crit
+  unit: Pa
+  description: Critical pressure
+resolution:
+  type: table
+  data:
+    # === Common Industrial Gases ===
+    air:
+      M: 0.02897
+      rho: 1.1843
+      cp: 1006.3
+      cv: 717.9
+      gamma: 1.402
+      k: 0.02625
+      mu: 1.845e-05
+      R_specific: 287.0
+      T_boil: 78.9
+      T_crit: 132.5
+      P_crit: 3.79e+06
+    nitrogen:
+      M: 0.02801
+      rho: 1.1452
+      cp: 1041.3
+      cv: 743.1
+      gamma: 1.401
+      k: 0.02584
+      mu: 1.780e-05
+      R_specific: 296.8
+      T_boil: 77.4
+      T_crit: 126.2
+      P_crit: 3.40e+06
+    oxygen:
+      M: 0.03200
+      rho: 1.3088
+      cp: 919.6
+      cv: 658.4
+      gamma: 1.397
+      k: 0.02634
+      mu: 2.055e-05
+      R_specific: 259.8
+      T_boil: 90.2
+      T_crit: 154.6
+      P_crit: 5.05e+06
+    argon:
+      M: 0.03995
+      rho: 1.6339
+      cp: 521.6
+      cv: 312.4
+      gamma: 1.670
+      k: 0.01775
+      mu: 2.262e-05
+      R_specific: 208.1
+      T_boil: 87.3
+      T_crit: 150.7
+      P_crit: 4.86e+06
+    helium:
+      M: 0.00400
+      rho: 0.1635
+      cp: 5193.2
+      cv: 3116.1
+      gamma: 1.667
+      k: 0.15531
+      mu: 1.985e-05
+      R_specific: 2077.3
+      T_boil: 4.2
+      T_crit: 5.2
+      P_crit: 2.28e+05
+    hydrogen:
+      M: 0.00202
+      rho: 0.0823
+      cp: 14306.3
+      cv: 10179.8
+      gamma: 1.405
+      k: 0.18581
+      mu: 8.900e-06
+      R_specific: 4124.5
+      T_boil: 20.4
+      T_crit: 33.1
+      P_crit: 1.30e+06
+    carbon_dioxide:
+      M: 0.04401
+      rho: 1.8080
+      cp: 850.9
+      cv: 657.5
+      gamma: 1.294
+      k: 0.01663
+      mu: 1.491e-05
+      R_specific: 188.9
+      T_boil: 185.2
+      T_crit: 304.1
+      P_crit: 7.38e+06
+    methane:
+      M: 0.01604
+      rho: 0.6569
+      cp: 2231.7
+      cv: 1708.6
+      gamma: 1.306
+      k: 0.03414
+      mu: 1.120e-05
+      R_specific: 518.3
+      T_boil: 111.7
+      T_crit: 190.6
+      P_crit: 4.60e+06
+    ethane:
+      M: 0.03007
+      rho: 1.2385
+      cp: 1757.2
+      cv: 1471.8
+      gamma: 1.194
+      k: 0.02098
+      mu: 9.354e-06
+      R_specific: 276.5
+      T_boil: 184.6
+      T_crit: 305.3
+      P_crit: 4.87e+06
+    propane:
+      M: 0.04410
+      rho: 1.8320
+      cp: 1684.7
+      cv: 1482.5
+      gamma: 1.136
+      k: 0.01831
+      mu: 8.146e-06
+      R_specific: 188.6
+      T_boil: 231.0
+      T_crit: 369.9
+      P_crit: 4.25e+06
+    ammonia:
+      M: 0.01703
+      rho: 0.7035
+      cp: 2163.2
+      cv: 1643.2
+      gamma: 1.316
+      k: 0.02493
+      mu: 1.009e-05
+      R_specific: 488.2
+      T_boil: 239.8
+      T_crit: 405.6
+      P_crit: 1.14e+07
+    # === Noble Gases ===
+    # Thermal conductivity from Engineering Toolbox / CRC Handbook
+    neon:
+      M: 0.02018
+      rho: 0.8245
+      cp: 1030.1
+      cv: 618.0
+      gamma: 1.667
+      k: 0.04917    # Engineering Toolbox
+      mu: 3.175e-05
+      R_specific: 412.0
+      T_boil: 27.1
+      T_crit: 44.5
+      P_crit: 2.68e+06
+    krypton:
+      M: 0.08380
+      rho: 3.4258
+      cp: 248.1
+      cv: 148.9
+      gamma: 1.667
+      k: 0.00949    # Engineering Toolbox
+      mu: 2.537e-05
+      R_specific: 99.2
+      T_boil: 119.7
+      T_crit: 209.5
+      P_crit: 5.53e+06
+    xenon:
+      M: 0.13129
+      rho: 5.3665
+      cp: 158.4
+      cv: 95.0
+      gamma: 1.667
+      k: 0.00565    # Engineering Toolbox
+      mu: 2.301e-05
+      R_specific: 63.3
+      T_boil: 165.1
+      T_crit: 289.7
+      P_crit: 5.84e+06
+    # === Industrial/Process Gases ===
+    carbon_monoxide:
+      M: 0.02801
+      rho: 1.1451
+      cp: 1042.0
+      cv: 745.2
+      gamma: 1.398
+      k: 0.02500    # Engineering Toolbox
+      mu: 1.760e-05
+      R_specific: 296.8
+      T_boil: 81.6
+      T_crit: 132.9
+      P_crit: 3.50e+06
+    ethylene:
+      M: 0.02805
+      rho: 1.1533
+      cp: 1528.3
+      cv: 1223.0
+      gamma: 1.250
+      k: 0.02080    # Engineering Toolbox
+      mu: 1.033e-05
+      R_specific: 296.4
+      T_boil: 169.4
+      T_crit: 282.4
+      P_crit: 5.04e+06
+    nitrous_oxide:
+      M: 0.04401
+      rho: 1.8015
+      cp: 879.2
+      cv: 676.9
+      gamma: 1.299
+      k: 0.01720    # Engineering Toolbox
+      mu: 1.480e-05
+      R_specific: 188.9
+      T_boil: 184.7
+      T_crit: 309.6
+      P_crit: 7.25e+06
+    hydrogen_sulfide:
+      M: 0.03408
+      rho: 1.4019
+      cp: 1011.1
+      cv: 760.8
+      gamma: 1.329
+      k: 0.01420    # Engineering Toolbox
+      mu: 1.260e-05
+      R_specific: 243.9
+      T_boil: 212.9
+      T_crit: 373.4
+      P_crit: 9.00e+06
+    sulfur_hexafluoride:
+      M: 0.14606
+      rho: 6.0383
+      cp: 669.0
+      cv: 609.1
+      gamma: 1.098
+      k: 0.01299
+      mu: 1.522e-05
+      R_specific: 56.9
+      T_boil: 205.8
+      T_crit: 318.7
+      P_crit: 3.75e+06
+    # === HVAC Refrigerants ===
+    r410a:
+      M: 0.07259
+      rho: 3.0063
+      cp: 822.8
+      cv: 699.9
+      gamma: 1.176
+      k: 0.01333
+      mu: 1.288e-05
+      R_specific: 114.5
+      T_boil: 221.7
+      T_crit: 344.5
+      P_crit: 4.90e+06
+    r22:
+      M: 0.08647
+      rho: 3.5868
+      cp: 662.0
+      cv: 558.8
+      gamma: 1.185
+      k: 0.01150
+      mu: 1.378e-05
+      R_specific: 96.2
+      T_boil: 232.3
+      T_crit: 369.3
+      P_crit: 4.99e+06
+    r134a:
+      M: 0.10203
+      rho: 4.2578
+      cp: 851.2
+      cv: 760.4
+      gamma: 1.120
+      k: 0.01339
+      mu: 1.182e-05
+      R_specific: 81.5
+      T_boil: 247.1
+      T_crit: 374.2
+      P_crit: 4.06e+06
+    r404a:
+      M: 0.09760
+      rho: 4.0575
+      cp: 877.4
+      cv: 784.5
+      gamma: 1.118
+      k: 0.01345
+      mu: 1.221e-05
+      R_specific: 85.2
+      T_boil: 226.9
+      T_crit: 345.3
+      P_crit: 3.73e+06
+    r507a:
+      M: 0.09886
+      rho: 4.1089
+      cp: 872.2
+      cv: 780.7
+      gamma: 1.117
+      k: 0.01347
+      mu: 1.218e-05
+      R_specific: 84.1
+      T_boil: 226.4
+      T_crit: 343.8
+      P_crit: 3.70e+06
+views:
+- id: default
+  name: Industrial Gas Properties
+  layout: flat
+  grid:
+    gas:
+      type: list
+      values:
+      # Common industrial
+      - air
+      - nitrogen
+      - oxygen
+      - argon
+      - helium
+      - hydrogen
+      - carbon_dioxide
+      - methane
+      - ethane
+      - propane
+      - ammonia
+      # Noble gases
+      - neon
+      - krypton
+      - xenon
+      # Process/safety
+      - carbon_monoxide
+      - ethylene
+      - nitrous_oxide
+      - hydrogen_sulfide
+      - sulfur_hexafluoride
+      # Refrigerants
+      - r410a
+      - r22
+      - r134a
+      - r404a
+      - r507a
+  columns:
+  - output: M
+    header: M
+    unit: g/mol
+  - output: rho
+    header: ρ
+    unit: kg/m³
+  - output: cp
+    header: cp
+    unit: J/(kg·K)
+  - output: gamma
+    header: γ
+    unit: '1'
+  - output: k
+    header: k
+    unit: mW/(m·K)
+  - output: mu
+    header: μ
+    unit: µPa·s
+  - output: T_boil
+    header: T_boil
+    unit: K
+- id: noble_gases
+  name: Noble Gases
+  layout: flat
+  grid:
+    gas:
+      type: list
+      values:
+      - helium
+      - neon
+      - argon
+      - krypton
+      - xenon
+  columns:
+  - output: M
+    header: M
+    unit: g/mol
+  - output: rho
+    header: ρ
+    unit: kg/m³
+  - output: cp
+    header: cp
+    unit: J/(kg·K)
+  - output: k
+    header: k
+    unit: mW/(m·K)
+  - output: T_boil
+    header: T_boil
+    unit: K
+  - output: T_crit
+    header: T_crit
+    unit: K
+- id: refrigerants
+  name: HVAC Refrigerants
+  layout: flat
+  grid:
+    gas:
+      type: list
+      values:
+      - r410a
+      - r22
+      - r134a
+      - r404a
+      - r507a
+  columns:
+  - output: M
+    header: M
+    unit: g/mol
+  - output: rho
+    header: ρ
+    unit: kg/m³
+  - output: cp
+    header: cp
+    unit: J/(kg·K)
+  - output: T_boil
+    header: T_boil
+    unit: K
+  - output: T_crit
+    header: T_crit
+    unit: K
+  - output: P_crit
+    header: P_crit
+    unit: MPa
+- id: process_gases
+  name: Process & Safety Gases
+  layout: flat
+  grid:
+    gas:
+      type: list
+      values:
+      - carbon_monoxide
+      - ethylene
+      - nitrous_oxide
+      - hydrogen_sulfide
+      - sulfur_hexafluoride
+  columns:
+  - output: M
+    header: M
+    unit: g/mol
+  - output: rho
+    header: ρ
+    unit: kg/m³
+  - output: cp
+    header: cp
+    unit: J/(kg·K)
+  - output: gamma
+    header: γ
+    unit: '1'
+  - output: T_boil
+    header: T_boil
+    unit: K

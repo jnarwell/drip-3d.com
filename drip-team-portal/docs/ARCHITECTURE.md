@@ -94,7 +94,7 @@ backend/
 
 ### Engineering Properties System
 
-The `properties/` service provides standardized engineering data lookups:
+The `properties/` service provides standardized engineering data lookups with 35+ verified data sources:
 
 ```
 backend/app/services/properties/
@@ -108,12 +108,24 @@ backend/app/services/properties/
     └── coolprop.py      # CoolProp library integration
 ```
 
+**Data Sources (backend/data/):**
+
+| Category | Tables | Source Standards |
+|----------|--------|------------------|
+| `fasteners` | bolt_torque, metric_bolt_torque, api6a_flange_torque, unc_threads, unf_threads, metric_threads_coarse, metric_threads_fine, npt_threads, metric_bolt_dimensions | SAE J-429, ISO 898-1, API 6A, ASME B1.1, ASME B1.20.1, ISO 68-1 |
+| `electrical` | wire_gauge_awg | ASTM B258 |
+| `mechanical` | oring_as568, pipe_schedules, keyway_sizes | SAE AS568, ASME B36.10 |
+| `process` | gas_properties (25 gases), steam tables, r134a | CoolProp (NIST REFPROP), IAPWS-IF97 |
+| `tolerances` | iso_286_tolerance, surface_roughness | ISO 286-1 |
+| `material` | 14 temperature-dependent materials | CoolProp, literature values |
+
 **Key Features:**
-- YAML-based property source definitions in `backend/data/`
+- YAML-based property source definitions with verified data sources
 - Case-insensitive discrete input matching
 - CoolProp integration for thermodynamic properties (IAPWS-IF97)
 - `lookup_source_id` pattern for unified LOOKUP across display views
-- Unit conversion for grid display values
+- SI unit storage with frontend conversion via UnitContext
+- All values stored in SI base units (m, kg, s, Pa, etc.)
 
 ## Frontend Architecture
 
@@ -292,4 +304,4 @@ VITE_API_URL=https://backend-production-aa29.up.railway.app
 
 ---
 
-*Last Updated: December 24, 2025*
+*Last Updated: December 26, 2025*

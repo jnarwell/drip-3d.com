@@ -222,10 +222,19 @@ def generate_view(source_id: str, view_id: str) -> dict:
         key = col.output or col.computed or col.header
         if col.phase:
             key = f"{key}_{col.phase}"
+
+        # Get SI unit from source output definition
+        si_unit = ''
+        if col.output:
+            output_def = next((o for o in source.outputs if o.name == col.output), None)
+            if output_def:
+                si_unit = output_def.unit or ''
+
         headers.append({
             'key': key,
             'label': col.header,
-            'unit': col.unit or '',
+            'unit': col.unit or '',  # Display unit from YAML (for fallback)
+            'si_unit': si_unit,  # SI base unit for conversion
             'subscript': col.subscript,
             'is_input': False
         })
@@ -337,9 +346,8 @@ def _generate_row_values(
                 else:
                     value = lookup_fn(source.id, col.output, **all_inputs)
 
-                # Apply unit conversion if column specifies a different unit
-                if col.unit and value is not None:
-                    value = _convert_display_unit(value, col.output, col.unit, source)
+                # Return SI values - frontend handles unit conversion based on user prefs
+                # (Previously converted here, now done in frontend)
 
                 values[col.output + ('_' + col.phase if col.phase else '')] = value
             except Exception as e:

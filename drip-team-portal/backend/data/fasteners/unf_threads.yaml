@@ -1,0 +1,269 @@
+# ASME B1.1 Unified National Fine (UNF) Thread Dimensions
+# Calculated from standard formulas:
+#   d2 = d - 0.6495*P (pitch diameter)
+#   d1 = d - 1.0825*P (minor diameter)
+#   As = (π/4)*((d2+d1)/2)² (stress area)
+id: unf_threads
+name: UNF Thread Dimensions
+category: fasteners
+description: Unified National Fine thread dimensions per ASME B1.1
+type: table
+source: ASME B1.1 (calculated)
+version: '1.0'
+inputs:
+- name: size
+  type: discrete
+  unit: none
+  description: Thread size designation
+  values:
+  - '#0-80'
+  - '#1-72'
+  - '#2-64'
+  - '#3-56'
+  - '#4-48'
+  - '#5-44'
+  - '#6-40'
+  - '#8-36'
+  - '#10-32'
+  - '#12-28'
+  - 1/4-28
+  - 5/16-24
+  - 3/8-24
+  - 7/16-20
+  - 1/2-20
+  - 9/16-18
+  - 5/8-18
+  - 3/4-16
+  - 7/8-14
+  - 1-12
+  - 1-1/8-12
+  - 1-1/4-12
+  - 1-3/8-12
+  - 1-1/2-12
+outputs:
+- name: TPI
+  unit: '1'
+  description: Threads per inch
+- name: pitch
+  unit: m
+  description: Thread pitch
+- name: major_dia
+  unit: m
+  description: Major (nominal) diameter
+- name: pitch_dia
+  unit: m
+  description: Pitch diameter
+- name: minor_dia
+  unit: m
+  description: Minor diameter
+- name: stress_area
+  unit: m²
+  description: Tensile stress area
+resolution:
+  type: table
+  data:
+    '#0-80':
+      TPI: 80
+      pitch: 0.000318
+      major_dia: 0.001524
+      pitch_dia: 0.001318
+      minor_dia: 0.001180
+      stress_area: 1.225e-06
+    '#1-72':
+      TPI: 72
+      pitch: 0.000353
+      major_dia: 0.001854
+      pitch_dia: 0.001625
+      minor_dia: 0.001472
+      stress_area: 1.884e-06
+    '#2-64':
+      TPI: 64
+      pitch: 0.000397
+      major_dia: 0.002184
+      pitch_dia: 0.001927
+      minor_dia: 0.001755
+      stress_area: 2.661e-06
+    '#3-56':
+      TPI: 56
+      pitch: 0.000454
+      major_dia: 0.002515
+      pitch_dia: 0.002220
+      minor_dia: 0.002024
+      stress_area: 3.536e-06
+    '#4-48':
+      TPI: 48
+      pitch: 0.000529
+      major_dia: 0.002845
+      pitch_dia: 0.002501
+      minor_dia: 0.002272
+      stress_area: 4.473e-06
+    '#5-44':
+      TPI: 44
+      pitch: 0.000577
+      major_dia: 0.003175
+      pitch_dia: 0.002800
+      minor_dia: 0.002550
+      stress_area: 5.620e-06
+    '#6-40':
+      TPI: 40
+      pitch: 0.000635
+      major_dia: 0.003505
+      pitch_dia: 0.003093
+      minor_dia: 0.002818
+      stress_area: 6.859e-06
+    '#8-36':
+      TPI: 36
+      pitch: 0.000706
+      major_dia: 0.004166
+      pitch_dia: 0.003707
+      minor_dia: 0.003402
+      stress_area: 9.924e-06
+    '#10-32':
+      TPI: 32
+      pitch: 0.000794
+      major_dia: 0.004826
+      pitch_dia: 0.004310
+      minor_dia: 0.003967
+      stress_area: 1.345e-05
+    '#12-28':
+      TPI: 28
+      pitch: 0.000907
+      major_dia: 0.005486
+      pitch_dia: 0.004897
+      minor_dia: 0.004504
+      stress_area: 1.736e-05
+    1/4-28:
+      TPI: 28
+      pitch: 0.000907
+      major_dia: 0.006350
+      pitch_dia: 0.005761
+      minor_dia: 0.005368
+      stress_area: 2.432e-05
+    5/16-24:
+      TPI: 24
+      pitch: 0.001058
+      major_dia: 0.007938
+      pitch_dia: 0.007250
+      minor_dia: 0.006792
+      stress_area: 3.872e-05
+    3/8-24:
+      TPI: 24
+      pitch: 0.001058
+      major_dia: 0.009525
+      pitch_dia: 0.008838
+      minor_dia: 0.008379
+      stress_area: 5.820e-05
+    7/16-20:
+      TPI: 20
+      pitch: 0.001270
+      major_dia: 0.011112
+      pitch_dia: 0.010288
+      minor_dia: 0.009738
+      stress_area: 7.874e-05
+    1/2-20:
+      TPI: 20
+      pitch: 0.001270
+      major_dia: 0.012700
+      pitch_dia: 0.011875
+      minor_dia: 0.011325
+      stress_area: 1.057e-04
+    9/16-18:
+      TPI: 18
+      pitch: 0.001411
+      major_dia: 0.014287
+      pitch_dia: 0.013371
+      minor_dia: 0.012760
+      stress_area: 1.341e-04
+    5/8-18:
+      TPI: 18
+      pitch: 0.001411
+      major_dia: 0.015875
+      pitch_dia: 0.014958
+      minor_dia: 0.014347
+      stress_area: 1.686e-04
+    3/4-16:
+      TPI: 16
+      pitch: 0.001587
+      major_dia: 0.019050
+      pitch_dia: 0.018019
+      minor_dia: 0.017332
+      stress_area: 2.454e-04
+    7/8-14:
+      TPI: 14
+      pitch: 0.001814
+      major_dia: 0.022225
+      pitch_dia: 0.021047
+      minor_dia: 0.020261
+      stress_area: 3.350e-04
+    1-12:
+      TPI: 12
+      pitch: 0.002117
+      major_dia: 0.025400
+      pitch_dia: 0.024025
+      minor_dia: 0.023109
+      stress_area: 4.362e-04
+    1-1/8-12:
+      TPI: 12
+      pitch: 0.002117
+      major_dia: 0.028575
+      pitch_dia: 0.027200
+      minor_dia: 0.026284
+      stress_area: 5.617e-04
+    1-1/4-12:
+      TPI: 12
+      pitch: 0.002117
+      major_dia: 0.031750
+      pitch_dia: 0.030375
+      minor_dia: 0.029459
+      stress_area: 7.030e-04
+    1-3/8-12:
+      TPI: 12
+      pitch: 0.002117
+      major_dia: 0.034925
+      pitch_dia: 0.033550
+      minor_dia: 0.032634
+      stress_area: 8.601e-04
+    1-1/2-12:
+      TPI: 12
+      pitch: 0.002117
+      major_dia: 0.038100
+      pitch_dia: 0.036725
+      minor_dia: 0.035809
+      stress_area: 1.033e-03
+views:
+- id: default
+  name: UNF Thread Dimensions
+  layout: flat
+  grid:
+    size:
+      type: list
+      values:
+      - '#4-48'
+      - '#6-40'
+      - '#8-36'
+      - '#10-32'
+      - 1/4-28
+      - 5/16-24
+      - 3/8-24
+      - 7/16-20
+      - 1/2-20
+      - 5/8-18
+      - 3/4-16
+      - 7/8-14
+      - 1-12
+  columns:
+  - output: TPI
+    header: TPI
+    unit: '1'
+  - output: major_dia
+    header: Major Ø
+    unit: mm
+  - output: pitch_dia
+    header: Pitch Ø
+    unit: mm
+  - output: minor_dia
+    header: Minor Ø
+    unit: mm
+  - output: stress_area
+    header: Stress Area
+    unit: mm²

@@ -53,8 +53,11 @@ const UNIT_TO_DIMENSION: Record<string, string> = {
   'Pa': 'pressure', 'kPa': 'pressure', 'MPa': 'pressure', 'GPa': 'pressure', 'bar': 'pressure', 'mbar': 'pressure',
   'psi': 'pressure', 'psf': 'pressure', 'inHg': 'pressure', 'inH₂O': 'pressure', 'ksi': 'pressure',
 
-  // Temperature units
-  'K': 'temperature', '°C': 'temperature', '°F': 'temperature', '°R': 'temperature',
+  // Temperature units (with common aliases - avoiding single letters that conflict with other units)
+  'K': 'temperature', 'kelvin': 'temperature',
+  '°C': 'temperature', '℃': 'temperature', 'degC': 'temperature', 'celsius': 'temperature',
+  '°F': 'temperature', '℉': 'temperature', 'degF': 'temperature', 'fahrenheit': 'temperature',
+  '°R': 'temperature', 'rankine': 'temperature',
 
   // Time units
   'ps': 'time', 'ns': 'time', 'μs': 'time', 'ms': 'time', 's': 'time', 'min': 'time',

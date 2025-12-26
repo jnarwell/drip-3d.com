@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../services/api';
-import { PropertySourceSummary, PropertyViewData } from '../../types/resources';
+import { PropertySourceSummary, PropertyViewData, PropertyViewHeader } from '../../types/resources';
+import { useUnits } from '../../contexts/UnitContext';
+import { convertUnit } from '../../utils/unitConversion';
 
 // Category display names
 const CATEGORY_INFO: Record<string, { name: string }> = {
@@ -24,22 +26,18 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 // Format snake_case strings to Title Case (e.g., "flame_cutting" → "Flame Cutting")
-const formatDisplayValue = (value: unknown): string | number => {
-  if (value === null || value === undefined) return '—';
-  if (typeof value === 'number') return Number(value.toPrecision(6));
-  if (typeof value === 'string') {
-    // Check if it looks like a snake_case identifier (lowercase with underscores)
-    if (/^[a-z][a-z0-9_]*$/.test(value)) {
-      return value
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    }
+const formatSnakeCase = (value: string): string => {
+  if (/^[a-z][a-z0-9_]*$/.test(value)) {
+    return value
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
-  return String(value);
+  return value;
 };
 
 const PropertyTables: React.FC = () => {
+  const { getDimensionFromUnit, getUserUnit, unitSettings } = useUnits();
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -123,6 +121,83 @@ const PropertyTables: React.FC = () => {
     }
     return `LOOKUP("${lookupId}", "<output>", ${inputParams})`;
   }, [selectedSourceData]);
+
+  // Get display unit for a header (user preference or fallback to YAML display unit)
+  const getDisplayUnit = useCallback((header: PropertyViewHeader): string => {
+    // Input columns don't get unit conversion
+    if (header.is_input) {
+      return header.unit || '';
+    }
+
+    // Try to get dimension from SI unit first, then from display unit
+    const unitToCheck = header.si_unit || header.unit;
+    if (unitToCheck) {
+      const dimension = getDimensionFromUnit(unitToCheck);
+      if (dimension) {
+        // Use user's preferred unit for this dimension
+        return getUserUnit(dimension);
+      }
+    }
+
+    // Fallback to YAML display unit
+    return header.unit || header.si_unit || '';
+  }, [getDimensionFromUnit, getUserUnit]);
+
+  // Format a value with unit conversion and precision
+  const formatValue = useCallback((
+    value: unknown,
+    header: PropertyViewHeader
+  ): string => {
+    if (value === null || value === undefined) return '—';
+
+    // String values (snake_case formatting)
+    if (typeof value === 'string') {
+      return formatSnakeCase(value);
+    }
+
+    // Non-numeric values
+    if (typeof value !== 'number') {
+      return String(value);
+    }
+
+    // Numeric value - convert and format
+    let displayValue = value;
+    // Use si_unit if available, otherwise fall back to header.unit for source unit
+    const sourceUnit = header.si_unit || header.unit;
+    const displayUnit = getDisplayUnit(header);
+
+    // Convert from source to user's display unit if needed
+    if (sourceUnit && displayUnit && sourceUnit !== displayUnit && !header.is_input) {
+      try {
+        displayValue = convertUnit(value, sourceUnit, displayUnit);
+      } catch {
+        // If conversion fails, use original value
+        displayValue = value;
+      }
+    }
+
+    // Get precision from user settings based on dimension
+    const dimension = sourceUnit ? getDimensionFromUnit(sourceUnit) : null;
+    const setting = dimension ? unitSettings[dimension] : null;
+    const precision = setting?.precision || 0.01;
+
+    // Calculate decimal places from precision
+    const decimalPlaces = Math.max(0, -Math.floor(Math.log10(precision)));
+
+    // Format based on magnitude
+    const absValue = Math.abs(displayValue);
+    if (absValue === 0) {
+      return '0';
+    } else if (absValue >= 1e6 || absValue < 1e-3) {
+      // Scientific notation for very large/small values
+      return displayValue.toExponential(decimalPlaces);
+    } else if (absValue >= 1000) {
+      // Large values - fewer decimal places
+      return displayValue.toFixed(Math.max(0, decimalPlaces - 2));
+    } else {
+      return displayValue.toFixed(decimalPlaces);
+    }
+  }, [getDisplayUnit, getDimensionFromUnit, unitSettings]);
 
   return (
     <div className="space-y-4">
@@ -258,19 +333,22 @@ const PropertyTables: React.FC = () => {
                   <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
-                        {viewData.headers.map((header, idx) => (
-                          <th
-                            key={idx}
-                            className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                          >
-                            <div>{header.label}</div>
-                            {header.unit && (
-                              <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
-                                ({header.unit})
-                              </div>
-                            )}
-                          </th>
-                        ))}
+                        {viewData.headers.map((header, idx) => {
+                          const displayUnit = getDisplayUnit(header);
+                          return (
+                            <th
+                              key={idx}
+                              className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                            >
+                              <div>{header.label}</div>
+                              {displayUnit && (
+                                <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
+                                  ({displayUnit})
+                                </div>
+                              )}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -289,7 +367,7 @@ const PropertyTables: React.FC = () => {
                                     : 'text-gray-600 font-mono'
                                 }`}
                               >
-                                {formatDisplayValue(value)}
+                                {formatValue(value, header)}
                               </td>
                             );
                           })}
@@ -348,19 +426,22 @@ const PropertyTables: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200 table-auto">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    {viewData.headers.map((header, idx) => (
-                      <th
-                        key={idx}
-                        className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
-                      >
-                        <div>{header.label}</div>
-                        {header.unit && (
-                          <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
-                            ({header.unit})
-                          </div>
-                        )}
-                      </th>
-                    ))}
+                    {viewData.headers.map((header, idx) => {
+                      const displayUnit = getDisplayUnit(header);
+                      return (
+                        <th
+                          key={idx}
+                          className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          <div>{header.label}</div>
+                          {displayUnit && (
+                            <div className="text-gray-400 font-normal normal-case whitespace-nowrap">
+                              ({displayUnit})
+                            </div>
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -379,7 +460,7 @@ const PropertyTables: React.FC = () => {
                                 : 'text-gray-600 font-mono'
                             }`}
                           >
-                            {formatDisplayValue(value)}
+                            {formatValue(value, header)}
                           </td>
                         );
                       })}
