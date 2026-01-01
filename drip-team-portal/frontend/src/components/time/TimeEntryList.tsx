@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { useTimeEntries, useDeleteTimeEntry, TimeEntry, TimeBreak, EditHistoryEntry } from '../../hooks/useTimeTracking';
 import EditEntryModal from './EditEntryModal';
+import DateRangeSelector, { DateRange } from './DateRangeSelector';
+
+function getWeekStart() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now);
+  monday.setDate(diff);
+  return monday.toISOString().split('T')[0];
+}
+
+function getToday() {
+  return new Date().toISOString().split('T')[0];
+}
 
 function formatDuration(seconds: number | null | undefined): string {
   if (seconds === null || seconds === undefined) return '--:--';
@@ -56,7 +70,18 @@ interface TimeEntryListProps {
 }
 
 const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
-  const { data, isLoading, error } = useTimeEntries({ ...filters, limit: filters.limit || 50 });
+  const [dateRange, setDateRange] = useState<DateRange>({
+    start_date: getWeekStart(),
+    end_date: getToday(),
+    label: 'Week'
+  });
+
+  const { data, isLoading, error } = useTimeEntries({
+    ...filters,
+    start_date: dateRange.start_date,
+    end_date: dateRange.end_date,
+    limit: filters.limit || 100
+  });
   const deleteEntry = useDeleteTimeEntry();
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
@@ -83,10 +108,16 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
     }
   };
 
+  const entries = data?.entries || [];
+
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-32">
+      <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
+        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        </div>
+        <div className="flex items-center justify-center flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
       </div>
@@ -95,25 +126,33 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="text-center text-red-600">
+      <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
+        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        </div>
+        <div className="flex items-center justify-center flex-1 text-red-600">
           Failed to load time entries
         </div>
       </div>
     );
   }
 
-  const entries = data?.entries || [];
-
   if (entries.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="text-center py-8">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No time entries</h3>
-          <p className="mt-1 text-sm text-gray-500">Start tracking time to see entries here.</p>
+      <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
+        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
+          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        </div>
+        <div className="flex items-center justify-center flex-1">
+          <div className="text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No time entries</h3>
+            <p className="mt-1 text-sm text-gray-500">No entries for {dateRange.label.toLowerCase()}.</p>
+          </div>
         </div>
       </div>
     );
@@ -134,11 +173,12 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b">
+      <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
+        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
+          <DateRangeSelector value={dateRange} onChange={setDateRange} />
         </div>
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
           {sortedDateKeys.map((dateKey) => (
             <div key={dateKey}>
               {/* Date header */}

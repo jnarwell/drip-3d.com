@@ -57,9 +57,6 @@ export default function RecentTeamEntries({ entries, limit = 8 }: RecentTeamEntr
               <span className="w-16 text-sm font-medium text-indigo-600 capitalize">
                 {name}
               </span>
-              <span className="w-20 text-xs text-gray-400">
-                {formatDate(entry.started_at)}
-              </span>
               <span className="w-20 text-sm font-mono whitespace-nowrap">
                 {formatDuration(entry.duration_seconds || 0)}
               </span>
@@ -76,6 +73,9 @@ export default function RecentTeamEntries({ entries, limit = 8 }: RecentTeamEntr
               ) : null}
               <span className="flex-1 text-sm text-gray-600 truncate">
                 {entry.description || entry.linear_issue_title || ''}
+              </span>
+              <span className="w-20 text-xs text-gray-400 text-right">
+                {formatDate(entry.started_at)}
               </span>
             </div>
           );

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTimeSummary, useProjectSummary, useTimeEntries, useUsers } from '../../hooks/useTimeTracking';
 import ActiveTimersSidebar from './ActiveTimersSidebar';
 import TeamStatsRow from './TeamStatsRow';
-import PersonBreakdown from './PersonBreakdown';
 import ProjectBreakdown from './ProjectBreakdown';
+import IssueBreakdown from './IssueBreakdown';
 import RecentTeamEntries from './RecentTeamEntries';
 import DateRangeSelector, { DateRange } from './DateRangeSelector';
 
@@ -25,7 +25,7 @@ export default function TeamTimeView() {
   const [dateRange, setDateRange] = useState<DateRange>({
     start_date: getWeekStart(),
     end_date: getToday(),
-    label: 'This Week'
+    label: 'Week'
   });
 
   const { data: users } = useUsers();
@@ -37,6 +37,10 @@ export default function TeamTimeView() {
     start_date: dateRange.start_date,
     end_date: dateRange.end_date
   });
+  const { data: issueSummary } = useTimeSummary(
+    { start_date: dateRange.start_date, end_date: dateRange.end_date, group_by: 'linear_issue' },
+    false
+  );
   const { data: entries } = useTimeEntries(
     { start_date: dateRange.start_date, end_date: dateRange.end_date },
     false
@@ -80,11 +84,14 @@ export default function TeamTimeView() {
           totalMembers={allUsers.length}
         />
 
-        {/* Two column: Person + Project */}
+        {/* Two column: Project + Issue */}
         <div className="grid grid-cols-2 gap-4">
-          <PersonBreakdown groups={groups} totalSeconds={totalSeconds} />
           <ProjectBreakdown
             groups={projectSummary?.groups || []}
+            totalSeconds={totalSeconds}
+          />
+          <IssueBreakdown
+            groups={issueSummary?.groups || []}
             totalSeconds={totalSeconds}
           />
         </div>

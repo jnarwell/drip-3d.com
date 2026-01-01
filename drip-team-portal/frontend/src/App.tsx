@@ -14,6 +14,8 @@ import Settings from './pages/Settings';
 import Resources from './pages/Resources';
 import PropertyTables from './pages/resources/PropertyTables';
 import Constants from './pages/resources/Constants';
+import Documents from './pages/resources/Documents';
+import Contacts from './pages/resources/Contacts';
 import ModelsList from './pages/ModelsList';
 import ModelBuilder from './pages/ModelBuilder';
 import Analysis from './pages/analysis/Analysis';
@@ -84,6 +86,8 @@ function AppRoutes() {
             <Route index element={<Navigate to="/resources/property-tables" />} />
             <Route path="property-tables" element={<PropertyTables />} />
             <Route path="constants" element={<Constants />} />
+            <Route path="documents" element={<Documents />} />
+            <Route path="contacts" element={<Contacts />} />
           </Route>
         </Route>
       </Routes>

@@ -7,6 +7,8 @@ const Resources: React.FC = () => {
   const navigation = [
     { name: 'Data Tables', href: '/resources/property-tables' },
     { name: 'Constants', href: '/resources/constants' },
+    { name: 'Documents', href: '/resources/documents' },
+    { name: 'Contacts', href: '/resources/contacts' },
   ];
 
   const isActive = (path: string) => {

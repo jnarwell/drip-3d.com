@@ -109,3 +109,96 @@ export const deleteConstant = async (id: number) => {
   const response = await api.delete(`/api/v1/constants/${id}`);
   return response.data;
 };
+
+// Contacts API functions
+export const getContacts = async (filter?: 'all' | 'internal' | 'external', search?: string) => {
+  const params = new URLSearchParams();
+  if (filter && filter !== 'all') {
+    params.append('is_internal', filter === 'internal' ? 'true' : 'false');
+  }
+  if (search) {
+    params.append('search', search);
+  }
+  const response = await api.get(`/api/v1/contacts${params.toString() ? `?${params}` : ''}`);
+  return response.data;
+};
+
+export const createContact = async (contactData: {
+  name: string;
+  organization?: string | null;
+  expertise?: string[];
+  email: string;
+  secondary_email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_internal?: boolean;
+}) => {
+  const response = await api.post('/api/v1/contacts', contactData);
+  return response.data;
+};
+
+export const updateContact = async (id: number, updateData: {
+  name?: string;
+  organization?: string | null;
+  expertise?: string[];
+  email?: string;
+  secondary_email?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+  is_internal?: boolean;
+}) => {
+  const response = await api.patch(`/api/v1/contacts/${id}`, updateData);
+  return response.data;
+};
+
+export const deleteContact = async (id: number) => {
+  const response = await api.delete(`/api/v1/contacts/${id}`);
+  return response.data;
+};
+
+// Documents API functions (uses existing /resources endpoint filtered by doc types)
+export const getDocuments = async (type?: string, tag?: string, search?: string) => {
+  const params = new URLSearchParams();
+  // Filter to document-type resources
+  params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
+  if (type && type !== 'all') {
+    params.set('type', type);
+  }
+  if (tag && tag !== 'all') {
+    params.append('tag', tag);
+  }
+  if (search) {
+    params.append('search', search);
+  }
+  const response = await api.get(`/api/v1/resources?${params.toString()}`);
+  return response.data;
+};
+
+export const createDocument = async (docData: {
+  title: string;
+  resource_type: string;
+  url?: string;
+  google_drive_file_id?: string;
+  tags?: string[];
+  notes?: string | null;
+  component_ids?: number[];
+}) => {
+  const response = await api.post('/api/v1/resources', docData);
+  return response.data;
+};
+
+export const deleteDocument = async (id: number) => {
+  const response = await api.delete(`/api/v1/resources/${id}`);
+  return response.data;
+};
+
+// Google Drive API functions
+export const getDriveFiles = async () => {
+  const response = await api.get('/api/v1/drive/files');
+  return response.data;
+};
+
+export const getDriveFile = async (fileId: string) => {
+  const response = await api.get(`/api/v1/drive/files/${fileId}`);
+  return response.data;
+};
