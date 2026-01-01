@@ -44,12 +44,12 @@ export const useAuthenticatedApi = () => {
       config.url = config.url.replace('http://', 'https://');
     }
     
-    // In dev mode or Railway, use mock authentication
-    if (import.meta.env.DEV || window.location.hostname.includes('railway.app')) {
-      config.headers['x-email'] = 'test@drip-3d.com';
+    // In local dev mode only, use mock authentication
+    if (import.meta.env.DEV) {
+      config.headers['x-email'] = 'user@drip-3d.com';
       config.headers.Authorization = `Bearer mock-dev-token`;
     } else {
-      // Production Auth0 implementation
+      // Production Auth0 implementation (team.drip-3d.com, Railway, etc.)
       try {
         const token = await getAccessTokenSilently({
           authorizationParams: {
