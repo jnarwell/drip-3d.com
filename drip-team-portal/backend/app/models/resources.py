@@ -82,6 +82,9 @@ class Resource(Base):
     tags = Column(JSON, nullable=True)  # ["research", "thermal", "phase-1"]
     notes = Column(Text, nullable=True)
 
+    # Google Drive integration
+    google_drive_file_id = Column(String(100), nullable=True, index=True)  # Drive file ID for linked docs
+
     # Relationships
     components = relationship(
         "Component",
@@ -105,6 +108,7 @@ class Resource(Base):
             "title": self.title,
             "resource_type": self.resource_type,
             "url": self.url,
+            "google_drive_file_id": self.google_drive_file_id,
             "added_by": self.added_by,
             "added_at": self.added_at.isoformat() if self.added_at else None,
             "tags": self.tags,

@@ -26,8 +26,11 @@ from app.api.v1.engineering_properties import router as eng_properties_router
 from app.api.v1.physics_models import router as physics_models_router
 from app.api.v1.websocket import router as websocket_router
 from app.api.v1.time import router as time_router
+from app.api.v1.time_import import router as time_import_router
 from app.api.v1.resources import router as resources_router
 from app.api.v1.users import router as users_router
+from app.api.v1.contacts import router as contacts_router
+from app.api.v1.drive import router as drive_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -95,6 +98,7 @@ async def startup_event():
             from app.models.values import ValueNode, ValueDependency, PropertyValueLink
             from app.models.user_preferences import UserUnitPreference
             from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
+            from app.models.contact import Contact
 
             # Create all tables (safe - won't modify existing tables)
             logging.info("Creating database tables...")
@@ -184,8 +188,11 @@ app.include_router(eng_properties_router, tags=["engineering-properties"])
 app.include_router(physics_models_router, tags=["physics-models"])
 app.include_router(websocket_router, tags=["websocket"])
 app.include_router(time_router, tags=["time"])
+app.include_router(time_import_router, tags=["time-import"])
 app.include_router(resources_router, tags=["resources"])
 app.include_router(users_router, tags=["users"])
+app.include_router(contacts_router, tags=["contacts"])
+app.include_router(drive_router, tags=["drive"])
 
 @app.get("/")
 async def root():

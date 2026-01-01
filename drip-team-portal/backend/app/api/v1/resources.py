@@ -33,6 +33,7 @@ class ResourceCreateRequest(BaseModel):
     title: str
     resource_type: str  # doc, folder, image, link, paper, video, spreadsheet
     url: Optional[str] = None
+    google_drive_file_id: Optional[str] = None  # Google Drive file ID
     tags: Optional[List[str]] = None
     notes: Optional[str] = None
     component_ids: Optional[List[int]] = None
@@ -43,6 +44,7 @@ class ResourceUpdateRequest(BaseModel):
     title: Optional[str] = None
     resource_type: Optional[str] = None
     url: Optional[str] = None
+    google_drive_file_id: Optional[str] = None  # Google Drive file ID
     tags: Optional[List[str]] = None
     notes: Optional[str] = None
     component_ids: Optional[List[int]] = None
@@ -134,6 +136,7 @@ async def create_resource(
         title=data.title,
         resource_type=data.resource_type,
         url=data.url,
+        google_drive_file_id=data.google_drive_file_id,
         tags=data.tags,
         notes=data.notes,
         added_by=user_id
@@ -207,6 +210,9 @@ async def update_resource(
 
     if data.url is not None:
         resource.url = data.url
+
+    if data.google_drive_file_id is not None:
+        resource.google_drive_file_id = data.google_drive_file_id
 
     if data.tags is not None:
         resource.tags = data.tags
