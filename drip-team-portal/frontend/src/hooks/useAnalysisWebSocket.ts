@@ -45,14 +45,15 @@ export function useAnalysisWebSocket() {
     }
 
     // Build WebSocket URL from API URL or fallback to current host
+    // Note: Backend endpoint is /ws/analyses (plural)
     let wsUrl: string;
     if (import.meta.env.DEV) {
-      wsUrl = `ws://localhost:8000/ws/analysis?token=${encodeURIComponent(token)}`;
+      wsUrl = `ws://localhost:8000/ws/analyses?token=${encodeURIComponent(token)}`;
     } else {
       // Use the configured API URL for production
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const wsBaseUrl = apiUrl.replace(/^http/, 'ws').replace(/^https/, 'wss');
-      wsUrl = `${wsBaseUrl}/ws/analysis?token=${encodeURIComponent(token)}`;
+      wsUrl = `${wsBaseUrl}/ws/analyses?token=${encodeURIComponent(token)}`;
     }
 
     console.log('[WebSocket] Connecting to:', wsUrl.replace(token, '***'));
