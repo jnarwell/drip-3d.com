@@ -655,6 +655,7 @@ async def delete_break(
 async def get_summary(
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
+    user_id: Optional[str] = Query(None, description="Filter by user email"),
     group_by: str = Query("user", regex="^(user|component|linear_issue)$"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -664,6 +665,7 @@ async def get_summary(
 
     Groups by: user, component, or linear_issue
     Returns total_seconds and entry_count per group.
+    Optionally filter by user_id (email) to get individual user summary.
     """
     # Build base query for completed entries only
     query = db.query(TimeEntry).filter(TimeEntry.stopped_at.isnot(None))
@@ -692,6 +694,8 @@ async def get_summary(
             results = results.filter(TimeEntry.started_at >= start_datetime)
         if end_date:
             results = results.filter(TimeEntry.started_at <= end_datetime)
+        if user_id:
+            results = results.filter(TimeEntry.user_id == user_id)
 
         results = results.group_by(TimeEntry.user_id).all()
 
@@ -714,6 +718,8 @@ async def get_summary(
             results = results.filter(TimeEntry.started_at >= start_datetime)
         if end_date:
             results = results.filter(TimeEntry.started_at <= end_datetime)
+        if user_id:
+            results = results.filter(TimeEntry.user_id == user_id)
 
         results = results.group_by(TimeEntry.component_id).all()
 
@@ -746,6 +752,8 @@ async def get_summary(
             results = results.filter(TimeEntry.started_at >= start_datetime)
         if end_date:
             results = results.filter(TimeEntry.started_at <= end_datetime)
+        if user_id:
+            results = results.filter(TimeEntry.user_id == user_id)
 
         results = results.group_by(TimeEntry.linear_issue_id, TimeEntry.linear_issue_title).all()
 
