@@ -80,6 +80,8 @@ async def startup_event():
                 except Exception as e:
                     logging.debug(f"Migration skipped (may already exist): {e}")
 
+                # Data wipe removed - was causing entries to be deleted on every restart
+
         else:
             logging.warning("DATABASE_URL not set - skipping table creation")
     except Exception as e:

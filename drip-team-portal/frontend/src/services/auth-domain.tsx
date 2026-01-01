@@ -4,6 +4,10 @@ import { Navigate } from 'react-router-dom';
 import { useIsTeamDomain } from '../hooks/useDomain';
 import { authConfig } from './auth';
 
+// Dev mode email - must match backend security_dev.py
+const DEV_USER_EMAIL = 'user@drip-3d.com';
+const DEV_USER_NAME = 'Local Developer';
+
 // Check if running in local dev mode (localhost without Auth0 config)
 const isLocalDev = () => {
   const hostname = window.location.hostname;
@@ -20,10 +24,25 @@ const MockAuthContext = createContext<{
 }>({
   isAuthenticated: true,
   isLoading: false,
-  user: { email: 'dev@drip-3d.com', name: 'Local Developer' },
+  user: { email: DEV_USER_EMAIL, name: DEV_USER_NAME },
 });
 
 export const useMockAuth = () => useContext(MockAuthContext);
+
+/**
+ * Unified auth hook that works in both dev mode (bypasses Auth0) and production.
+ * Use this instead of useAuth0() directly when you need user info.
+ */
+export const useDevAwareAuth = () => {
+  const mockAuth = useMockAuth();
+  const auth0 = useAuth0();
+
+  // In dev mode, return mock auth; otherwise return Auth0
+  if (isLocalDev()) {
+    return mockAuth;
+  }
+  return auth0;
+};
 
 export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isTeamDomain = useIsTeamDomain();
@@ -41,7 +60,7 @@ export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = 
         value={{
           isAuthenticated: true,
           isLoading: false,
-          user: { email: 'dev@drip-3d.com', name: 'Local Developer' },
+          user: { email: DEV_USER_EMAIL, name: DEV_USER_NAME },
         }}
       >
         {children}

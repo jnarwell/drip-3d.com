@@ -13,6 +13,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 from typing import Optional, List
 from pydantic import BaseModel
+import logging
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timezone, date
 import os
 
@@ -95,6 +98,7 @@ async def start_timer(
     Returns the newly created entry.
     """
     user_id = current_user["email"]
+    print(f"🕐 [TIME] START: user_id={user_id}")
 
     # Handle empty body
     if data is None:
@@ -240,6 +244,7 @@ async def list_entries(
 
     Returns entries sorted by started_at descending (most recent first).
     """
+    print(f"📋 [TIME] LIST: user_id filter={user_id}, backend_user={current_user.get('email')}")
     query = db.query(TimeEntry)
 
     # Apply filters

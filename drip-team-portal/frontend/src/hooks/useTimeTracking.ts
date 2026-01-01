@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useDevAwareAuth } from '../services/auth-domain';
 import { useAuthenticatedApi } from '../services/api';
 
 export interface TimeBreak {
@@ -101,7 +101,7 @@ export function useActiveTimer() {
 
 export function useTimeEntries(filters: TimeEntryFilters = {}, myEntriesOnly = true) {
   const api = useAuthenticatedApi();
-  const { user } = useAuth0();
+  const { user } = useDevAwareAuth();
 
   // Apply current user filter by default (for /time page)
   // Set myEntriesOnly=false for team views
@@ -131,7 +131,7 @@ export function useTimeSummary(
   myEntriesOnly = true
 ) {
   const api = useAuthenticatedApi();
-  const { user } = useAuth0();
+  const { user } = useDevAwareAuth();
 
   // Apply current user filter by default
   const effectiveUserId = myEntriesOnly && user?.email && !filters.user_id
