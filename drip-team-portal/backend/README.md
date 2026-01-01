@@ -37,7 +37,7 @@ backend/
 │   │   └── ...              # More models
 │   ├── services/            # Business logic services
 │   │   ├── value_engine.py  # Expression evaluation with SymPy
-│   │   ├── unit_calculator.py   # Unit propagation
+│   │   ├── model_evaluation.py  # Physics model evaluation
 │   │   ├── materials_project.py # MP API client
 │   │   └── ...              # More services
 │   ├── db/

@@ -1,0 +1,278 @@
+"""
+Equation Parser - SymPy to AST Converter
+
+Parses equation text into a JSON-serializable AST structure.
+Validates that all inputs are in the allowed set.
+"""
+
+from typing import Dict, Any, List, Optional, Set
+import sympy
+from sympy import sympify, Symbol, sqrt, sin, cos, tan, log, exp, pi, E, Abs
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.numbers import (
+    Integer, Float, Rational, Pi, Exp1, NegativeOne, One, Zero, Half
+)
+from sympy.core.symbol import Symbol as SymbolType
+from sympy.functions.elementary.exponential import log as sympy_log, exp as sympy_exp
+from sympy.functions.elementary.miscellaneous import sqrt as sympy_sqrt
+from sympy.functions.elementary.trigonometric import sin as sympy_sin, cos as sympy_cos, tan as sympy_tan
+from sympy.functions.elementary.complexes import Abs as sympy_abs
+
+from .exceptions import EquationParseError, UnknownInputError
+
+
+# Supported functions mapping
+SUPPORTED_FUNCTIONS = {
+    'sqrt': sqrt,
+    'sin': sin,
+    'cos': cos,
+    'tan': tan,
+    'log': log,
+    'ln': log,  # ln is alias for log
+    'exp': exp,
+    'abs': Abs,
+}
+
+# Supported constants
+SUPPORTED_CONSTANTS = {
+    'pi': pi,
+    'e': E,
+}
+
+
+def parse_equation(
+    equation_text: str,
+    allowed_inputs: Optional[List[str]] = None
+) -> Dict[str, Any]:
+    """
+    Parse equation text into a JSON-serializable AST.
+
+    Args:
+        equation_text: The equation string (e.g., "length * CTE * delta_T")
+        allowed_inputs: Optional list of valid input names. If provided,
+                       raises UnknownInputError for undefined inputs.
+
+    Returns:
+        Dict with structure:
+        {
+            "original": "length * CTE * delta_T",
+            "ast": {
+                "type": "mul",
+                "operands": [
+                    {"type": "input", "name": "length"},
+                    {"type": "input", "name": "CTE"},
+                    {"type": "input", "name": "delta_T"}
+                ]
+            },
+            "inputs": ["length", "CTE", "delta_T"],
+            "sympy_expr": <SymPy expression object>
+        }
+
+    Raises:
+        EquationParseError: Invalid syntax
+        UnknownInputError: References undefined input (if allowed_inputs provided)
+    """
+    if not equation_text or not equation_text.strip():
+        raise EquationParseError("Empty equation")
+
+    equation_text = equation_text.strip()
+
+    # Build local dict for sympify
+    local_dict = {}
+    local_dict.update(SUPPORTED_FUNCTIONS)
+    local_dict.update(SUPPORTED_CONSTANTS)
+
+    try:
+        # Parse with SymPy
+        sympy_expr = sympify(equation_text, locals=local_dict)
+    except Exception as e:
+        raise EquationParseError(f"Failed to parse equation: {e}")
+
+    # Extract all input symbols from the expression
+    found_inputs = _extract_inputs(sympy_expr)
+
+    # Validate inputs if allowed_inputs provided
+    if allowed_inputs is not None:
+        allowed_set = set(allowed_inputs)
+        for inp in found_inputs:
+            if inp not in allowed_set:
+                raise UnknownInputError(inp, allowed_inputs)
+
+    # Convert SymPy expression to AST
+    ast = _sympy_to_ast(sympy_expr)
+
+    return {
+        "original": equation_text,
+        "ast": ast,
+        "inputs": sorted(found_inputs),
+        "sympy_expr": sympy_expr,  # Keep for LaTeX generation
+    }
+
+
+def _extract_inputs(expr) -> Set[str]:
+    """Extract all input variable names from a SymPy expression."""
+    inputs = set()
+
+    # Get all free symbols (variables that aren't defined constants)
+    for symbol in expr.free_symbols:
+        name = str(symbol)
+        # Skip if it's a known constant
+        if name not in SUPPORTED_CONSTANTS:
+            inputs.add(name)
+
+    return inputs
+
+
+def _sympy_to_ast(expr) -> Dict[str, Any]:
+    """
+    Convert a SymPy expression to a JSON-serializable AST dict.
+
+    AST node types:
+    - {"type": "const", "value": 3.14}
+    - {"type": "input", "name": "length"}
+    - {"type": "add", "operands": [...]}
+    - {"type": "mul", "operands": [...]}
+    - {"type": "pow", "base": {...}, "exponent": {...}}
+    - {"type": "neg", "operand": {...}}
+    - {"type": "func", "name": "sqrt", "arg": {...}}
+    """
+    # Handle numbers
+    if isinstance(expr, (Integer, Float, Rational)):
+        return {"type": "const", "value": float(expr)}
+
+    if isinstance(expr, Zero):
+        return {"type": "const", "value": 0.0}
+
+    if isinstance(expr, One):
+        return {"type": "const", "value": 1.0}
+
+    if isinstance(expr, NegativeOne):
+        return {"type": "const", "value": -1.0}
+
+    if isinstance(expr, Half):
+        return {"type": "const", "value": 0.5}
+
+    # Handle pi and e constants
+    if isinstance(expr, Pi):
+        return {"type": "const", "value": 3.141592653589793, "name": "pi"}
+
+    if isinstance(expr, Exp1):
+        return {"type": "const", "value": 2.718281828459045, "name": "e"}
+
+    # Handle symbols (input variables)
+    if isinstance(expr, SymbolType):
+        name = str(expr)
+        if name in SUPPORTED_CONSTANTS:
+            # It's pi or e used as symbol
+            if name == 'pi':
+                return {"type": "const", "value": 3.141592653589793, "name": "pi"}
+            elif name == 'e':
+                return {"type": "const", "value": 2.718281828459045, "name": "e"}
+        return {"type": "input", "name": name}
+
+    # Handle addition
+    if isinstance(expr, Add):
+        operands = [_sympy_to_ast(arg) for arg in expr.args]
+        return {"type": "add", "operands": operands}
+
+    # Handle multiplication
+    if isinstance(expr, Mul):
+        operands = []
+        for arg in expr.args:
+            # Check for negation (multiplication by -1)
+            if isinstance(arg, NegativeOne):
+                # Skip -1, we'll handle it as negation of the whole thing
+                continue
+            operands.append(_sympy_to_ast(arg))
+
+        # If there was a -1 factor, wrap in negation
+        if any(isinstance(arg, NegativeOne) for arg in expr.args):
+            if len(operands) == 1:
+                return {"type": "neg", "operand": operands[0]}
+            else:
+                return {"type": "neg", "operand": {"type": "mul", "operands": operands}}
+
+        if len(operands) == 1:
+            return operands[0]
+        return {"type": "mul", "operands": operands}
+
+    # Handle power/exponentiation
+    if isinstance(expr, Pow):
+        base = _sympy_to_ast(expr.args[0])
+        exponent = _sympy_to_ast(expr.args[1])
+
+        # Check for sqrt (power of 1/2)
+        if isinstance(expr.args[1], Rational) and expr.args[1] == Rational(1, 2):
+            return {"type": "func", "name": "sqrt", "arg": base}
+
+        # Check for negative exponent (division)
+        if isinstance(expr.args[1], NegativeOne):
+            return {"type": "div", "numerator": {"type": "const", "value": 1.0}, "denominator": base}
+
+        return {"type": "pow", "base": base, "exponent": exponent}
+
+    # Handle functions
+    func_name = type(expr).__name__
+
+    # sqrt
+    if func_name == 'sqrt' or (isinstance(expr, Pow) and expr.args[1] == Rational(1, 2)):
+        return {"type": "func", "name": "sqrt", "arg": _sympy_to_ast(expr.args[0])}
+
+    # exp
+    if func_name == 'exp':
+        return {"type": "func", "name": "exp", "arg": _sympy_to_ast(expr.args[0])}
+
+    # log/ln
+    if func_name == 'log':
+        return {"type": "func", "name": "ln", "arg": _sympy_to_ast(expr.args[0])}
+
+    # Trig functions
+    if func_name == 'sin':
+        return {"type": "func", "name": "sin", "arg": _sympy_to_ast(expr.args[0])}
+
+    if func_name == 'cos':
+        return {"type": "func", "name": "cos", "arg": _sympy_to_ast(expr.args[0])}
+
+    if func_name == 'tan':
+        return {"type": "func", "name": "tan", "arg": _sympy_to_ast(expr.args[0])}
+
+    # abs
+    if func_name == 'Abs':
+        return {"type": "func", "name": "abs", "arg": _sympy_to_ast(expr.args[0])}
+
+    # Fallback for unhandled types
+    raise EquationParseError(f"Unsupported expression type: {func_name}")
+
+
+def get_ast_inputs(ast: Dict[str, Any]) -> Set[str]:
+    """
+    Extract all input names from an AST.
+    Useful for validation without re-parsing.
+    """
+    inputs = set()
+    _collect_inputs(ast, inputs)
+    return inputs
+
+
+def _collect_inputs(node: Dict[str, Any], inputs: Set[str]):
+    """Recursively collect input names from AST nodes."""
+    node_type = node.get("type")
+
+    if node_type == "input":
+        inputs.add(node["name"])
+    elif node_type in ("add", "mul"):
+        for operand in node.get("operands", []):
+            _collect_inputs(operand, inputs)
+    elif node_type == "pow":
+        _collect_inputs(node["base"], inputs)
+        _collect_inputs(node["exponent"], inputs)
+    elif node_type == "div":
+        _collect_inputs(node["numerator"], inputs)
+        _collect_inputs(node["denominator"], inputs)
+    elif node_type == "neg":
+        _collect_inputs(node["operand"], inputs)
+    elif node_type == "func":
+        _collect_inputs(node["arg"], inputs)
+    # "const" nodes have no inputs to collect

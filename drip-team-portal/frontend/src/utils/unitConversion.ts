@@ -392,3 +392,55 @@ export function formatRangeWithUnit(
   // Regular formatting with exact decimal places
   return `${min.toFixed(decimalPlaces)} - ${max.toFixed(decimalPlaces)} ${unit}`;
 }
+
+// ============== API Sync (Optional) ==============
+// These functions can be used to fetch conversion data from the backend API
+// The backend is the single source of truth for unit definitions
+
+interface BulkUnitsResponse {
+  conversions: Record<string, { factor: number; offset: number }>;
+  aliases: Record<string, string>;
+  base_units: Record<string, string>;
+  units: Record<string, { name: string; quantity_type: string; is_base_unit: boolean }>;
+}
+
+let _apiConversions: BulkUnitsResponse | null = null;
+
+/**
+ * Fetch unit conversion data from the backend API.
+ * This can be used to sync frontend with backend or for dynamic unit loading.
+ */
+export async function fetchUnitConversions(): Promise<BulkUnitsResponse | null> {
+  try {
+    const response = await fetch('/api/v1/units/bulk');
+    if (!response.ok) {
+      console.warn('Failed to fetch unit conversions from API');
+      return null;
+    }
+    _apiConversions = await response.json();
+    return _apiConversions;
+  } catch (error) {
+    console.warn('Error fetching unit conversions:', error);
+    return null;
+  }
+}
+
+/**
+ * Get conversion factor, preferring API data if available.
+ * Falls back to hardcoded TO_BASE_CONVERSIONS.
+ */
+export function getConversionFactor(unit: string): number {
+  // Try API data first
+  if (_apiConversions?.conversions[unit]) {
+    return _apiConversions.conversions[unit].factor;
+  }
+  // Fall back to hardcoded
+  return TO_BASE_CONVERSIONS[unit] ?? 1;
+}
+
+/**
+ * Check if API conversions have been loaded.
+ */
+export function hasApiConversions(): boolean {
+  return _apiConversions !== null;
+}

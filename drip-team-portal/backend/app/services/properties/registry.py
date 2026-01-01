@@ -212,6 +212,7 @@ def generate_view(source_id: str, view_id: str) -> dict:
             'key': input_name,
             'label': label,
             'unit': input_unit,
+            'si_unit': input_unit,  # Input units are already in SI
             'subscript': None,
             'is_input': True
         })
@@ -369,48 +370,29 @@ def _frange(start: float, end: float, step: float):
         current += step
 
 
-# Unit conversion factors: (from_unit, to_unit) -> multiplier
-# Values in SI base units are multiplied by this factor to get display units
-_UNIT_CONVERSIONS = {
-    # Energy
-    ('J', 'kJ'): 0.001,
-    ('J', 'MJ'): 0.000001,
-    ('kJ', 'J'): 1000,
-    ('MJ', 'J'): 1000000,
-    # Specific energy (enthalpy, internal energy)
-    ('J/kg', 'kJ/kg'): 0.001,
-    ('J/kg', 'MJ/kg'): 0.000001,
-    ('kJ/kg', 'J/kg'): 1000,
-    # Specific entropy / specific heat
-    ('J/(kg·K)', 'kJ/(kg·K)'): 0.001,
-    ('kJ/(kg·K)', 'J/(kg·K)'): 1000,
-    # Pressure
-    ('Pa', 'kPa'): 0.001,
-    ('Pa', 'MPa'): 0.000001,
-    ('Pa', 'bar'): 0.00001,
-    ('kPa', 'Pa'): 1000,
-    ('MPa', 'Pa'): 1000000,
-    ('bar', 'Pa'): 100000,
-    # Volume
-    ('m³', 'L'): 1000,
-    ('L', 'm³'): 0.001,
-    ('m³/kg', 'L/kg'): 1000,
-    ('L/kg', 'm³/kg'): 0.001,
-    # Density
-    ('kg/m³', 'g/cm³'): 0.001,
-    ('g/cm³', 'kg/m³'): 1000,
-    # Temperature (note: offset conversions not handled here)
-    # Length
-    ('m', 'mm'): 1000,
-    ('m', 'cm'): 100,
-    ('mm', 'm'): 0.001,
-    ('cm', 'm'): 0.01,
-    # Power
-    ('W', 'kW'): 0.001,
-    ('W', 'MW'): 0.000001,
-    ('kW', 'W'): 1000,
-    ('MW', 'W'): 1000000,
-}
+# Import centralized unit constants
+from app.services.unit_constants import UNIT_TO_SI
+
+
+def _get_conversion_factor(from_unit: str, to_unit: str) -> float:
+    """
+    Get conversion factor from one unit to another.
+
+    Computed dynamically from UNIT_TO_SI factors.
+    Returns 1.0 if units are unknown or same.
+    """
+    if from_unit == to_unit:
+        return 1.0
+
+    from_factor = UNIT_TO_SI.get(from_unit, 1.0)
+    to_factor = UNIT_TO_SI.get(to_unit, 1.0)
+
+    if to_factor == 0:
+        return 1.0
+
+    # from_unit to SI, then SI to to_unit
+    # value_in_to = (value_in_from * from_factor) / to_factor
+    return from_factor / to_factor
 
 
 def _convert_display_unit(
@@ -422,7 +404,7 @@ def _convert_display_unit(
     """
     Convert a value from SI base unit to display unit.
 
-    Uses simple multiplier conversions for common engineering prefixes.
+    Uses centralized unit conversion factors from unit_constants.
     This is for display purposes only - the formula system uses UnitEngine
     for full dimensional analysis.
     """
@@ -438,14 +420,9 @@ def _convert_display_unit(
     if si_unit == display_unit:
         return value
 
-    # Look up conversion
-    conversion_key = (si_unit, display_unit)
-    if conversion_key in _UNIT_CONVERSIONS:
-        return value * _UNIT_CONVERSIONS[conversion_key]
-
-    # No conversion found - return as-is with warning
-    # In production, might want to log this
-    return value
+    # Compute conversion factor dynamically
+    factor = _get_conversion_factor(si_unit, display_unit)
+    return value * factor
 
 
 def reload_sources():

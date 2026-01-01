@@ -297,7 +297,8 @@ const ExpressionInput: React.FC<ExpressionInputProps> = ({
       // Before the dot - search entities
       fetchEntitySuggestion(ref.text);
     }
-  }, [value, getCurrentReference, fetchEntitySuggestion, fetchPropertySuggestion]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   // Handle Tab to accept ghost text
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {

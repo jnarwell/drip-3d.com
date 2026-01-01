@@ -49,25 +49,15 @@ async def get_critical_path(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get tests on critical path (blocking other tests)"""
-    try:
-        print("🔧 ENTERED critical_path endpoint")
-        print(f"🔧 current_user type: {type(current_user)}")
-        print(f"🔧 current_user value: {current_user}")
-        print(f"🔧 DEV_MODE environment: {os.getenv('DEV_MODE')}")
-        
-        # Return early for debugging - skip database calls
-        return {"debug": "endpoint_reached", "user": current_user, "dev_mode": os.getenv("DEV_MODE")}
-        
-    except Exception as e:
-        print(f"❌ Error in critical_path: {str(e)}")
-        print(f"❌ Error type: {type(e)}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {str(e)}"
-        )
+    """Get tests on critical path (blocking other tests).
+
+    NOTE: Test system being rebuilt - this endpoint is a placeholder.
+    """
+    # TODO: Implement proper critical path analysis when test system is rebuilt
+    return {
+        "message": "Critical path analysis not yet implemented",
+        "tests": []
+    }
 
 @router.get("/{test_id}", response_model=TestResponse)
 async def get_test(

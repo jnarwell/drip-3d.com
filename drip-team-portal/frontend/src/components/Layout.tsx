@@ -11,6 +11,8 @@ const Layout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Components', href: '/components' },
+    { name: 'Models', href: '/models' },
+    { name: 'Analysis', href: '/analysis' },
     { name: 'Tests', href: '/tests' },
     { name: 'Reports', href: '/reports' },
     { name: 'Resources', href: '/resources' },

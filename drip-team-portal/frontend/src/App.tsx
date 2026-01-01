@@ -14,6 +14,10 @@ import Settings from './pages/Settings';
 import Resources from './pages/Resources';
 import PropertyTables from './pages/resources/PropertyTables';
 import Constants from './pages/resources/Constants';
+import ModelsList from './pages/ModelsList';
+import ModelBuilder from './pages/ModelBuilder';
+import Analysis from './pages/analysis/Analysis';
+import AnalysisCreator from './pages/analysis/AnalysisCreator';
 
 // Company pages
 import HomePage from './pages/company/HomePage';
@@ -66,6 +70,12 @@ function AppRoutes() {
           <Route path="components" element={<ComponentRegistry />} />
           <Route path="components/:componentId" element={<ComponentDetailPage />} />
           <Route path="tests" element={<TestCampaign />} />
+          <Route path="models" element={<ModelsList />} />
+          <Route path="models/new" element={<ModelBuilder />} />
+          <Route path="models/:modelId/edit" element={<ModelBuilder />} />
+          <Route path="analysis" element={<Analysis />} />
+          <Route path="analysis/new" element={<AnalysisCreator />} />
+          <Route path="analysis/:analysisId/edit" element={<AnalysisCreator />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="resources" element={<Resources />}>

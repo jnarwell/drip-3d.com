@@ -13,6 +13,113 @@ Examples:
   - #cmp001.thermal_conductivity
   - #steel.density
   - #table1.lookup(temp=100)
+
+================================================================================
+ValueNode Expression Storage Format
+================================================================================
+
+ValueNodes with node_type=EXPRESSION store parsed expressions in the
+`parsed_expression` JSON field. This enables fast re-evaluation without
+re-parsing.
+
+Property References (#refs)
+---------------------------
+References to component/material properties are extracted and stored as
+placeholders:
+
+    Expression: "#PART.length + #MAT.density * 2"
+
+    parsed_expression = {
+        "original": "#PART.length + #MAT.density * 2",
+        "modified": "__ref_0__ + __ref_1__ * 2",
+        "placeholders": {
+            "__ref_0__": "PART.length",
+            "__ref_1__": "MAT.density"
+        },
+        "references": ["PART.length", "MAT.density"],
+        "valid": True
+    }
+
+LOOKUP() Function Calls
+-----------------------
+Table lookups are extracted and stored separately for evaluation:
+
+    Expression: "LOOKUP(\"steam\", \"h\", T=373)"
+
+    parsed_expression = {
+        "original": "LOOKUP(\"steam\", \"h\", T=373)",
+        "modified": "__lookup_0__",
+        "lookup_calls": {
+            "__lookup_0__": {
+                "table_code": "steam",
+                "output_column": "h",
+                "key_column": "T",
+                "key_value_expr": "373"
+            }
+        },
+        "valid": True
+    }
+
+MODEL() Function Calls
+----------------------
+Physics model evaluations are extracted similarly to LOOKUP():
+
+    Expression: "#PART.length + MODEL(\"Thermal Expansion\", CTE: 2.3e-5, delta_T: 100, L0: 1m)"
+
+    parsed_expression = {
+        "original": "#PART.length + MODEL(\"Thermal Expansion\", CTE: 2.3e-5, delta_T: 100, L0: 1m)",
+        "modified": "__ref_0__ + __model_0__",
+        "placeholders": {
+            "__ref_0__": "PART.length"
+        },
+        "model_calls": {
+            "__model_0__": {
+                "model_name": "Thermal Expansion",
+                "bindings": {
+                    "CTE": "2.3e-5",
+                    "delta_T": "100",
+                    "L0": "1m"
+                },
+                "output_name": null
+            }
+        },
+        "valid": True
+    }
+
+MODEL() bindings can contain:
+- Literal numbers: "100", "2.3e-5"
+- Literals with units: "1m", "25°C", "100Pa"
+- Property references: "#MAT.cte"
+- Expressions: "#PART.temp - 273.15"
+- Nested LOOKUP(): "LOOKUP(\"steam\", \"h\", T=373)"
+
+Multi-output models use the output parameter:
+
+    MODEL("Rectangle", length: 5, width: 3, output: "area")
+
+    model_calls = {
+        "__model_0__": {
+            "model_name": "Rectangle",
+            "bindings": {"length": "5", "width": "3"},
+            "output_name": "area"
+        }
+    }
+
+Evaluation Flow
+---------------
+1. Parse expression → extract #refs, LOOKUP(), MODEL() calls
+2. Create ValueNode with parsed_expression JSON
+3. Create ValueDependency records for #ref sources
+4. When computing:
+   a. Resolve #refs to float values
+   b. Evaluate LOOKUP() calls using table lookup service
+   c. Evaluate MODEL() calls using evaluate_inline_model()
+   d. Substitute all placeholders with values
+   e. Evaluate final expression with SymPy
+   f. Store result in computed_value
+5. Mark dependents stale when sources change
+
+================================================================================
 """
 
 from typing import Optional, List, Dict, Any, Set, Tuple
@@ -80,6 +187,174 @@ LOOKUP_PATTERN = re.compile(
     r'LOOKUP\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*,\s*([a-zA-Z][a-zA-Z0-9_]*)\s*=\s*([^)]+)\s*\)',
     re.UNICODE
 )
+
+# Regex for MODEL function calls - simple pattern to find MODEL( start
+# Full extraction done by _extract_model_calls() with proper paren matching
+MODEL_START_PATTERN = re.compile(r'MODEL\s*\(', re.UNICODE)
+
+
+def _extract_model_calls(expr: str) -> List[Dict[str, Any]]:
+    """
+    Extract MODEL() calls from expression with proper parenthesis matching.
+
+    Handles nested MODEL() and LOOKUP() calls in bindings:
+        MODEL("A", x: MODEL("B", y: 1))  -> extracts both correctly
+
+    Works inside-out: extracts innermost MODEL() calls first so nested
+    calls are replaced before outer calls are processed.
+
+    Args:
+        expr: Expression string containing MODEL() calls
+
+    Returns:
+        List of dicts with 'full_match', 'model_name', 'params_str', 'start', 'end'
+        Ordered from innermost to outermost for proper replacement.
+    """
+    results = []
+    working_expr = expr
+
+    # Keep extracting until no more MODEL() calls found
+    while True:
+        # Find MODEL( start positions
+        match = MODEL_START_PATTERN.search(working_expr)
+        if not match:
+            break
+
+        start_idx = match.start()
+        paren_start = match.end() - 1  # Position of opening (
+
+        # Find matching closing paren with proper nesting
+        depth = 1
+        pos = paren_start + 1
+        in_string = False
+        string_char = None
+
+        while pos < len(working_expr) and depth > 0:
+            char = working_expr[pos]
+
+            # Handle string literals
+            if char in ('"', "'") and not in_string:
+                in_string = True
+                string_char = char
+            elif char == string_char and in_string:
+                # Check for escaped quote
+                if pos > 0 and working_expr[pos-1] != '\\':
+                    in_string = False
+                    string_char = None
+            elif not in_string:
+                if char == '(':
+                    depth += 1
+                elif char == ')':
+                    depth -= 1
+            pos += 1
+
+        if depth != 0:
+            # Unbalanced parentheses - skip this match
+            # Replace just "MODEL" to prevent infinite loop
+            working_expr = working_expr[:start_idx] + "_MODEL_" + working_expr[start_idx+5:]
+            continue
+
+        end_idx = pos
+        full_match = working_expr[start_idx:end_idx]
+
+        # Extract model name and params from the matched string
+        # Format: MODEL("name", params...) or MODEL("name")
+        inner = full_match[full_match.index('(')+1:-1].strip()  # Content inside parens
+
+        # Find the model name (first quoted string)
+        name_match = re.match(r'\s*"([^"]+)"', inner)
+        if not name_match:
+            # Invalid format - skip
+            working_expr = working_expr[:start_idx] + "_MODEL_" + working_expr[start_idx+5:]
+            continue
+
+        model_name = name_match.group(1)
+        params_str = inner[name_match.end():].strip()
+
+        # Remove leading comma from params if present
+        if params_str.startswith(','):
+            params_str = params_str[1:].strip()
+
+        results.append({
+            'full_match': full_match,
+            'model_name': model_name,
+            'params_str': params_str,
+            'start': start_idx,
+            'end': end_idx,
+        })
+
+        # Replace this MODEL() with a placeholder to find outer ones
+        placeholder = f"__MODEL_EXTRACTED_{len(results)-1}__"
+        working_expr = working_expr[:start_idx] + placeholder + working_expr[end_idx:]
+
+    return results
+
+
+def _split_model_params(params_str: str) -> list:
+    """
+    Split MODEL() parameter string by commas, respecting nested parentheses.
+
+    Handles cases like: a: 1, b: MODEL("X", c: 2), d: 3
+    Don't split on commas inside nested MODEL() or LOOKUP() calls.
+
+    Args:
+        params_str: Parameter string like "CTE: 2.3e-5, delta_T: 100, output: \"delta_L\""
+
+    Returns:
+        List of parameter strings like ["CTE: 2.3e-5", "delta_T: 100", "output: \"delta_L\""]
+    """
+    if not params_str:
+        return []
+
+    params = []
+    current = ""
+    depth = 0
+    in_string = False
+    string_char = None
+
+    for char in params_str:
+        if char in ('"', "'") and not in_string:
+            in_string = True
+            string_char = char
+        elif char == string_char and in_string:
+            in_string = False
+            string_char = None
+        elif char == '(' and not in_string:
+            depth += 1
+        elif char == ')' and not in_string:
+            depth -= 1
+        elif char == ',' and depth == 0 and not in_string:
+            if current.strip():
+                params.append(current.strip())
+            current = ""
+            continue
+        current += char
+
+    if current.strip():
+        params.append(current.strip())
+
+    return params
+
+
+def _parse_model_binding(binding_str: str) -> tuple:
+    """
+    Parse a single MODEL() binding like "CTE: 2.3e-5" or "output: \"delta_L\"".
+
+    Args:
+        binding_str: String like "CTE: 2.3e-5" or "output: \"delta_L\""
+
+    Returns:
+        Tuple of (key, value) where value is the raw string expression
+    """
+    # Find the first colon (key: value separator)
+    colon_idx = binding_str.find(':')
+    if colon_idx == -1:
+        raise ValueError(f"Invalid MODEL() binding (missing ':'): {binding_str}")
+
+    key = binding_str[:colon_idx].strip()
+    value = binding_str[colon_idx + 1:].strip()
+
+    return (key, value)
 
 
 class ExpressionError(Exception):
@@ -273,126 +548,15 @@ class ValueEngine:
 
     # ==================== EXPRESSION PARSING ====================
 
-    # SI base units for each dimension
-    DIMENSION_SI_UNITS = {
-        'length': 'm',
-        'area': 'm²',
-        'volume': 'm³',
-        'mass': 'kg',
-        'force': 'N',
-        'pressure': 'Pa',
-        'temperature': 'K',
-        'time': 's',
-        'frequency': 'Hz',
-        'energy': 'J',
-        'power': 'W',
-        'torque': 'N·m',
-        'current': 'A',
-        'voltage': 'V',
-        'resistance': 'Ω',
-        'angle': 'rad',
-        'velocity': 'm/s',
-        'acceleration': 'm/s²',
-        'density': 'kg/m³',
-    }
-
-    # Map unit symbols to their dimension
-    UNIT_TO_DIMENSION = {
-        # Length
-        'nm': 'length', 'μm': 'length', 'mm': 'length', 'cm': 'length', 'm': 'length', 'km': 'length',
-        'in': 'length', 'ft': 'length',
-        # Area
-        'mm²': 'area', 'cm²': 'area', 'm²': 'area', 'km²': 'area', 'ha': 'area', 'in²': 'area', 'ft²': 'area',
-        # Volume
-        'mm³': 'volume', 'cm³': 'volume', 'mL': 'volume', 'L': 'volume', 'm³': 'volume',
-        'in³': 'volume', 'ft³': 'volume', 'gal': 'volume',
-        # Mass
-        'μg': 'mass', 'mg': 'mass', 'g': 'mass', 'kg': 'mass', 't': 'mass', 'oz': 'mass', 'lb': 'mass',
-        # Force
-        'μN': 'force', 'mN': 'force', 'N': 'force', 'kN': 'force', 'MN': 'force', 'lbf': 'force',
-        # Pressure
-        'Pa': 'pressure', 'kPa': 'pressure', 'MPa': 'pressure', 'GPa': 'pressure',
-        'bar': 'pressure', 'mbar': 'pressure', 'psi': 'pressure', 'ksi': 'pressure',
-        # Temperature (with common aliases)
-        'K': 'temperature', 'kelvin': 'temperature',
-        '°C': 'temperature', '℃': 'temperature', 'degC': 'temperature', 'celsius': 'temperature',
-        '°F': 'temperature', '℉': 'temperature', 'degF': 'temperature', 'fahrenheit': 'temperature',
-        '°R': 'temperature', 'rankine': 'temperature',
-        # Time
-        'ps': 'time', 'ns': 'time', 'μs': 'time', 'ms': 'time', 's': 'time',
-        'min': 'time', 'h': 'time', 'd': 'time', 'yr': 'time',
-        # Frequency
-        'Hz': 'frequency', 'kHz': 'frequency', 'MHz': 'frequency', 'GHz': 'frequency',
-        # Energy
-        'J': 'energy', 'kJ': 'energy', 'MJ': 'energy', 'Wh': 'energy', 'kWh': 'energy', 'BTU': 'energy',
-        # Power
-        'W': 'power', 'mW': 'power', 'kW': 'power', 'MW': 'power', 'hp': 'power',
-        # Torque
-        'N·m': 'torque', 'kN·m': 'torque', 'lbf·ft': 'torque',
-        # Electrical
-        'A': 'current', 'mA': 'current', 'μA': 'current',
-        'V': 'voltage', 'mV': 'voltage', 'kV': 'voltage',
-        'Ω': 'resistance', 'kΩ': 'resistance', 'MΩ': 'resistance',
-        # Angle
-        'rad': 'angle', 'mrad': 'angle', 'deg': 'angle', '°': 'angle',
-        # Velocity
-        'm/s': 'velocity', 'km/h': 'velocity', 'ft/s': 'velocity', 'mph': 'velocity',
-        # Acceleration
-        'm/s²': 'acceleration',
-        # Density
-        'kg/m³': 'density', 'g/cm³': 'density', 'lb/ft³': 'density',
-    }
-
-    # Unit conversion factors to SI base units
-    UNIT_TO_SI = {
-        # Length -> meters
-        'nm': 1e-9, 'μm': 1e-6, 'mm': 0.001, 'cm': 0.01, 'm': 1, 'km': 1000,
-        'in': 0.0254, 'ft': 0.3048,
-        # Area -> m²
-        'mm²': 1e-6, 'cm²': 1e-4, 'm²': 1, 'km²': 1e6, 'ha': 1e4,
-        'in²': 0.00064516, 'ft²': 0.092903,
-        # Volume -> m³
-        'mm³': 1e-9, 'cm³': 1e-6, 'mL': 1e-6, 'L': 0.001, 'm³': 1,
-        'in³': 1.6387e-5, 'ft³': 0.0283168, 'gal': 0.00378541,
-        # Mass -> kg
-        'μg': 1e-9, 'mg': 1e-6, 'g': 0.001, 'kg': 1, 't': 1000,
-        'oz': 0.0283495, 'lb': 0.453592,
-        # Force -> N
-        'μN': 1e-6, 'mN': 1e-3, 'N': 1, 'kN': 1000, 'MN': 1e6,
-        'lbf': 4.44822,
-        # Pressure -> Pa
-        'Pa': 1, 'kPa': 1000, 'MPa': 1e6, 'GPa': 1e9,
-        'bar': 1e5, 'mbar': 100, 'psi': 6894.76, 'ksi': 6.89476e6,
-        # Temperature -> K (special handling needed for offset, not just multiplication)
-        # Note: actual conversion with offset is handled in _evaluate_expression for LOOKUP
-        'K': 1, 'kelvin': 1,
-        '°C': 1, '℃': 1, 'degC': 1, 'celsius': 1,
-        '°F': 1, '℉': 1, 'degF': 1, 'fahrenheit': 1,  # Factor not used - offset conversion
-        '°R': 1, 'rankine': 1,  # Factor not used - offset conversion
-        # Time -> seconds
-        'ps': 1e-12, 'ns': 1e-9, 'μs': 1e-6, 'ms': 0.001, 's': 1,
-        'min': 60, 'h': 3600, 'd': 86400, 'yr': 3.154e7,
-        # Frequency -> Hz
-        'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9,
-        # Energy -> J
-        'J': 1, 'kJ': 1000, 'MJ': 1e6, 'Wh': 3600, 'kWh': 3.6e6, 'BTU': 1055.06,
-        # Power -> W
-        'W': 1, 'mW': 0.001, 'kW': 1000, 'MW': 1e6, 'hp': 745.7,
-        # Torque -> N·m
-        'N·m': 1, 'kN·m': 1000, 'lbf·ft': 1.35582,
-        # Electrical
-        'A': 1, 'mA': 0.001, 'μA': 1e-6,
-        'V': 1, 'mV': 0.001, 'kV': 1000,
-        'Ω': 1, 'kΩ': 1000, 'MΩ': 1e6,
-        # Angle -> radians
-        'rad': 1, 'mrad': 0.001, 'deg': 0.0174533, '°': 0.0174533,
-        # Velocity -> m/s
-        'm/s': 1, 'km/h': 0.277778, 'ft/s': 0.3048, 'mph': 0.44704,
-        # Acceleration -> m/s²
-        'm/s²': 1,
-        # Density -> kg/m³
-        'kg/m³': 1, 'g/cm³': 1000, 'lb/ft³': 16.0185,
-    }
+    # Import unit constants from centralized source (single source of truth)
+    from app.services.unit_constants import (
+        DIMENSION_SI_UNITS as _DIMENSION_SI_UNITS,
+        UNIT_TO_DIMENSION as _UNIT_TO_DIMENSION,
+        UNIT_TO_SI as _UNIT_TO_SI,
+    )
+    DIMENSION_SI_UNITS = _DIMENSION_SI_UNITS
+    UNIT_TO_DIMENSION = _UNIT_TO_DIMENSION
+    UNIT_TO_SI = _UNIT_TO_SI
 
     def _parse_expression(self, expression: str) -> Dict[str, Any]:
         """
@@ -439,6 +603,44 @@ class ValueEngine:
                 'key_value_expr': key_val.strip(),  # May be a reference like #PART.temp or a literal
             }
             modified_expr = modified_expr.replace(original_call, placeholder, 1)
+
+        # Process MODEL() function calls with proper parenthesis matching
+        # MODEL("Model Name", input1: value1, input2: #REF.prop, output: "output_name")
+        # Handles nested MODEL() calls: MODEL("A", x: MODEL("B", y: 1))
+        model_calls = {}
+        extracted_models = _extract_model_calls(modified_expr)
+
+        # Process in order (innermost first due to extraction algorithm)
+        for model_info in extracted_models:
+            model_name = model_info['model_name']
+            params_str = model_info['params_str']
+
+            # Parse parameters: key: value pairs
+            bindings = {}
+            output_name = None
+
+            for param in _split_model_params(params_str):
+                try:
+                    key, value = _parse_model_binding(param)
+                    if key == 'output':
+                        # Remove quotes from output name
+                        output_name = value.strip('"\'')
+                    else:
+                        bindings[key] = value
+                except ValueError as e:
+                    logger.warning(f"Skipping invalid MODEL() param: {e}")
+                    continue
+
+            placeholder = f"__model_{len(model_calls)}__"
+            model_calls[placeholder] = {
+                'original': model_info['full_match'],
+                'model_name': model_name,
+                'bindings': bindings,
+                'output_name': output_name
+            }
+
+            # Replace MODEL() with placeholder symbol
+            modified_expr = modified_expr.replace(model_info['full_match'], placeholder, 1)
 
         # Replace literal values with units (e.g., 12mm -> converted SI value)
         literal_matches = LITERAL_WITH_UNIT_PATTERN.findall(modified_expr)
@@ -518,6 +720,8 @@ class ValueEngine:
                 local_dict[p] = Symbol(p)
             for p in lookup_calls:
                 local_dict[p] = Symbol(p)
+            for p in model_calls:
+                local_dict[p] = Symbol(p)
 
             parsed = sympify(modified_expr, locals=local_dict)
 
@@ -529,6 +733,7 @@ class ValueEngine:
                 "literal_values": literal_values,
                 "bare_literals": bare_literals,  # Unitless numbers that need user unit conversion
                 "lookup_calls": lookup_calls,  # LOOKUP() function calls
+                "model_calls": model_calls,  # MODEL() function calls
                 "sympy_repr": str(parsed),
                 "references": refs,
                 "valid": True
@@ -542,13 +747,6 @@ class ValueEngine:
         """Extract all variable references from an expression."""
         matches = REFERENCE_PATTERN.findall(expression)
         return list(set(matches))  # Remove duplicates
-
-    def _generate_code_from_name(self, name: str) -> str:
-        """Generate a code from entity name if no code exists."""
-        code = re.sub(r'[^a-zA-Z0-9]', '_', name.upper())
-        code = re.sub(r'_+', '_', code)
-        code = code.strip('_')
-        return code
 
     def _get_reference_unit(self, ref: str) -> Optional[str]:
         """
@@ -626,13 +824,11 @@ class ValueEngine:
         entity_code, prop_name = parts
         # Normalize property name: underscores → spaces (Yield_Strength → "Yield Strength")
         prop_name_normalized = prop_name.replace('_', ' ')
-        print(f"DEBUG: Resolving reference: entity_code={entity_code}, prop_name={prop_name} -> normalized={prop_name_normalized}")
 
         # Try to find Component by code
         component = self.db.query(Component).filter(
             Component.code == entity_code
         ).first()
-        print(f"DEBUG: Component by code lookup: {component.name if component else 'NOT FOUND'}")
 
         # If not found by code, try by generated code from name using SQL
         if not component:
@@ -651,15 +847,12 @@ class ValueEngine:
             component = self.db.query(Component).filter(
                 generated_code_expr == entity_code
             ).first()
-            print(f"DEBUG: Component by generated code SQL lookup: {component.name if component else 'NOT FOUND'}")
 
         if component:
-            print(f"DEBUG: Component found: id={component.id}, name={component.name}")
             # Find the property definition (use normalized name with spaces)
             prop_def = self.db.query(PropertyDefinition).filter(
                 PropertyDefinition.name == prop_name_normalized
             ).first()
-            print(f"DEBUG: Property definition lookup for '{prop_name_normalized}': {prop_def.id if prop_def else 'NOT FOUND'}")
 
             if prop_def:
                 # Find the ComponentProperty linking them
@@ -667,20 +860,16 @@ class ValueEngine:
                     ComponentProperty.component_id == component.id,
                     ComponentProperty.property_definition_id == prop_def.id
                 ).first()
-                print(f"DEBUG: ComponentProperty lookup (comp_id={component.id}, prop_def_id={prop_def.id}): {comp_prop.id if comp_prop else 'NOT FOUND'}")
 
                 if comp_prop:
-                    print(f"DEBUG: ComponentProperty details: value_node_id={comp_prop.value_node_id}, single_value={comp_prop.single_value}")
                     if comp_prop.value_node_id:
                         node = self.db.query(ValueNode).filter(
                             ValueNode.id == comp_prop.value_node_id
                         ).first()
-                        print(f"DEBUG: ValueNode found: {node.id if node else 'NOT FOUND'}")
                         return node
                     else:
                         # Property exists but has no value_node - create one from the literal value
                         literal_value = comp_prop.single_value or comp_prop.average_value or comp_prop.min_value
-                        print(f"DEBUG: No value_node, checking literal_value={literal_value}")
                         if literal_value is not None:
                             # Convert from property unit to SI base unit
                             prop_unit = prop_def.unit if prop_def else None
@@ -694,9 +883,6 @@ class ValueEngine:
                                 dimension = self.UNIT_TO_DIMENSION.get(prop_unit)
                                 if dimension:
                                     si_unit_symbol = self.DIMENSION_SI_UNITS.get(dimension)
-                                print(f"DEBUG: Converting component property: {literal_value} {prop_unit} -> {si_value} {si_unit_symbol}")
-                            else:
-                                print(f"DEBUG: Creating literal ValueNode for property with value={literal_value} (no unit conversion)")
 
                             # Create a new literal ValueNode for this property (in SI units)
                             new_node = ValueNode(
@@ -712,7 +898,6 @@ class ValueEngine:
                             # Link it back to the ComponentProperty
                             comp_prop.value_node_id = new_node.id
                             self.db.flush()
-                            print(f"DEBUG: Created and linked ValueNode id={new_node.id}")
                             return new_node
 
             logger.warning(f"Component {entity_code} found but property '{prop_name_normalized}' not found or has no value_node")
@@ -995,6 +1180,84 @@ class ValueEngine:
 
                 local_dict[p] = lookup_result
                 logger.debug(f"LOOKUP({lookup_info['table_code']}, {lookup_info['output_column']}, {lookup_info['key_column']}={key_val}) = {lookup_result} (interpolated: {interpolated})")
+
+            # Evaluate MODEL() function calls
+            for p, model_info in parsed.get("model_calls", {}).items():
+                model_name = model_info['model_name']
+                bindings = model_info['bindings']
+                output_name = model_info.get('output_name')
+
+                # Resolve binding values (may contain #refs, literals with units, or expressions)
+                resolved_bindings = {}
+                for input_name, binding_expr in bindings.items():
+                    resolved_expr = binding_expr
+
+                    # Substitute any #ref placeholders that were already resolved
+                    for ref_placeholder, ref in parsed.get("placeholders", {}).items():
+                        if ref_placeholder in resolved_expr or f"#{ref}" in resolved_expr:
+                            # Get the resolved value for this reference
+                            ref_value = values.get(ref_placeholder)
+                            if ref_value is not None:
+                                resolved_expr = resolved_expr.replace(ref_placeholder, str(ref_value))
+                                resolved_expr = resolved_expr.replace(f"#{ref}", str(ref_value))
+
+                    # Try to evaluate the binding expression
+                    try:
+                        # First check if it's a literal with unit (e.g., "1m", "25°C")
+                        unit_match = LITERAL_WITH_UNIT_PATTERN.match(resolved_expr.strip())
+                        if unit_match:
+                            numeric_str = unit_match.group(1)
+                            unit_str = unit_match.group(2)
+                            raw_value = float(numeric_str)
+
+                            # Convert to SI
+                            if unit_str in self.UNIT_TO_SI:
+                                # Handle temperature specially
+                                if unit_str in ['°C', '℃', 'degC', 'celsius']:
+                                    resolved_bindings[input_name] = raw_value + 273.15
+                                elif unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
+                                    resolved_bindings[input_name] = (raw_value - 32) * 5/9 + 273.15
+                                elif unit_str in ['°R', 'rankine']:
+                                    resolved_bindings[input_name] = raw_value * 5/9
+                                else:
+                                    resolved_bindings[input_name] = raw_value * self.UNIT_TO_SI[unit_str]
+                            else:
+                                resolved_bindings[input_name] = raw_value
+                        else:
+                            # Try as a plain number or expression
+                            # Use safe eval with math functions
+                            import math
+                            safe_dict = {
+                                'sqrt': math.sqrt,
+                                'sin': math.sin,
+                                'cos': math.cos,
+                                'tan': math.tan,
+                                'log': math.log,
+                                'ln': math.log,
+                                'exp': math.exp,
+                                'abs': abs,
+                                'pi': math.pi,
+                                'e': math.e,
+                            }
+                            resolved_bindings[input_name] = float(eval(resolved_expr, {"__builtins__": {}}, safe_dict))
+                    except Exception as e:
+                        return (None, None, False, f"MODEL() binding '{input_name}: {binding_expr}' could not be resolved: {e}", None)
+
+                # Evaluate the model
+                try:
+                    from app.services.model_evaluation import evaluate_inline_model, ModelEvaluationError
+                    model_result = evaluate_inline_model(
+                        model_name=model_name,
+                        bindings=resolved_bindings,
+                        output_name=output_name,
+                        db=self.db
+                    )
+                    local_dict[p] = model_result
+                    logger.debug(f"MODEL('{model_name}', output='{output_name}') with {resolved_bindings} = {model_result}")
+                except ModelEvaluationError as e:
+                    return (None, None, False, f"MODEL() error: {e}", None)
+                except Exception as e:
+                    return (None, None, False, f"MODEL() evaluation failed: {e}", None)
 
             # Handle bare literals (numbers without units)
             # Only convert them using user's preferred unit for ADDITIVE expressions
@@ -1326,8 +1589,3 @@ class ValueEngine:
         # Mark dependents as stale
         self.mark_dependents_stale(node)
         self.db.flush()
-
-
-def create_value_engine(db: Session) -> ValueEngine:
-    """Factory function to create a ValueEngine instance."""
-    return ValueEngine(db)

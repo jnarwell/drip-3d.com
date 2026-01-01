@@ -12,32 +12,58 @@
 - Imperial/metric expressions (`#FRAME.Height - 2ft`)
 - Cross-component references
 - Keyboard-first UX (Cmd+K command palette)
+- **Physics Models System (December 26-27, 2025)** - see details below
 
 ### Known Blockers
 - Tables not yet working (prerequisite for several features below)
 
 ---
 
+## Recently Completed
+
+### Physics Models System (SimEngine Phase 1)
+**Completed:** December 26-27, 2025
+**Implementation:** 30-minute parallel build across 6 Claude instances
+
+**What was built:**
+- **Database Models**: PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
+- **Equation Engine**: Parser, evaluator, LaTeX generator (SymPy-based)
+- **Dimensional Analysis**: 32 predefined dimensions, 197 unit mappings, validation
+- **Model Evaluation**: Resolves inputs, evaluates equations, creates output ValueNodes
+- **API Endpoints**: 7 endpoints for model CRUD, validation, instantiation
+- **Model Builder**: 4-step wizard for creating physics models
+- **Instance Creator**: 4-step wizard for instantiating models with bindings
+- **Integration Tests**: 105 automated tests
+
+**Capabilities:**
+- Create reusable physics model templates (e.g., thermal expansion, stress)
+- Define typed inputs/outputs with units
+- Write equations with math functions: `sqrt()`, `sin()`, `cos()`, `exp()`, `ln()`
+- Dimensional analysis catches physics errors before runtime
+- Bind model inputs to component properties, constants, or literals
+- Outputs integrate with Value System (can be referenced as `#COMPONENT.expansion`)
+- LaTeX rendering for equation display
+
+**Documentation:** See `docs/PHYSICS_MODELS.md` for comprehensive reference.
+
+---
+
 ## Planned Features (Priority Order)
 
-### 1. SimEngine (Modeling Page Enhancement)
-**What it is:** Extend the Value System with physics-based formulas
+### 1. SimEngine Phase 2 (Enhancements)
+**What it is:** Extend the completed Physics Models system
 
 **Features:**
-- Pre-built formula templates:
-  - Thermal resistance: `R = L / (k * A)`
-  - Heat transfer: `Q = k * A * ΔT / L`
-  - Pressure drop (Darcy-Weisbach)
-  - Stress/strain calculations
-  - Fluid flow (Reynolds, etc.)
 - Temperature-dependent property curves (not just static values)
 - "What-if" scenario mode (change inputs, see cascading effects)
-- Formula library browser
+- LOOKUP bindings (execute table lookups as model inputs)
+- Model library browser (pre-built templates)
+- Version comparison UI
 
 **Implementation notes:**
-- Builds on existing Value System
-- Add formula templates as pre-defined expressions
+- Phase 1 complete - foundation exists
 - Temperature curves need new data structure (array of {temp, value} pairs)
+- LOOKUP binding requires table system completion
 
 ---
 
@@ -185,7 +211,12 @@ All features share:
 
 ## Success Metrics
 
-- [ ] SimEngine: Can calculate thermal resistance across assembly
+- [x] **SimEngine Phase 1**: Physics models system complete (December 27, 2025)
+  - Can create model templates with equations
+  - Can instantiate with bound inputs
+  - Dimensional analysis validates physics
+  - Outputs integrate with Value System
+- [ ] SimEngine Phase 2: Temperature curves, LOOKUP bindings
 - [ ] CostPredict: BOM shows accurate cost rollup
 - [ ] TestBench: Requirements linked to tests with pass/fail status
 - [ ] DocGen: Can export component spec sheet as PDF
@@ -194,8 +225,13 @@ All features share:
 
 ## Notes
 
+- **SimEngine Phase 1 complete** - Physics models foundation built
 - **Tables must work first** - many features depend on tabular data display
-- **SimEngine is highest leverage** - extends what's already built
+- **LOOKUP bindings blocked on tables** - can't lookup table values without working tables
 - **CostPredict is quick win** - just add cost fields to existing BOM
 - **TestBench is larger scope** - new models, new UI, new workflows
 - **DocGen can be incremental** - start with simple exports, add templates later
+
+---
+
+*Last Updated: December 27, 2025*

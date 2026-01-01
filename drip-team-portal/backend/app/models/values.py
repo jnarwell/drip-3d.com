@@ -84,6 +84,11 @@ class ValueNode(Base):
     # Description/name for debugging and display
     description = Column(String, nullable=True)
 
+    # Physics Model output tracking
+    # When a ModelInstance computes, it creates ValueNodes with these set
+    source_model_instance_id = Column(Integer, ForeignKey("model_instances.id"), nullable=True)
+    source_output_name = Column(String(100), nullable=True)  # Which output this represents
+
     # Relationships
     unit = relationship("Unit", foreign_keys=[unit_id])
     computed_unit = relationship("Unit", foreign_keys=[computed_unit_id])

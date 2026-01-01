@@ -167,7 +167,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
 
     if (isEditing) {
       return (
-        <div className="w-80">
+        <div className="flex-1">
           <ExpressionInput
             value={inputValue}
             onChange={setInputValue}
@@ -282,12 +282,12 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
   return (
     <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-shadow">
       <div className="flex-1">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-3 w-full">
+          <span className="text-sm font-medium text-gray-700 shrink-0">
             {property.property_definition.name}
           </span>
           <div
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex-1 flex items-center gap-2 cursor-pointer min-w-0"
             onClick={() => !isEditing && setIsEditing(true)}
           >
             {renderValue()}

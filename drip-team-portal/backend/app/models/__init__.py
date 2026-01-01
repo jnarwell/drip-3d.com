@@ -7,6 +7,9 @@ from app.models.audit import AuditLog
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType, ValueType, UnitSystem
 from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
 from app.models.resources import SystemConstant
+from app.models.values import ValueNode, ValueDependency, NodeType, ComputationStatus, PropertyValueLink, MaterialPropertyValueLink
+from app.models.units import Unit, UnitConversion, UnitAlias
+from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
 
 __all__ = [
     "Base",
@@ -27,4 +30,20 @@ __all__ = [
     "MaterialProperty",
     "MaterialPropertyTemplate",
     "SystemConstant",
+    # Value System
+    "ValueNode",
+    "ValueDependency",
+    "NodeType",
+    "ComputationStatus",
+    "PropertyValueLink",
+    "MaterialPropertyValueLink",
+    # Units
+    "Unit",
+    "UnitConversion",
+    "UnitAlias",
+    # Physics Models
+    "PhysicsModel",
+    "PhysicsModelVersion",
+    "ModelInstance",
+    "ModelInput",
 ]

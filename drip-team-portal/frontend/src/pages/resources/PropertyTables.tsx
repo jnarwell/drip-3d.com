@@ -124,11 +124,6 @@ const PropertyTables: React.FC = () => {
 
   // Get display unit for a header (user preference or fallback to YAML display unit)
   const getDisplayUnit = useCallback((header: PropertyViewHeader): string => {
-    // Input columns don't get unit conversion
-    if (header.is_input) {
-      return header.unit || '';
-    }
-
     // Try to get dimension from SI unit first, then from display unit
     const unitToCheck = header.si_unit || header.unit;
     if (unitToCheck) {
@@ -167,7 +162,7 @@ const PropertyTables: React.FC = () => {
     const displayUnit = getDisplayUnit(header);
 
     // Convert from source to user's display unit if needed
-    if (sourceUnit && displayUnit && sourceUnit !== displayUnit && !header.is_input) {
+    if (sourceUnit && displayUnit && sourceUnit !== displayUnit) {
       try {
         displayValue = convertUnit(value, sourceUnit, displayUnit);
       } catch {

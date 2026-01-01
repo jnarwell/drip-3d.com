@@ -8,63 +8,9 @@ from app.models.component import Component
 from app.models.material import Material, MaterialProperty
 from app.models.property import ComponentProperty, PropertyDefinition, PropertyType
 from app.services.alloy_standards import AlloyStandardsService
+from app.services.unit_constants import UNIT_TO_SI, convert_to_si
 
 logger = logging.getLogger(__name__)
-
-# Unit conversion factors to SI base units (copied from value_engine.py)
-UNIT_TO_SI = {
-    # Length -> meters
-    'nm': 1e-9, 'μm': 1e-6, 'mm': 0.001, 'cm': 0.01, 'm': 1, 'km': 1000,
-    'in': 0.0254, 'ft': 0.3048,
-    # Area -> m²
-    'mm²': 1e-6, 'cm²': 1e-4, 'm²': 1,
-    # Volume -> m³
-    'mm³': 1e-9, 'cm³': 1e-6, 'mL': 1e-6, 'L': 0.001, 'm³': 1,
-    # Mass -> kg
-    'μg': 1e-9, 'mg': 1e-6, 'g': 0.001, 'kg': 1, 't': 1000,
-    'oz': 0.0283495, 'lb': 0.453592,
-    # Force -> N
-    'μN': 1e-6, 'mN': 1e-3, 'N': 1, 'kN': 1000, 'MN': 1e6,
-    'lbf': 4.44822,
-    # Pressure -> Pa
-    'Pa': 1, 'kPa': 1000, 'MPa': 1e6, 'GPa': 1e9,
-    'bar': 1e5, 'mbar': 100, 'psi': 6894.76, 'ksi': 6.89476e6,
-    # Temperature -> K (special handling needed for offset)
-    'K': 1, '°C': 1, '°F': 5/9,
-    # Time -> seconds
-    'ms': 0.001, 's': 1, 'min': 60, 'h': 3600,
-    # Frequency -> Hz
-    'Hz': 1, 'kHz': 1000, 'MHz': 1e6, 'GHz': 1e9,
-    # Energy -> J
-    'J': 1, 'kJ': 1000, 'MJ': 1e6, 'eV/atom': 1,
-    # Power -> W
-    'W': 1, 'kW': 1000, 'MW': 1e6,
-    # Velocity -> m/s
-    'm/s': 1,
-    # Density -> kg/m³
-    'kg/m³': 1, 'g/cm³': 1000, 'lb/ft³': 16.0185,
-    # Thermal conductivity -> W/m·K
-    'W/m·K': 1,
-    # Specific heat -> J/kg·K
-    'J/kg·K': 1,
-    # Acoustic impedance -> Rayl
-    'Rayl': 1, 'MRayl': 1e6,
-}
-
-def convert_to_si(value: Optional[float], unit: Optional[str]) -> Optional[float]:
-    """Convert a value from its unit to SI base unit.
-
-    For example:
-    - 77 GPa -> 77e9 Pa
-    - 8.0 g/cm³ -> 8000 kg/m³
-    """
-    if value is None or unit is None:
-        return value
-
-    conversion_factor = UNIT_TO_SI.get(unit)
-    if conversion_factor:
-        return value * conversion_factor
-    return value
 
 
 class MaterialPropertyManager:

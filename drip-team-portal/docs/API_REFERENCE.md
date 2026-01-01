@@ -214,6 +214,15 @@ POST /api/v1/units/convert
 }
 ```
 
+### Unit Format
+
+Units should use caret notation for exponents:
+- `m/s^2` (correct)
+- `kg/m^3` (correct)
+- `m/s²` (Unicode superscripts not recommended)
+
+The API normalizes common Unicode superscripts (², ³, ⁻¹) to caret notation, but caret notation is preferred for consistency.
+
 ---
 
 ## User Preferences
@@ -341,6 +350,510 @@ POST /api/v1/tests/
 
 ---
 
+## Physics Models
+
+### List Physics Models
+```
+GET /api/v1/physics-models
+Query: ?category=thermal
+```
+
+Response:
+```json
+[
+  {
+    "id": 1,
+    "name": "Thermal Expansion",
+    "description": "Calculates thermal expansion for materials",
+    "category": "thermal",
+    "created_at": "2025-12-27T00:00:00Z",
+    "current_version": {
+      "id": 1,
+      "version": 1,
+      "inputs": [...],
+      "outputs": [...],
+      "equations": {"expansion": "length * CTE * delta_T"}
+    }
+  }
+]
+```
+
+### Get Physics Model
+```
+GET /api/v1/physics-models/{model_id}
+```
+
+Returns full model with all versions.
+
+### Validate Physics Model
+```
+POST /api/v1/physics-models/validate
+{
+  "inputs": [
+    {"name": "length", "unit": "m", "required": true},
+    {"name": "CTE", "unit": "1/K", "required": true},
+    {"name": "delta_T", "unit": "K", "required": true}
+  ],
+  "outputs": [
+    {"name": "expansion", "unit": "m"}
+  ],
+  "equations": [
+    {"output_name": "expansion", "expression": "length * CTE * delta_T"}
+  ]
+}
+```
+
+Response:
+```json
+{
+  "valid": true,
+  "errors": [],
+  "dimensional_analysis": {
+    "expansion": {"valid": true, "message": "Dimensions valid"}
+  },
+  "latex_preview": {
+    "expansion": "L \\cdot \\alpha \\cdot \\Delta T"
+  }
+}
+```
+
+### Create Physics Model
+```
+POST /api/v1/physics-models
+{
+  "name": "Thermal Expansion",
+  "description": "Calculates thermal expansion",
+  "category": "thermal",
+  "inputs": [...],
+  "outputs": [...],
+  "equations": [...]
+}
+```
+
+### List Categories
+```
+GET /api/v1/physics-models/categories
+```
+
+Returns available model categories (thermal, mechanical, fluid, etc.).
+
+### Get Physics Model by Name
+```
+GET /api/v1/physics-models/by-name/{model_name}
+```
+
+Retrieve a physics model by its name (case-insensitive). Used internally by the `MODEL()` expression function for fast model lookup.
+
+**Parameters:**
+- `model_name` (path) - Name of the model (case-insensitive match)
+
+**Example:**
+```
+GET /api/v1/physics-models/by-name/Thermal%20Expansion
+GET /api/v1/physics-models/by-name/thermal%20expansion   # Also works (case-insensitive)
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "name": "Thermal Expansion",
+  "description": "Linear thermal expansion calculator",
+  "category": "thermal",
+  "created_at": "2025-12-27T00:00:00Z",
+  "current_version": {
+    "id": 1,
+    "version": 1,
+    "inputs": [
+      {"name": "CTE", "unit": "1/K", "dimension": "thermal_expansion", "required": true},
+      {"name": "delta_T", "unit": "K", "dimension": "temperature_difference", "required": true},
+      {"name": "L0", "unit": "m", "dimension": "length", "required": true}
+    ],
+    "outputs": [
+      {"name": "delta_L", "unit": "m", "dimension": "length"}
+    ],
+    "equations": {
+      "delta_L": "CTE * delta_T * L0"
+    },
+    "equation_ast": {
+      "delta_L": {...}
+    },
+    "equation_latex": "{\"delta_L\": \"\\\\alpha \\\\cdot \\\\Delta T \\\\cdot L_0\"}"
+  }
+}
+```
+
+**Error Responses:**
+- `404` - Model not found
+```json
+{
+  "detail": "Model 'NonExistent' not found"
+}
+```
+
+---
+
+## Model Instances
+
+### Create Model Instance
+```
+POST /api/v1/model-instances
+{
+  "name": "Steel Rod Expansion",
+  "model_version_id": 1,
+  "target_component_id": 5,
+  "bindings": {
+    "length": "0.003",
+    "CTE": "8.1e-6",
+    "delta_T": "500"
+  }
+}
+```
+
+Response:
+```json
+{
+  "id": 1,
+  "name": "Steel Rod Expansion",
+  "model_version_id": 1,
+  "component_id": 5,
+  "bindings": {...},
+  "output_value_nodes": []
+}
+```
+
+### Get Model Instance
+```
+GET /api/v1/model-instances/{instance_id}
+```
+
+---
+
+## Analyses (Named Model Instances)
+
+Named analyses are model instances visible team-wide on the Analysis dashboard. They exist independently of components (`component_id = NULL`).
+
+### List Analyses
+```
+GET /api/v1/analyses
+```
+
+List all analyses (named model instances).
+
+**Query Parameters:** None
+
+**Response:**
+```json
+[
+  {
+    "id": 14,
+    "name": "Frame Expansion",
+    "description": "Calculates thermal expansion of frame",
+    "model_version_id": 1,
+    "model": {
+      "id": 1,
+      "name": "Thermal Expansion",
+      "version": 1
+    },
+    "computation_status": "valid",
+    "last_computed": "2025-12-28T12:00:00Z",
+    "created_at": "2025-12-28T11:00:00Z",
+    "created_by": "user@example.com",
+    "inputs": [
+      {
+        "input_name": "CTE",
+        "literal_value": 2.3e-5,
+        "source_lookup": null
+      },
+      {
+        "input_name": "L0",
+        "literal_value": null,
+        "source_lookup": "#FRAME.Length"
+      }
+    ],
+    "output_value_nodes": [
+      {
+        "id": 89,
+        "name": "delta_L",
+        "computed_value": 6.9e-6,
+        "unit": "m",
+        "status": "valid"
+      }
+    ]
+  }
+]
+```
+
+**Notes:**
+- Returns array directly (not wrapped in object)
+- Sorted by `created_at` descending (newest first)
+- Response includes full `model` object, `inputs` array, and `output_value_nodes` array
+- `computation_status` values: `valid`, `stale`, `error`, `pending`
+
+---
+
+### Create Analysis
+```
+POST /api/v1/analyses
+{
+  "name": "Frame Expansion",
+  "description": "Calculates thermal expansion of aluminum frame",
+  "model_version_id": 1,
+  "bindings": {
+    "CTE": "2.3e-5",
+    "delta_T": "100",
+    "L0": "#FRAME.Length"
+  }
+}
+```
+
+**Request Fields:**
+- `name` (required): Unique analysis name
+- `description` (optional): What this analysis calculates
+- `model_version_id` (required): Physics model version to use
+- `bindings` (required): Input bindings as key-value pairs
+  - Literal values: `"100"` or `"2.3e-5"`
+  - Component references: `"#FRAME.Length"` (see #REF format below)
+
+**Response:**
+```json
+{
+  "id": 14,
+  "name": "Frame Expansion",
+  "description": "Calculates thermal expansion of aluminum frame",
+  "model_version_id": 1,
+  "component_id": null,
+  "is_analysis": true,
+  "created_by": "user@example.com",
+  "created_at": "2025-12-28T11:00:00Z",
+  "computation_status": "valid",
+  "last_computed": "2025-12-28T12:00:00Z",
+  "inputs": [...],
+  "output_value_nodes": [...],
+  "evaluation_error": null
+}
+```
+
+**Notes:**
+- `is_analysis` is always `true` for analyses
+- `component_id` is always `null` for analyses
+- `evaluation_error` contains error message if computation failed
+
+**Errors:**
+- `400`: Name already exists, invalid bindings, missing required fields
+- `404`: Model version not found
+
+#### #REF Binding Format
+
+Analyses can bind inputs to component properties using `#ComponentCode.PropertyName` syntax:
+
+```
+#<ComponentCode>.<PropertyName>
+```
+
+**Examples:**
+```json
+{
+  "bindings": {
+    "L0": "#FRAME.Length",
+    "power": "#TRANSDUCER.Max_Power",
+    "temp": "#CHAMBER.Temperature"
+  }
+}
+```
+
+When a #REF binding is used:
+- System looks up component by code
+- Finds property's ValueNode
+- Links analysis input to that ValueNode (creates dependency)
+- When component property updates → analysis auto-recalculates
+
+---
+
+### Get Analysis
+```
+GET /api/v1/analyses/{analysis_id}
+```
+
+Get details of a specific analysis.
+
+**Path Parameters:**
+- `analysis_id`: Analysis ID
+
+**Response:**
+```json
+{
+  "id": 14,
+  "name": "Frame Expansion",
+  "description": "Calculates thermal expansion of frame",
+  "model_version_id": 1,
+  "model": {"id": 1, "name": "Thermal Expansion", "version": 1},
+  "computation_status": "valid",
+  "last_computed": "2025-12-28T12:00:00Z",
+  "created_at": "2025-12-28T11:00:00Z",
+  "created_by": "user@example.com",
+  "inputs": [
+    {
+      "input_name": "L0",
+      "literal_value": null,
+      "source_lookup": "#FRAME.Length",
+      "source_value_node_id": 45
+    }
+  ],
+  "output_value_nodes": [...]
+}
+```
+
+**Notes:**
+- Single analysis includes `source_value_node_id` in inputs (resolved ValueNode ID)
+- `source_value_node_id` is `null` for literal bindings
+
+**Errors:**
+- `404`: Analysis not found
+
+---
+
+### Update Analysis
+```
+PATCH /api/v1/analyses/{id}
+{
+  "name": "New Name",
+  "description": "Updated description",
+  "bindings": {"CTE": "2.5e-5", "L0": "#FRAME.Length"}
+}
+```
+
+**Request Fields:** (all optional)
+- `name`: New analysis name
+- `description`: Updated description
+- `bindings`: Updated input bindings
+
+**Response:**
+```json
+{
+  "id": 14,
+  "name": "New Name",
+  "description": "Updated description",
+  "model_version_id": 1,
+  "computation_status": "valid",
+  "last_computed": "2025-12-28T12:30:00Z",
+  "inputs": [...],
+  "output_value_nodes": [...]
+}
+```
+
+**Notes:**
+- Response is a subset of GET response (no `model`, `created_at`, `created_by`)
+- Re-evaluates automatically if bindings changed
+- Status will be `pending` during evaluation, then `valid` or `error`
+- Broadcasts `instance_updated` via WebSocket
+
+---
+
+### Delete Analysis
+```
+DELETE /api/v1/analyses/{id}
+```
+
+Removes analysis, inputs, and output ValueNodes. Broadcasts `instance_deleted` via WebSocket.
+
+**Response:**
+```json
+{
+  "deleted": true,
+  "id": 14
+}
+```
+
+---
+
+### Force Re-Evaluation
+```
+POST /api/v1/analyses/{id}/evaluate
+```
+
+Immediately re-evaluates outputs and updates `last_computed`. Broadcasts `instance_evaluated` via WebSocket.
+
+**Response:**
+```json
+{
+  "id": 14,
+  "name": "Frame Expansion",
+  "computation_status": "valid",
+  "last_computed": "2025-12-28T12:35:00Z",
+  "output_value_nodes": [...],
+  "evaluation_error": null
+}
+```
+
+**Notes:**
+- `evaluation_error` contains error message if computation failed
+- Useful for forcing recalculation after upstream changes
+
+---
+
+## WebSocket: Analysis Updates
+
+Real-time updates for the Analysis dashboard.
+
+### Endpoint
+```
+ws://localhost:8000/ws/analysis?token=<jwt>
+```
+
+**Authentication:** JWT token in query parameter
+
+### Message Types
+
+| Type | Description |
+|------|-------------|
+| `connected` | Connection established |
+| `instance_created` | New analysis created |
+| `instance_updated` | Analysis modified |
+| `instance_deleted` | Analysis removed |
+| `instance_evaluated` | Outputs recalculated |
+
+**Example message:**
+```json
+{
+  "type": "instance_updated",
+  "data": {
+    "id": 5,
+    "name": "Updated Analysis",
+    "computation_status": "valid",
+    "outputs": [...]
+  }
+}
+```
+
+See [PHYSICS_MODELS.md](PHYSICS_MODELS.md#real-time-collaboration-websocket) for full WebSocket documentation.
+
+### Error Handling
+
+**Connection Errors:**
+- `401 Unauthorized`: Invalid or missing JWT token
+- `403 Forbidden`: Token expired
+- Connection close with code 1008 (Policy Violation) for auth failures
+
+**Reconnection Strategy:**
+```javascript
+// Frontend automatically handles reconnection
+// Retry delays: 1s, 2s, 4s, 8s, 16s (exponential backoff)
+// After 5 failed attempts, stops and shows "Disconnected" indicator
+```
+
+**Handling Disconnection:**
+- UI shows connection status indicator
+- On disconnect: "Live updates paused" message
+- On reconnect: "Live updates resumed" + automatic data refetch
+
+**Message Errors:**
+- Malformed messages are logged and ignored
+- Invalid message types return error in WebSocket message
+- Broadcast failures are logged server-side (client unaffected)
+
+---
+
 ## Health Check
 
 ```
@@ -386,4 +899,4 @@ Full interactive API documentation available at:
 
 ---
 
-*Last Updated: December 19, 2025*
+*Last Updated: December 30, 2025*

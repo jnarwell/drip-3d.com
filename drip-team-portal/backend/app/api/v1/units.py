@@ -366,3 +366,80 @@ async def seed_unit_database(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to seed units: {str(e)}"
         )
+
+
+# ============== Bulk Export for Frontend ==============
+
+class ConversionFactorData(BaseModel):
+    factor: float
+    offset: float
+
+
+class BulkConversionsResponse(BaseModel):
+    """All conversion data in frontend-friendly format."""
+    conversions: dict  # symbol -> {factor, offset}
+    aliases: dict  # alias -> canonical symbol
+    base_units: dict  # quantity_type -> SI base unit symbol
+    units: dict  # symbol -> {name, quantity_type, is_base_unit}
+
+
+@router.get("/bulk", response_model=BulkConversionsResponse)
+async def get_bulk_conversions(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get all unit conversion data in a single request.
+
+    This endpoint is optimized for frontend caching - fetch once on app load
+    and use for all unit conversions client-side.
+
+    Returns:
+    - conversions: {symbol: {factor, offset}} - multiply by factor, add offset to convert to SI
+    - aliases: {alias: canonical_symbol} - alternative names for units
+    - base_units: {quantity_type: symbol} - SI base unit for each dimension
+    - units: {symbol: {name, quantity_type, is_base_unit}} - unit metadata
+    """
+    # Get all units
+    all_units = db.query(Unit).all()
+
+    units_data = {}
+    base_units = {}
+    conversions = {}
+
+    for u in all_units:
+        units_data[u.symbol] = {
+            'name': u.name,
+            'quantity_type': u.quantity_type,
+            'is_base_unit': u.is_base_unit
+        }
+        if u.is_base_unit and u.quantity_type:
+            base_units[u.quantity_type] = u.symbol
+        # Base units convert to themselves with factor=1, offset=0
+        if u.is_base_unit:
+            conversions[u.symbol] = {'factor': 1.0, 'offset': 0.0}
+
+    # Get all conversions
+    all_conversions = db.query(UnitConversion).all()
+    for c in all_conversions:
+        from_unit = db.query(Unit).filter(Unit.id == c.from_unit_id).first()
+        if from_unit:
+            conversions[from_unit.symbol] = {
+                'factor': c.multiplier,
+                'offset': c.offset
+            }
+
+    # Get all aliases
+    all_aliases = db.query(UnitAlias).all()
+    aliases = {}
+    for a in all_aliases:
+        unit = db.query(Unit).filter(Unit.id == a.unit_id).first()
+        if unit:
+            aliases[a.alias] = unit.symbol
+
+    return BulkConversionsResponse(
+        conversions=conversions,
+        aliases=aliases,
+        base_units=base_units,
+        units=units_data
+    )
