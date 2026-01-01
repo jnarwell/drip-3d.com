@@ -1,6 +1,6 @@
 interface IssueGroup {
   key: string;
-  name: string;
+  name?: string;
   total_seconds: number;
   entry_count: number;
 }
