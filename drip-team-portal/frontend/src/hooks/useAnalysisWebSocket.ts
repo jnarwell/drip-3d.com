@@ -31,7 +31,7 @@ export function useAnalysisWebSocket() {
 
     // Get token for WebSocket authentication
     let token = 'mock-dev-token';
-    if (!import.meta.env.DEV && !window.location.hostname.includes('railway.app')) {
+    if (!import.meta.env.DEV) {
       try {
         token = await getAccessTokenSilently({
           authorizationParams: {
@@ -44,10 +44,16 @@ export function useAnalysisWebSocket() {
       }
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    const port = import.meta.env.DEV ? '8000' : window.location.port || (protocol === 'wss:' ? '443' : '80');
-    const wsUrl = `${protocol}//${host}:${port}/ws/analysis?token=${encodeURIComponent(token)}`;
+    // Build WebSocket URL from API URL or fallback to current host
+    let wsUrl: string;
+    if (import.meta.env.DEV) {
+      wsUrl = `ws://localhost:8000/ws/analysis?token=${encodeURIComponent(token)}`;
+    } else {
+      // Use the configured API URL for production
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const wsBaseUrl = apiUrl.replace(/^http/, 'ws').replace(/^https/, 'wss');
+      wsUrl = `${wsBaseUrl}/ws/analysis?token=${encodeURIComponent(token)}`;
+    }
 
     console.log('[WebSocket] Connecting to:', wsUrl.replace(token, '***'));
     const ws: WebSocketWithPing = new WebSocket(wsUrl);
