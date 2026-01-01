@@ -854,6 +854,253 @@ See [PHYSICS_MODELS.md](PHYSICS_MODELS.md#real-time-collaboration-websocket) for
 
 ---
 
+## Time Tracking
+
+Time tracking allows team members to log work sessions with categorization.
+
+### Start Timer
+```
+POST /api/v1/time/start
+```
+
+Request:
+```json
+{
+  "component_id": 5,           // Optional: context component
+  "linear_issue_id": "DRP-156" // Optional: pre-link to Linear issue
+}
+```
+
+Response:
+```json
+{
+  "id": 1,
+  "user_id": "jamie@drip-3d.com",
+  "started_at": "2025-12-31T10:00:00Z",
+  "stopped_at": null,
+  "duration_seconds": null,
+  "linear_issue_id": "DRP-156",
+  "linear_issue_title": null,
+  "resource_id": null,
+  "description": null,
+  "is_uncategorized": false,
+  "component_id": 5
+}
+```
+
+### Stop Timer
+```
+POST /api/v1/time/stop
+```
+
+Stops the active timer and requires categorization.
+
+Request:
+```json
+{
+  "linear_issue_id": "DRP-156",     // Option 1: Link to Linear issue
+  "linear_issue_title": "Fix bug",  // Optional: cached title
+  "resource_id": 12,                 // Option 2: Link to resource
+  "description": "Research work",    // Option 3: Free-text
+  "is_uncategorized": false          // Option 4: Mark as N/A
+}
+```
+
+At least one categorization field must be provided (or `is_uncategorized: true`).
+
+Response:
+```json
+{
+  "id": 1,
+  "user_id": "jamie@drip-3d.com",
+  "started_at": "2025-12-31T10:00:00Z",
+  "stopped_at": "2025-12-31T11:30:00Z",
+  "duration_seconds": 5400,
+  "linear_issue_id": "DRP-156",
+  "linear_issue_title": "Fix bug",
+  "resource_id": null,
+  "description": null,
+  "is_uncategorized": false,
+  "component_id": 5
+}
+```
+
+### Get Active Timer
+```
+GET /api/v1/time/active
+```
+
+Returns the current user's running timer, or `null` if none.
+
+Response:
+```json
+{
+  "id": 1,
+  "user_id": "jamie@drip-3d.com",
+  "started_at": "2025-12-31T10:00:00Z",
+  "stopped_at": null,
+  "duration_seconds": null,
+  "component_id": 5
+}
+```
+
+### List Time Entries
+```
+GET /api/v1/time/entries
+Query: ?user_id=jamie@drip-3d.com&start_date=2025-12-01&end_date=2025-12-31&limit=100
+```
+
+**Query Parameters:**
+- `user_id` (optional): Filter by user
+- `start_date` (optional): ISO date, inclusive
+- `end_date` (optional): ISO date, inclusive
+- `linear_issue_id` (optional): Filter by Linear issue
+- `component_id` (optional): Filter by component
+- `limit` (optional): Max results (default 100)
+- `offset` (optional): Pagination offset
+
+Response:
+```json
+[
+  {
+    "id": 1,
+    "user_id": "jamie@drip-3d.com",
+    "started_at": "2025-12-31T10:00:00Z",
+    "stopped_at": "2025-12-31T11:30:00Z",
+    "duration_seconds": 5400,
+    "linear_issue_id": "DRP-156",
+    "linear_issue_title": "Fix bug",
+    "component_id": 5
+  }
+]
+```
+
+### Get Time Summary
+```
+GET /api/v1/time/summary
+Query: ?group_by=user&start_date=2025-12-01&end_date=2025-12-31
+```
+
+**Query Parameters:**
+- `group_by` (required): `user`, `linear_issue`, `component`, or `day`
+- `start_date` (optional): ISO date
+- `end_date` (optional): ISO date
+- `user_id` (optional): Filter by specific user
+
+Response (group_by=user):
+```json
+{
+  "summary": [
+    {
+      "user_id": "jamie@drip-3d.com",
+      "total_seconds": 28800,
+      "entry_count": 5
+    }
+  ],
+  "period": {
+    "start": "2025-12-01",
+    "end": "2025-12-31"
+  }
+}
+```
+
+---
+
+## Resources
+
+Knowledge base resources linked to components and physics models.
+
+### List Resources
+```
+GET /api/v1/resources
+Query: ?resource_type=doc&component_id=5&tag=research
+```
+
+**Query Parameters:**
+- `resource_type` (optional): `doc`, `folder`, `image`, `link`, `paper`, `video`, `spreadsheet`
+- `component_id` (optional): Filter by linked component
+- `physics_model_id` (optional): Filter by linked model
+- `tag` (optional): Filter by tag
+- `added_by` (optional): Filter by user
+
+Response:
+```json
+[
+  {
+    "id": 1,
+    "title": "Thermal Analysis Report",
+    "resource_type": "doc",
+    "url": "https://docs.google.com/...",
+    "added_by": "jamie@drip-3d.com",
+    "added_at": "2025-12-31T10:00:00Z",
+    "tags": ["thermal", "phase-1"],
+    "notes": "Key findings from thermal testing",
+    "component_ids": [5, 12],
+    "physics_model_ids": [3]
+  }
+]
+```
+
+### Get Resource
+```
+GET /api/v1/resources/{resource_id}
+```
+
+### Create Resource
+```
+POST /api/v1/resources
+```
+
+Request:
+```json
+{
+  "title": "Thermal Analysis Report",
+  "resource_type": "doc",
+  "url": "https://docs.google.com/...",
+  "tags": ["thermal", "phase-1"],
+  "notes": "Key findings from thermal testing",
+  "component_ids": [5, 12],
+  "physics_model_ids": [3]
+}
+```
+
+Response:
+```json
+{
+  "id": 1,
+  "title": "Thermal Analysis Report",
+  "resource_type": "doc",
+  "url": "https://docs.google.com/...",
+  "added_by": "jamie@drip-3d.com",
+  "added_at": "2025-12-31T10:00:00Z",
+  "tags": ["thermal", "phase-1"],
+  "notes": "Key findings from thermal testing",
+  "component_ids": [5, 12],
+  "physics_model_ids": [3]
+}
+```
+
+### Update Resource
+```
+PUT /api/v1/resources/{resource_id}
+```
+
+Request:
+```json
+{
+  "title": "Updated Title",
+  "tags": ["thermal", "phase-2"],
+  "component_ids": [5, 12, 18]
+}
+```
+
+### Delete Resource
+```
+DELETE /api/v1/resources/{resource_id}
+```
+
+---
+
 ## Health Check
 
 ```
@@ -899,4 +1146,4 @@ Full interactive API documentation available at:
 
 ---
 
-*Last Updated: December 30, 2025*
+*Last Updated: December 31, 2025*

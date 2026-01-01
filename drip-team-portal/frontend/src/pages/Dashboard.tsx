@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { DashboardStats } from '../types';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ActiveTimersBar from '../components/time/ActiveTimersBar';
 
 const Dashboard: React.FC = () => {
   const api = useAuthenticatedApi();
@@ -62,7 +63,10 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-      
+
+      {/* Active Timers */}
+      <ActiveTimersBar />
+
       {/* Overall Progress */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">System Validation Progress</h2>

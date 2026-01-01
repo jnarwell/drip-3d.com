@@ -74,6 +74,7 @@ backend/
 │   │   ├── units.py            # Unit management
 │   │   ├── user_preferences.py # User settings persistence
 │   │   ├── values.py           # Value system endpoints
+│   │   ├── time.py             # Time tracking endpoints
 │   │   ├── webhooks.py         # External webhooks
 │   │   └── websocket.py        # WebSocket for real-time updates
 │   ├── models/                 # SQLAlchemy ORM (14 models)
@@ -82,7 +83,8 @@ backend/
 │   │   ├── material.py         # Material, MaterialProperty
 │   │   ├── physics_model.py    # PhysicsModel, ModelVersion, ModelInstance, ModelInput
 │   │   ├── property.py         # PropertyDefinition
-│   │   ├── resources.py        # Resource definitions
+│   │   ├── resources.py        # Resource definitions, SystemConstant
+│   │   ├── time_entry.py       # TimeEntry model
 │   │   ├── test.py             # TestCampaign, TestResult
 │   │   ├── units.py            # Unit, UnitConversion
 │   │   ├── user.py             # User accounts
@@ -343,6 +345,8 @@ PropertyDefinition  ValueDependency
 | `User` | User accounts |
 | `UserPreference` | User settings |
 | `AuditLog` | Change tracking |
+| `TimeEntry` | Time tracking work sessions |
+| `Resource` | Knowledge base resources (docs, links, papers) |
 
 ### Key Relationships
 
@@ -463,7 +467,8 @@ VITE_API_URL=https://backend-production-aa29.up.railway.app
 | [LINEAR_INTEGRATION.md](LINEAR_INTEGRATION.md) | Progress tracking |
 | [API_REFERENCE.md](API_REFERENCE.md) | API endpoints |
 | [ROADMAP_FEATURES.md](ROADMAP_FEATURES.md) | Future features |
+| [TIME_TRACKING.md](TIME_TRACKING.md) | Time tracking system |
 
 ---
 
-*Last Updated: December 27, 2025*
+*Last Updated: December 31, 2025*

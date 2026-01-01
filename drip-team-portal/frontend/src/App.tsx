@@ -18,6 +18,7 @@ import ModelsList from './pages/ModelsList';
 import ModelBuilder from './pages/ModelBuilder';
 import Analysis from './pages/analysis/Analysis';
 import AnalysisCreator from './pages/analysis/AnalysisCreator';
+import TimeTracker from './pages/TimeTracker';
 
 // Company pages
 import HomePage from './pages/company/HomePage';
@@ -76,6 +77,7 @@ function AppRoutes() {
           <Route path="analysis" element={<Analysis />} />
           <Route path="analysis/new" element={<AnalysisCreator />} />
           <Route path="analysis/:analysisId/edit" element={<AnalysisCreator />} />
+          <Route path="time" element={<TimeTracker />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="resources" element={<Resources />}>

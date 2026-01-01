@@ -6,7 +6,8 @@ from app.models.user_preferences import UserUnitPreference
 from app.models.audit import AuditLog
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType, ValueType, UnitSystem
 from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
-from app.models.resources import SystemConstant
+from app.models.resources import SystemConstant, Resource, resource_components, resource_physics_models
+from app.models.time_entry import TimeEntry
 from app.models.values import ValueNode, ValueDependency, NodeType, ComputationStatus, PropertyValueLink, MaterialPropertyValueLink
 from app.models.units import Unit, UnitConversion, UnitAlias
 from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
@@ -30,6 +31,11 @@ __all__ = [
     "MaterialProperty",
     "MaterialPropertyTemplate",
     "SystemConstant",
+    "Resource",
+    "resource_components",
+    "resource_physics_models",
+    # Time Tracking
+    "TimeEntry",
     # Value System
     "ValueNode",
     "ValueDependency",

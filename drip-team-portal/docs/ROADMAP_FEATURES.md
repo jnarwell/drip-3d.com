@@ -21,6 +21,27 @@
 
 ## Recently Completed
 
+### Time Tracking & Resources (December 2025)
+**Status:** In Progress
+
+**What was built:**
+- **TimeEntry Model**: Work session tracking with start/stop timestamps
+- **Resource Model**: Knowledge base for docs, links, papers, videos
+- **Linear Integration**: Link time entries to Linear issues
+- **Categorization System**: Entries linked to issues, resources, or free-text descriptions
+- **Association Tables**: Resources linked to Components and PhysicsModels
+
+**Capabilities:**
+- Start/stop timers with automatic duration calculation
+- Categorize work by Linear issue, resource, or description
+- View team time entries (symmetric visibility)
+- Link resources to components and physics models
+- Filter and summarize time by user, issue, component, or day
+
+**Documentation:** See `docs/TIME_TRACKING.md` for comprehensive reference.
+
+---
+
 ### Physics Models System (SimEngine Phase 1)
 **Completed:** December 26-27, 2025
 **Implementation:** 30-minute parallel build across 6 Claude instances
@@ -234,4 +255,4 @@ All features share:
 
 ---
 
-*Last Updated: December 27, 2025*
+*Last Updated: December 31, 2025*

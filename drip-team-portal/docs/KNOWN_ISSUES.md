@@ -310,3 +310,61 @@ if isinstance(value, str):
 **Key File**: `backend/app/services/properties/router.py`
 
 **Result**: Both `LOOKUP(..., size="m5")` and `LOOKUP(..., size="M5")` now work correctly.
+
+---
+
+## Build Learnings - Time Tracking (Dec 31, 2025)
+
+> These learnings inform future parallel instance deployments. Each rut encountered once should be prevented in future dispatches.
+
+### Rut 1: Model column added, database not migrated
+
+**Symptom**: `psycopg2.errors.UndefinedColumn: column components.owner_id does not exist`
+
+**Root cause**: Added `owner_id` to Component model, but `create_all()` doesn't add columns to existing tables
+
+**Fix**: Added auto-migration to main.py startup that runs `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+
+**Prevention**: When adding columns to existing tables, always include migration step in dispatch prompts
+
+---
+
+### Rut 2: API response shape mismatch
+
+**Symptom**: Frontend expecting `response.data.entry`, backend returning `response.data` directly
+
+**Root cause**: API contract specified endpoints but not exact response shapes
+
+**Fixes applied**:
+- `useTimeTracking.ts:64` - `response.data.entry` → `response.data`
+- `useTimeTracking.ts:112` - `/entries?active_only=true` → `/team/active`
+- `ActiveTimersBar.tsx:42` - `data?.entries` → `data?.active_timers`
+- `ActiveTimersBar.tsx:20` - `entry.user_email` → `entry.user_id`
+
+**Prevention**: API contract should include full JSON response examples, not just endpoint paths
+
+---
+
+### Rut 3: Missing environment variable for integration
+
+**Symptom**: Linear dropdown returns 500 - "Linear API key not configured"
+
+**Root cause**: `LINEAR_API_KEY` not set in local dev environment
+
+**Impact**: Low - fallback categorization (description, N/A) still works
+
+**Fix**: Add LINEAR_API_KEY to .env
+
+**Prevention**: Discovery phase should audit which env vars are required for new integrations
+
+---
+
+### Rut 4: SQLite vs PostgreSQL timezone handling
+
+**Symptom**: `TypeError: can't subtract offset-naive and offset-aware datetimes`
+
+**Root cause**: SQLite strips timezone info, PostgreSQL preserves it. Tests use SQLite, prod uses PostgreSQL.
+
+**Fix**: Normalize datetimes before comparison: `dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt`
+
+**Prevention**: Always normalize timezone in datetime operations, don't assume tzinfo survives storage

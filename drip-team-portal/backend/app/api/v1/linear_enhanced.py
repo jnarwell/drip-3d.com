@@ -519,6 +519,106 @@ async def force_refresh_all_data():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to refresh all data: {str(e)}")
 
+
+@router.get("/issues")
+async def get_linear_issues(
+    state: str = "active",
+    project_id: Optional[str] = None,
+    search: Optional[str] = None,
+    limit: int = 50
+):
+    """
+    Get Linear issues for time tracking dropdown.
+
+    Parameters:
+    - state: "active" (default), "completed", "all"
+    - project_id: Filter by Linear project ID
+    - search: Search in issue title
+    - limit: Max issues to return (default 50)
+
+    Returns issues sorted by updated date (most recent first).
+    Returns empty array with configured=false when API key not set.
+    """
+    # Graceful degradation when Linear not configured
+    if not LINEAR_API_KEY:
+        return {"issues": [], "count": 0, "configured": False}
+
+    try:
+        client = EnhancedLinearClient()
+
+        # Build filter based on state
+        if state == "active":
+            state_filter = '{ type: { nin: ["completed", "canceled"] } }'
+        elif state == "completed":
+            state_filter = '{ type: { eq: "completed" } }'
+        else:
+            state_filter = '{}'
+
+        # Build project filter
+        project_filter = f', project: {{ id: {{ eq: "{project_id}" }} }}' if project_id else ""
+
+        # Build search filter
+        search_filter = f', title: {{ containsIgnoreCase: "{search}" }}' if search else ""
+
+        query = f"""
+            query {{
+                issues(
+                    first: {limit},
+                    filter: {{ state: {state_filter}{project_filter}{search_filter} }},
+                    orderBy: updatedAt
+                ) {{
+                    nodes {{
+                        id
+                        identifier
+                        title
+                        state {{
+                            name
+                            type
+                        }}
+                        project {{
+                            id
+                            name
+                        }}
+                        assignee {{
+                            name
+                            email
+                        }}
+                        updatedAt
+                    }}
+                }}
+            }}
+        """
+
+        data = await client.make_graphql_request(query)
+        issues = data.get("issues", {}).get("nodes", [])
+
+        return {
+            "issues": [
+                {
+                    "id": issue["id"],
+                    "identifier": issue["identifier"],  # "DRP-156"
+                    "title": issue["title"],
+                    "state": issue.get("state", {}).get("name"),
+                    "state_type": issue.get("state", {}).get("type"),
+                    "project_id": issue.get("project", {}).get("id") if issue.get("project") else None,
+                    "project_name": issue.get("project", {}).get("name") if issue.get("project") else None,
+                    "assignee_name": issue.get("assignee", {}).get("name") if issue.get("assignee") else None,
+                    "assignee_email": issue.get("assignee", {}).get("email") if issue.get("assignee") else None,
+                    "updated_at": issue.get("updatedAt"),
+                }
+                for issue in issues
+            ],
+            "count": len(issues),
+            "configured": True
+        }
+
+    except Exception as e:
+        # Log warning but return empty array instead of 500 error
+        import logging
+        logging.warning(f"Linear issues fetch failed: {e}")
+        return {"issues": [], "count": 0, "configured": True, "error": str(e)}
+
+
 @router.get("/health")
 async def enhanced_linear_health_check():
     """Check enhanced Linear API connectivity and cache status"""

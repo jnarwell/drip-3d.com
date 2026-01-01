@@ -52,9 +52,15 @@ class Component(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = Column(String)
-    
+    owner_id = Column(String, nullable=True)  # User email who "owns" this component
+
     test_results = relationship("TestResult", back_populates="component")
     properties = relationship("ComponentProperty", back_populates="component", cascade="all, delete-orphan")
+
+    # Time tracking and resources
+    time_entries = relationship("TimeEntry", back_populates="component")
+    from app.models.resources import resource_components
+    resources = relationship("Resource", secondary=resource_components, back_populates="components")
     
     # Material relationships
     from app.models.material import component_materials

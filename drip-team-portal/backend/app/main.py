@@ -25,6 +25,8 @@ from app.api.v1.user_preferences import router as user_preferences_router
 from app.api.v1.engineering_properties import router as eng_properties_router
 from app.api.v1.physics_models import router as physics_models_router
 from app.api.v1.websocket import router as websocket_router
+from app.api.v1.time import router as time_router
+from app.api.v1.resources import router as resources_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -37,11 +39,14 @@ async def startup_event():
     """Initialize database tables on startup"""
     try:
         if settings.DATABASE_URL:
+            from sqlalchemy import text
+
             # Import all models to register them with Base
             from app.models.audit import AuditLog
             from app.models.component import Component
             from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
-            from app.models.resources import SystemConstant
+            from app.models.resources import SystemConstant, Resource
+            from app.models.time_entry import TimeEntry
             from app.models.user import User
             from app.models.test import Test, TestResult
             from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
@@ -50,10 +55,22 @@ async def startup_event():
             from app.models.user_preferences import UserUnitPreference
             from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
 
-            # Create all tables
+            # Create all tables (safe - won't modify existing tables)
             logging.info("Creating database tables...")
             Base.metadata.create_all(bind=engine)
             logging.info("Database tables created successfully!")
+
+            # Migrate existing tables: add new columns that create_all() won't add
+            logging.info("Running schema migrations...")
+            with engine.connect() as conn:
+                # Add owner_id to components table if it doesn't exist
+                try:
+                    conn.execute(text("ALTER TABLE components ADD COLUMN IF NOT EXISTS owner_id VARCHAR"))
+                    conn.commit()
+                    logging.info("Migration: components.owner_id column ensured")
+                except Exception as e:
+                    logging.debug(f"Migration skipped (may already exist): {e}")
+
         else:
             logging.warning("DATABASE_URL not set - skipping table creation")
     except Exception as e:
@@ -115,6 +132,8 @@ app.include_router(user_preferences_router, tags=["user-preferences"])
 app.include_router(eng_properties_router, tags=["engineering-properties"])
 app.include_router(physics_models_router, tags=["physics-models"])
 app.include_router(websocket_router, tags=["websocket"])
+app.include_router(time_router, tags=["time"])
+app.include_router(resources_router, tags=["resources"])
 
 @app.get("/")
 async def root():

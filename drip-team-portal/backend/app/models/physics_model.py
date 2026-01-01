@@ -54,6 +54,14 @@ class PhysicsModel(Base):
         cascade="all, delete-orphan"
     )
 
+    # Resources relationship (via association table)
+    from app.models.resources import resource_physics_models
+    resources = relationship(
+        "Resource",
+        secondary=resource_physics_models,
+        back_populates="physics_models"
+    )
+
     def __repr__(self):
         return f"<PhysicsModel {self.id}: {self.name}>"
 
