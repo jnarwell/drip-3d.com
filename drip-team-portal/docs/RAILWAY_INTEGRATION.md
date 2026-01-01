@@ -253,7 +253,7 @@ curl https://backend-production-aa29.up.railway.app/api/v1/components/
 
 ---
 
-**Last Updated**: December 2, 2025  
+**Last Updated**: December 19, 2025  
 **Railway Services**: 3 (Frontend + Backend + PostgreSQL)  
 **Custom Domains**: 2 (www.drip-3d.com, team.drip-3d.com) → Single frontend service
 **Deployment Status**: Active with unified frontend serving both sites  

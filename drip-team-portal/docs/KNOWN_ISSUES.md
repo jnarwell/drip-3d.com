@@ -8,7 +8,7 @@
 
 **Discovered**: 2024-12-04
 
-**Last Updated**: 2025-12-14
+**Last Updated**: 2025-12-31 (documentation audit fixes)
 
 **Details**:
 - The `/team` route fails when accessed directly via URL

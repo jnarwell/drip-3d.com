@@ -1,5 +1,5 @@
 # Team Portal State Analysis
-**Date**: December 19, 2025
+**Date**: December 27, 2025
 
 ## Current State Overview
 
@@ -92,7 +92,43 @@ Dimensional analysis with 7 SI base dimensions:
 - Dimension tracking through expression evaluation
 - User-preferred unit display per quantity type
 
-### 5. **Main Pages**
+### 5. **Physics Models System (NEW - December 27, 2025)**
+
+Reusable physics/engineering calculation templates with dimensional analysis.
+
+#### Architecture
+```
+PhysicsModel → PhysicsModelVersion → ModelInstance → Output ValueNodes
+                       ↓                    ↓
+                  equations            ModelInput bindings
+```
+
+#### Key Components
+- **Equation Engine**: SymPy-based parser, evaluator, LaTeX generator
+- **Dimensional Analysis**: 32 dimensions, 197 unit mappings, validation
+- **Model Evaluation**: Resolves inputs, computes outputs, creates ValueNodes
+
+#### Features
+- Create model templates (e.g., thermal expansion, stress calculations)
+- Define typed inputs/outputs with units
+- Write equations: `length * CTE * delta_T`
+- Math functions: `sqrt()`, `sin()`, `cos()`, `exp()`, `ln()`, `abs()`
+- Dimensional validation catches physics errors at design time
+- 4-step Model Builder wizard
+- 4-step Instance Creator wizard
+- Output integration with Value System (`#COMPONENT.expansion`)
+
+#### Binding Types
+| Type | Purpose |
+|------|---------|
+| Component Property | Reference existing ValueNode |
+| Constant | System constant (e.g., `g`) |
+| Literal | Direct value entry |
+| LOOKUP | Table lookup (not yet implemented) |
+
+**Full documentation**: See `docs/PHYSICS_MODELS.md`
+
+### 6. **Main Pages**
 
 #### Dashboard (`/dashboard`)
 - **Status**: Working
@@ -118,6 +154,18 @@ Dimensional analysis with 7 SI base dimensions:
   - Constants
   - Templates
 
+#### Analysis Dashboard (`/analysis`) (NEW - December 27, 2025)
+- **Status**: Working
+- **Purpose**: Team-wide view of named model instances
+- **Features**:
+  - List all named analyses (`component_id = NULL`)
+  - Create new analyses via 3-step wizard
+  - Real-time updates via WebSocket
+  - Filter by status (VALID/STALE/ERROR)
+  - Filter by physics model
+  - Alphabetical sort by name
+- **Documentation**: See `docs/PHYSICS_MODELS.md` Analysis Dashboard section
+
 #### Settings (`/settings`)
 - **Status**: Working (unit preferences)
 
@@ -139,6 +187,18 @@ Dimensional analysis with 7 SI base dimensions:
 - `/api/v1/values` - ValueNode CRUD and recalculation
 - `/api/v1/search/entities` - Entity autocomplete search
 - `/api/v1/search/entities/{code}/properties` - Property autocomplete search
+
+### Physics Models Endpoints (NEW)
+- `/api/v1/physics-models` - Model CRUD, list with category filter
+- `/api/v1/physics-models/validate` - Dimensional analysis validation
+- `/api/v1/physics-models/categories` - List available categories
+- `/api/v1/model-instances` - Instance CRUD with input bindings
+
+### Analysis Dashboard Endpoints (NEW)
+- `/api/v1/analyses` - List all named analyses (GET)
+- `/api/v1/analyses/{id}` - Update (PATCH) or delete (DELETE) analysis
+- `/api/v1/analyses/{id}/evaluate` - Force re-evaluation (POST)
+- `ws://host/ws/analysis` - WebSocket for real-time collaboration
 
 ## Data Models
 
@@ -174,6 +234,26 @@ Unit:
   - is_base_unit, multiplier, offset
 ```
 
+### Physics Models (`/backend/app/models/physics_model.py`)
+```python
+PhysicsModel:
+  - id, name, description, category
+  - created_by, created_at
+
+PhysicsModelVersion:
+  - id, physics_model_id, version, is_current
+  - inputs (JSONB), outputs (JSONB), equations (JSONB)
+  - equation_ast (pre-parsed), equation_latex
+
+ModelInstance:
+  - id, model_version_id, component_id (optional)
+  - name, computation_status, last_computed
+
+ModelInput:
+  - id, model_instance_id, input_name
+  - source_value_node_id | literal_value | source_lookup
+```
+
 ## Services
 
 ### ValueEngine (`/backend/app/services/value_engine.py`)
@@ -189,6 +269,25 @@ Unit:
 - Unit dimensional analysis
 - Unit compatibility checking
 - Value conversion between units
+
+### Physics Models Services (NEW)
+
+**EquationEngine** (`/backend/app/services/equation_engine/`):
+- `parser.py` - SymPy to AST conversion
+- `evaluator.py` - AST tree walker
+- `latex_generator.py` - LaTeX with symbol mapping
+- `exceptions.py` - Custom exception types
+
+**DimensionalAnalysis** (`/backend/app/services/dimensional_analysis.py`):
+- 32 predefined dimensions (SI base + derived)
+- 197 unit → dimension mappings
+- `validate_equation_dimensions()` - Validate output matches expected
+- `infer_dimension()` - Compute dimension from AST
+
+**ModelEvaluation** (`/backend/app/services/model_evaluation.py`):
+- `evaluate_model_instance()` - Main entry point
+- `resolve_model_input()` - Resolve binding to float
+- Creates output ValueNodes with `source_model_instance_id`
 
 ## UI/UX State
 
@@ -251,4 +350,9 @@ See `/docs/KNOWN_ISSUES.md` for details:
 ### Future Development
 1. **Table lookups** - Implement TABLE_LOOKUP node type with interpolation
 2. **Testing integration** - Connect test results to value system
-3. **Modeling** - Full system modeling, non-dimensional scaling
+3. **Physics Models Phase 2** - Temperature curves, LOOKUP bindings, model library
+4. **Cost tracking** - BOM cost rollup (CostPredict feature)
+
+---
+
+*Last Updated: December 31, 2025*
