@@ -18,6 +18,7 @@ import os
 
 from app.db.database import get_db
 from app.models.time_entry import TimeEntry
+from app.models.time_break import TimeBreak
 from app.models.resources import Resource
 from app.models.component import Component
 
@@ -60,6 +61,7 @@ class TimeEntryCreateRequest(BaseModel):
 
 
 class TimeEntryUpdateRequest(BaseModel):
+    """Update request with required edit_reason for audit trail."""
     started_at: Optional[datetime] = None
     stopped_at: Optional[datetime] = None
     linear_issue_id: Optional[str] = None
@@ -68,6 +70,12 @@ class TimeEntryUpdateRequest(BaseModel):
     description: Optional[str] = None
     is_uncategorized: Optional[bool] = None
     component_id: Optional[int] = None
+    edit_reason: str  # REQUIRED - why was this entry edited?
+
+
+class BreakStartRequest(BaseModel):
+    """Optional note when starting a break."""
+    note: Optional[str] = None
 
 
 # =============================================================================
@@ -340,8 +348,9 @@ async def update_entry(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Update a time entry.
+    Update a time entry with edit tracking.
 
+    Requires edit_reason for audit trail.
     Only the entry owner can update their entries.
     """
     user_id = current_user["email"]
@@ -354,27 +363,41 @@ async def update_entry(
     if entry.user_id != user_id:
         raise HTTPException(status_code=403, detail="Can only update your own entries")
 
-    # Update fields
-    if data.started_at is not None:
-        entry.started_at = data.started_at
-    if data.stopped_at is not None:
-        entry.stopped_at = data.stopped_at
-    if data.linear_issue_id is not None:
-        entry.linear_issue_id = data.linear_issue_id
-    if data.linear_issue_title is not None:
-        entry.linear_issue_title = data.linear_issue_title
-    if data.resource_id is not None:
-        entry.resource_id = data.resource_id
-    if data.description is not None:
-        entry.description = data.description
-    if data.is_uncategorized is not None:
-        entry.is_uncategorized = data.is_uncategorized
-    if data.component_id is not None:
-        entry.component_id = data.component_id
+    # Track changes for edit history
+    changes = []
+    editable_fields = [
+        "started_at", "stopped_at", "linear_issue_id", "linear_issue_title",
+        "resource_id", "description", "is_uncategorized", "component_id"
+    ]
 
-    # Recalculate duration if both times are set
-    if entry.started_at and entry.stopped_at:
-        entry.duration_seconds = entry.compute_duration()
+    for field in editable_fields:
+        new_value = getattr(data, field)
+        if new_value is not None:
+            old_value = getattr(entry, field)
+            # Compare values (handle datetime serialization)
+            old_str = old_value.isoformat() if hasattr(old_value, 'isoformat') else str(old_value) if old_value is not None else None
+            new_str = new_value.isoformat() if hasattr(new_value, 'isoformat') else str(new_value) if new_value is not None else None
+
+            if old_str != new_str:
+                changes.append({
+                    "field": field,
+                    "old_value": old_str,
+                    "new_value": new_str,
+                    "reason": data.edit_reason,
+                    "edited_at": datetime.now(timezone.utc).isoformat(),
+                    "edited_by": user_id
+                })
+                setattr(entry, field, new_value)
+
+    # Append changes to edit history
+    if changes:
+        history = entry.edit_history or []
+        history.extend(changes)
+        entry.edit_history = history
+
+        # Recalculate duration if times changed
+        if entry.started_at and entry.stopped_at:
+            entry.duration_seconds = entry.compute_duration()
 
     db.commit()
     db.refresh(entry)
@@ -407,6 +430,146 @@ async def delete_entry(
     db.commit()
 
     return {"deleted": True, "id": entry_id}
+
+
+# =============================================================================
+# BREAK ENDPOINTS
+# =============================================================================
+
+@router.post("/entries/{entry_id}/breaks")
+async def start_break(
+    entry_id: int,
+    data: BreakStartRequest = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Start a break on a running time entry.
+
+    Only works on entries that are still running (no stopped_at).
+    Cannot start a break if already on break.
+    """
+    user_id = current_user["email"]
+
+    # Handle empty body
+    if data is None:
+        data = BreakStartRequest()
+
+    entry = db.query(TimeEntry).filter(TimeEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if entry.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your entry")
+    if entry.stopped_at:
+        raise HTTPException(status_code=400, detail="Cannot break on stopped entry")
+    if entry.on_break:
+        raise HTTPException(status_code=400, detail="Already on break")
+
+    break_entry = TimeBreak(
+        time_entry_id=entry_id,
+        started_at=datetime.now(timezone.utc),
+        note=data.note
+    )
+    db.add(break_entry)
+    db.commit()
+    db.refresh(break_entry)
+
+    return break_entry.to_dict()
+
+
+@router.post("/entries/{entry_id}/breaks/{break_id}/stop")
+async def stop_break(
+    entry_id: int,
+    break_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    End an active break.
+
+    Returns the completed break with duration.
+    """
+    user_id = current_user["email"]
+
+    # Verify entry ownership
+    entry = db.query(TimeEntry).filter(TimeEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if entry.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your entry")
+
+    break_entry = db.query(TimeBreak).filter(
+        TimeBreak.id == break_id,
+        TimeBreak.time_entry_id == entry_id
+    ).first()
+    if not break_entry:
+        raise HTTPException(status_code=404, detail="Break not found")
+    if break_entry.stopped_at:
+        raise HTTPException(status_code=400, detail="Break already stopped")
+
+    break_entry.stopped_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(break_entry)
+
+    return break_entry.to_dict()
+
+
+@router.get("/entries/{entry_id}/breaks")
+async def list_breaks(
+    entry_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    List all breaks for a time entry.
+    """
+    entry = db.query(TimeEntry).filter(TimeEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    breaks = db.query(TimeBreak).filter(
+        TimeBreak.time_entry_id == entry_id
+    ).order_by(TimeBreak.started_at.asc()).all()
+
+    return {
+        "breaks": [b.to_dict() for b in breaks],
+        "total_break_seconds": sum(b.duration_seconds for b in breaks),
+        "active_break": next((b.to_dict() for b in breaks if b.stopped_at is None), None)
+    }
+
+
+@router.delete("/entries/{entry_id}/breaks/{break_id}")
+async def delete_break(
+    entry_id: int,
+    break_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a break from a time entry.
+
+    Only the entry owner can delete breaks.
+    """
+    user_id = current_user["email"]
+
+    # Verify entry ownership
+    entry = db.query(TimeEntry).filter(TimeEntry.id == entry_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    if entry.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your entry")
+
+    break_entry = db.query(TimeBreak).filter(
+        TimeBreak.id == break_id,
+        TimeBreak.time_entry_id == entry_id
+    ).first()
+    if not break_entry:
+        raise HTTPException(status_code=404, detail="Break not found")
+
+    db.delete(break_entry)
+    db.commit()
+
+    return {"deleted": True, "id": break_id}
 
 
 # =============================================================================

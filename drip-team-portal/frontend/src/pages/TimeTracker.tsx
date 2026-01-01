@@ -1,7 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import TimerWidget from '../components/time/TimerWidget';
 import TimeEntryList from '../components/time/TimeEntryList';
-import { useTimeSummary } from '../hooks/useTimeTracking';
+import ManualEntryForm from '../components/time/ManualEntryForm';
+import StopTimerModal from '../components/time/StopTimerModal';
+import { useTimeSummary, useCreateManualEntry, ManualEntryBreak } from '../hooks/useTimeTracking';
+
+type EntryMode = 'timer' | 'manual';
+
+interface PendingManualEntry {
+  started_at: string;
+  stopped_at: string;
+  breaks: ManualEntryBreak[];
+}
 
 function formatHoursMinutes(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
@@ -31,7 +41,11 @@ function getWeekDates() {
 }
 
 const TimeTracker: React.FC = () => {
+  const [mode, setMode] = useState<EntryMode>('timer');
+  const [pendingManualEntry, setPendingManualEntry] = useState<PendingManualEntry | null>(null);
+
   const weekDates = useMemo(() => getWeekDates(), []);
+  const createManualEntry = useCreateManualEntry();
 
   const { data: summaryData, isLoading: summaryLoading } = useTimeSummary({
     start_date: weekDates.start,
@@ -50,6 +64,33 @@ const TimeTracker: React.FC = () => {
     0
   ) || 0;
 
+  const handleManualEntrySubmit = (data: PendingManualEntry) => {
+    setPendingManualEntry(data);
+  };
+
+  const handleManualEntryCategorize = async (categorization: {
+    linear_issue_id?: string;
+    linear_issue_title?: string;
+    resource_id?: number;
+    description?: string;
+    is_uncategorized?: boolean;
+    component_id?: number;
+  }) => {
+    if (!pendingManualEntry) return;
+
+    try {
+      await createManualEntry.mutateAsync({
+        ...pendingManualEntry,
+        ...categorization,
+      });
+      setPendingManualEntry(null);
+      setMode('timer');
+    } catch (error) {
+      console.error('Failed to create manual entry:', error);
+      alert('Failed to create entry. Please try again.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -64,9 +105,43 @@ const TimeTracker: React.FC = () => {
 
       {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Timer Widget */}
+        {/* Timer/Manual Entry Widget */}
         <div className="lg:col-span-1">
-          <TimerWidget />
+          {/* Mode Toggle */}
+          <div className="bg-white rounded-lg shadow mb-4">
+            <div className="flex">
+              <button
+                onClick={() => setMode('timer')}
+                className={`flex-1 py-3 px-4 text-sm font-medium rounded-l-lg transition-colors ${
+                  mode === 'timer'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Timer
+              </button>
+              <button
+                onClick={() => setMode('manual')}
+                className={`flex-1 py-3 px-4 text-sm font-medium rounded-r-lg transition-colors ${
+                  mode === 'manual'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Manual Entry
+              </button>
+            </div>
+          </div>
+
+          {/* Timer or Manual Entry Form */}
+          {mode === 'timer' ? (
+            <TimerWidget />
+          ) : (
+            <ManualEntryForm
+              onSubmit={handleManualEntrySubmit}
+              onCancel={() => setMode('timer')}
+            />
+          )}
 
           {/* Weekly Summary Card */}
           <div className="bg-white rounded-lg shadow p-6 mt-6">
@@ -107,6 +182,15 @@ const TimeTracker: React.FC = () => {
           <TimeEntryList />
         </div>
       </div>
+
+      {/* Categorization Modal for Manual Entry */}
+      {pendingManualEntry && (
+        <StopTimerModal
+          onClose={() => setPendingManualEntry(null)}
+          onSubmit={handleManualEntryCategorize}
+          isSubmitting={createManualEntry.isPending}
+        />
+      )}
     </div>
   );
 };

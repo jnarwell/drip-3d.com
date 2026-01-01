@@ -9,7 +9,7 @@ Time entries track work sessions with:
 
 from sqlalchemy import (
     Column, Integer, String, Text, Boolean, DateTime, ForeignKey,
-    Index, func
+    Index, func, JSON
 )
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
@@ -54,9 +54,13 @@ class TimeEntry(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Edit history: [{field, old_value, new_value, reason, edited_at, edited_by}, ...]
+    edit_history = Column(JSON, default=list)
+
     # Relationships
     component = relationship("Component", back_populates="time_entries")
     resource = relationship("Resource", back_populates="time_entries")
+    breaks = relationship("TimeBreak", back_populates="time_entry", cascade="all, delete-orphan")
 
     # Indexes for common queries
     __table_args__ = (
@@ -72,6 +76,27 @@ class TimeEntry(Base):
     def is_running(self) -> bool:
         """True if this timer is still running."""
         return self.stopped_at is None
+
+    @property
+    def total_break_seconds(self) -> int:
+        """Total seconds spent on breaks."""
+        return sum(b.duration_seconds for b in (self.breaks or []))
+
+    @property
+    def net_duration_seconds(self) -> int:
+        """Duration minus break time."""
+        gross = self.duration_seconds or 0
+        return max(0, gross - self.total_break_seconds)
+
+    @property
+    def was_edited(self) -> bool:
+        """True if this entry has edit history."""
+        return len(self.edit_history or []) > 0
+
+    @property
+    def on_break(self) -> bool:
+        """True if there's an active break (no stopped_at)."""
+        return any(b.stopped_at is None for b in (self.breaks or []))
 
     def compute_duration(self) -> int:
         """
@@ -122,4 +147,12 @@ class TimeEntry(Base):
             "component_id": self.component_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            # Break tracking
+            "breaks": [b.to_dict() for b in (self.breaks or [])],
+            "total_break_seconds": self.total_break_seconds,
+            "net_duration_seconds": self.net_duration_seconds,
+            "on_break": self.on_break,
+            # Edit history
+            "edit_history": self.edit_history or [],
+            "was_edited": self.was_edited,
         }

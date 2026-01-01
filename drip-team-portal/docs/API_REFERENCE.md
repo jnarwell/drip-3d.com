@@ -1006,6 +1006,136 @@ Response (group_by=user):
 
 ---
 
+### Edit Time Entry
+```
+PATCH /api/v1/time/entries/{id}
+```
+
+Edit an existing time entry. **Requires `edit_reason`** for audit trail.
+
+Request:
+```json
+{
+  "stopped_at": "2025-12-31T17:30:00Z",
+  "edit_reason": "Forgot to stop timer"
+}
+```
+
+**Editable fields:** `started_at`, `stopped_at`, `linear_issue_id`, `linear_issue_title`, `resource_id`, `description`, `is_uncategorized`, `component_id`
+
+**Preset edit reasons:**
+- Forgot to stop timer
+- Started earlier than recorded
+- Ended earlier than recorded
+- Wrong categorization
+- Adding break time
+- Other (custom text)
+
+Response:
+```json
+{
+  "id": 1,
+  "user_id": "jamie@drip-3d.com",
+  "started_at": "2025-12-31T10:00:00Z",
+  "stopped_at": "2025-12-31T17:30:00Z",
+  "duration_seconds": 27000,
+  "edit_history": [
+    {
+      "field": "stopped_at",
+      "old_value": "2025-12-31T18:00:00Z",
+      "new_value": "2025-12-31T17:30:00Z",
+      "reason": "Forgot to stop timer",
+      "edited_at": "2025-12-31T17:35:00Z",
+      "edited_by": "jamie@drip-3d.com"
+    }
+  ]
+}
+```
+
+**Notes:**
+- Entries with edits show `[edited]` indicator in UI
+- Full edit history preserved and viewable
+- Duration auto-recalculated on time changes
+
+---
+
+## Time Tracking - Breaks
+
+Breaks allow tracking pauses within a work session. Timer continues running during breaks (paid breaks).
+
+### Start Break
+```
+POST /api/v1/time/entries/{id}/breaks
+```
+
+Start a break on an active time entry.
+
+Request:
+```json
+{
+  "note": "lunch"
+}
+```
+
+Response:
+```json
+{
+  "id": 1,
+  "time_entry_id": 5,
+  "started_at": "2025-12-31T12:00:00Z",
+  "stopped_at": null,
+  "note": "lunch"
+}
+```
+
+### Stop Break
+```
+POST /api/v1/time/entries/{id}/breaks/{break_id}/stop
+```
+
+End an active break.
+
+Response:
+```json
+{
+  "id": 1,
+  "time_entry_id": 5,
+  "started_at": "2025-12-31T12:00:00Z",
+  "stopped_at": "2025-12-31T12:30:00Z",
+  "duration_seconds": 1800,
+  "note": "lunch"
+}
+```
+
+### List Breaks
+```
+GET /api/v1/time/entries/{id}/breaks
+```
+
+Get all breaks for a time entry.
+
+Response:
+```json
+[
+  {
+    "id": 1,
+    "started_at": "2025-12-31T12:00:00Z",
+    "stopped_at": "2025-12-31T12:30:00Z",
+    "duration_seconds": 1800,
+    "note": "lunch"
+  },
+  {
+    "id": 2,
+    "started_at": "2025-12-31T15:00:00Z",
+    "stopped_at": "2025-12-31T15:15:00Z",
+    "duration_seconds": 900,
+    "note": "coffee"
+  }
+]
+```
+
+---
+
 ## Resources
 
 Knowledge base resources linked to components and physics models.

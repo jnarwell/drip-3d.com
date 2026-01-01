@@ -404,11 +404,14 @@ class TestEntryCRUD:
         assert data["id"] == entry_id
 
     def test_update_entry(self, client, auth_headers, completed_entries):
-        """Update a time entry."""
+        """Update a time entry with required edit_reason."""
         entry_id = completed_entries[0].id
         response = client.patch(
             f"/api/v1/time/entries/{entry_id}",
-            json={"description": "Updated description"},
+            json={
+                "description": "Updated description",
+                "edit_reason": "Correcting description"
+            },
             headers=auth_headers
         )
 
@@ -418,6 +421,20 @@ class TestEntryCRUD:
         assert response.status_code == 200
         data = response.json()
         assert data["description"] == "Updated description"
+        # Verify edit history was recorded
+        assert data["was_edited"] is True
+        assert len(data["edit_history"]) > 0
+        assert data["edit_history"][-1]["reason"] == "Correcting description"
+
+    def test_update_entry_requires_reason(self, client, auth_headers, completed_entries):
+        """Update without edit_reason should fail."""
+        entry_id = completed_entries[0].id
+        response = client.patch(
+            f"/api/v1/time/entries/{entry_id}",
+            json={"description": "No reason given"},
+            headers=auth_headers
+        )
+        assert response.status_code == 422  # Validation error - missing edit_reason
 
     def test_delete_entry(self, client, auth_headers, completed_entries):
         """Delete a time entry."""
@@ -439,3 +456,198 @@ class TestEntryCRUD:
             headers=auth_headers
         )
         assert get_response.status_code == 404
+
+
+class TestBreaks:
+    """Test break endpoints."""
+
+    def test_start_break(self, client, auth_headers, running_timer):
+        """Start a break on a running timer."""
+        response = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            json={"note": "lunch"},
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["note"] == "lunch"
+        assert data["is_active"] is True
+        assert data["time_entry_id"] == running_timer.id
+
+    def test_start_break_without_note(self, client, auth_headers, running_timer):
+        """Start a break without a note."""
+        response = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["note"] is None
+        assert data["is_active"] is True
+
+    def test_cannot_break_stopped_entry(self, client, auth_headers, completed_entries):
+        """Cannot start a break on a stopped entry."""
+        entry_id = completed_entries[0].id
+        response = client.post(
+            f"/api/v1/time/entries/{entry_id}/breaks",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "stopped entry" in response.json()["detail"].lower()
+
+    def test_cannot_double_break(self, client, auth_headers, running_timer):
+        """Cannot start a break when already on break."""
+        # Start first break
+        response1 = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        assert response1.status_code == 200
+
+        # Try to start second break
+        response2 = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        assert response2.status_code == 400
+        assert "already on break" in response2.json()["detail"].lower()
+
+    def test_stop_break(self, client, auth_headers, running_timer):
+        """Stop an active break."""
+        # Start break
+        start_resp = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            json={"note": "coffee"},
+            headers=auth_headers
+        )
+        break_id = start_resp.json()["id"]
+
+        # Stop break
+        stop_resp = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}/stop",
+            headers=auth_headers
+        )
+
+        assert stop_resp.status_code == 200
+        data = stop_resp.json()
+        assert data["is_active"] is False
+        assert data["duration_seconds"] >= 0
+
+    def test_cannot_stop_already_stopped_break(self, client, auth_headers, running_timer):
+        """Cannot stop a break that's already stopped."""
+        # Start and stop break
+        start_resp = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        break_id = start_resp.json()["id"]
+
+        client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}/stop",
+            headers=auth_headers
+        )
+
+        # Try to stop again
+        response = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}/stop",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 400
+        assert "already stopped" in response.json()["detail"].lower()
+
+    def test_list_breaks(self, client, auth_headers, running_timer):
+        """List all breaks for an entry."""
+        # Create a couple of breaks
+        client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            json={"note": "break1"},
+            headers=auth_headers
+        )
+        # Need to stop first break before starting second
+        breaks_resp = client.get(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        break_id = breaks_resp.json()["breaks"][0]["id"]
+        client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}/stop",
+            headers=auth_headers
+        )
+
+        client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            json={"note": "break2"},
+            headers=auth_headers
+        )
+
+        response = client.get(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["breaks"]) == 2
+        assert data["active_break"] is not None
+        assert data["active_break"]["note"] == "break2"
+
+    def test_delete_break(self, client, auth_headers, running_timer):
+        """Delete a break from an entry."""
+        # Create break
+        start_resp = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        break_id = start_resp.json()["id"]
+
+        # Delete it
+        response = client.delete(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        assert response.json()["deleted"] is True
+
+        # Verify deleted
+        list_resp = client.get(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        assert len(list_resp.json()["breaks"]) == 0
+
+    def test_entry_includes_break_data(self, client, auth_headers, running_timer):
+        """Entry responses include break tracking data."""
+        # Create and stop a break
+        start_resp = client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks",
+            headers=auth_headers
+        )
+        break_id = start_resp.json()["id"]
+
+        import time
+        time.sleep(0.1)  # Small delay for duration
+
+        client.post(
+            f"/api/v1/time/entries/{running_timer.id}/breaks/{break_id}/stop",
+            headers=auth_headers
+        )
+
+        # Get the entry
+        response = client.get(
+            f"/api/v1/time/entries/{running_timer.id}",
+            headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "breaks" in data
+        assert "total_break_seconds" in data
+        assert "net_duration_seconds" in data
+        assert "on_break" in data
+        assert len(data["breaks"]) == 1
+        assert data["on_break"] is False

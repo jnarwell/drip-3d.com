@@ -47,6 +47,7 @@ async def startup_event():
             from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
             from app.models.resources import SystemConstant, Resource
             from app.models.time_entry import TimeEntry
+            from app.models.time_break import TimeBreak
             from app.models.user import User
             from app.models.test import Test, TestResult
             from app.models.property import PropertyDefinition, ComponentProperty, UnitSystem
@@ -68,6 +69,14 @@ async def startup_event():
                     conn.execute(text("ALTER TABLE components ADD COLUMN IF NOT EXISTS owner_id VARCHAR"))
                     conn.commit()
                     logging.info("Migration: components.owner_id column ensured")
+                except Exception as e:
+                    logging.debug(f"Migration skipped (may already exist): {e}")
+
+                # Add edit_history to time_entries table if it doesn't exist
+                try:
+                    conn.execute(text("ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS edit_history JSON"))
+                    conn.commit()
+                    logging.info("Migration: time_entries.edit_history column ensured")
                 except Exception as e:
                     logging.debug(f"Migration skipped (may already exist): {e}")
 

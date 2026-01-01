@@ -15,11 +15,13 @@ function formatDuration(startedAt: string): string {
 
 function getDisplayName(entry: TimeEntry): string {
   if (entry.user_name) {
-    return entry.user_name.split(' ')[0]; // First name only
+    const firstName = entry.user_name.split(' ')[0];
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   }
   if (entry.user_id) {
-    // user_id is email in this system
-    return entry.user_id.split('@')[0];
+    // user_id is email - extract name and capitalize
+    const name = entry.user_id.split('@')[0];
+    return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
   }
   return 'Someone';
 }
@@ -57,10 +59,7 @@ const ActiveTimersBar: React.FC = () => {
           >
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             <span className="font-medium text-gray-700">{getDisplayName(entry)}</span>
-            <span className="font-mono text-indigo-600">{formatDuration(entry.started_at)}</span>
-            {entry.linear_issue_id && (
-              <span className="text-gray-500">{entry.linear_issue_id}</span>
-            )}
+            <span className="font-mono text-gray-400">{formatDuration(entry.started_at)}</span>
           </div>
         ))}
       </div>

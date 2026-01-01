@@ -13,6 +13,74 @@ The Time Tracking system enables team members to log work sessions with categori
 
 ---
 
+## Entry Modes
+
+### Timer Mode
+
+Click Start to begin tracking. Timer runs continuously until stopped.
+
+**Features:**
+- **Break button**: Start/end breaks while timer runs (timer keeps running, break noted)
+- Multiple breaks supported per entry
+- Visual indicator when on break
+
+### Manual Entry Mode
+
+Enter time ranges directly for past work.
+
+**Fields:**
+- Date
+- Start time
+- End time
+- Breaks (optional, multiple allowed)
+- Categorization (Linear issue, resource, or description)
+
+---
+
+## Breaks
+
+Breaks are tracked separately from the main entry:
+- Timer continues running during breaks (all breaks paid)
+- Each break has start time, end time, and optional note
+- Total break time shown on entry
+- Multiple breaks per entry supported
+
+**Break data:**
+
+| Field | Description |
+|-------|-------------|
+| `started_at` | When break started |
+| `stopped_at` | When break ended |
+| `note` | Optional description (e.g., "lunch", "coffee") |
+
+---
+
+## Edit History
+
+All edits are tracked for transparency:
+- Edit reason required (dropdown with common reasons + custom option)
+- Full history preserved: who changed what, when, and why
+- Edited entries marked with `[edited]` indicator
+- Click to expand and see full edit history
+
+**Preset edit reasons:**
+- Forgot to stop timer
+- Started earlier than recorded
+- Ended earlier than recorded
+- Wrong categorization
+- Adding break time
+- Other (custom text)
+
+---
+
+## Clickable Links
+
+Entry list displays clickable links:
+- **Linear issues**: Opens Linear in new tab
+- **Resource URLs**: Opens document/folder in new tab
+
+---
+
 ## Core Concepts
 
 ### Time Entries
@@ -32,6 +100,7 @@ A `TimeEntry` represents a single work session:
 | `description` | text | Free-text description |
 | `is_uncategorized` | bool | N/A flag for uncategorizable work |
 | `component_id` | int | Optional context component |
+| `edit_history` | JSON | Array of edit records (see Edit History) |
 
 **Entry States:**
 - **Running**: `stopped_at` is NULL, timer actively counting
@@ -120,6 +189,9 @@ See [API_REFERENCE.md#time-tracking](API_REFERENCE.md#time-tracking) for full en
 | GET | `/api/v1/time/active` | Get current user's running timer |
 | GET | `/api/v1/time/entries` | List time entries (filterable) |
 | GET | `/api/v1/time/summary` | Aggregated time summaries |
+| PATCH | `/api/v1/time/entries/{id}` | Edit entry (requires edit_reason) |
+| POST | `/api/v1/time/entries/{id}/breaks` | Start a break |
+| POST | `/api/v1/time/entries/{id}/breaks/{break_id}/stop` | Stop a break |
 
 **Resource Endpoints:**
 | Method | Endpoint | Description |
@@ -133,6 +205,20 @@ See [API_REFERENCE.md#time-tracking](API_REFERENCE.md#time-tracking) for full en
 ---
 
 ## Database Schema
+
+### TimeBreak Table
+
+```sql
+CREATE TABLE time_breaks (
+    id SERIAL PRIMARY KEY,
+    time_entry_id INTEGER NOT NULL REFERENCES time_entries(id) ON DELETE CASCADE,
+    started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    stopped_at TIMESTAMP WITH TIME ZONE,
+    note VARCHAR(200)
+);
+
+CREATE INDEX ix_time_breaks_entry_id ON time_breaks(time_entry_id);
+```
 
 ### TimeEntry Table
 
@@ -156,6 +242,9 @@ CREATE TABLE time_entries (
     -- Context
     component_id INTEGER REFERENCES components(id),
 
+    -- Edit tracking
+    edit_history JSONB DEFAULT '[]',
+
     -- Meta
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE
@@ -167,6 +256,19 @@ CREATE INDEX ix_time_entries_linear_issue_id ON time_entries(linear_issue_id);
 CREATE INDEX ix_time_entries_component_id ON time_entries(component_id);
 CREATE INDEX ix_time_entries_user_started ON time_entries(user_id, started_at);
 CREATE INDEX ix_time_entries_active ON time_entries(user_id, stopped_at);
+```
+
+**Edit History Record Structure:**
+
+```json
+{
+  "field": "stopped_at",
+  "old_value": "2025-12-31T18:00:00Z",
+  "new_value": "2025-12-31T17:30:00Z",
+  "reason": "Forgot to stop timer",
+  "edited_at": "2025-12-31T17:35:00Z",
+  "edited_by": "jamie@drip-3d.com"
+}
 ```
 
 ### Resource Table
@@ -247,7 +349,9 @@ When stopping a timer, at least one must be provided:
 ## Future Enhancements
 
 - [ ] Real-time timer sync via WebSocket
-- [ ] Time entry editing (adjust start/stop times)
+- [x] Time entry editing (adjust start/stop times) - v2
+- [x] Break tracking - v2
+- [x] Edit history with reasons - v2
 - [ ] Recurring time entries (templates)
 - [ ] Time budgets and alerts
 - [ ] Export to timesheet formats

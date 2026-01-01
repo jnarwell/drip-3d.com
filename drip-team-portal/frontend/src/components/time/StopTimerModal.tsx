@@ -3,9 +3,21 @@ import { createPortal } from 'react-dom';
 import { useStopTimer, TimeEntry } from '../../hooks/useTimeTracking';
 import { useLinearIssues, LinearIssue } from '../../hooks/useLinearIssues';
 
+interface CategorizationData {
+  linear_issue_id?: string;
+  linear_issue_title?: string;
+  resource_id?: number;
+  description?: string;
+  is_uncategorized?: boolean;
+  component_id?: number;
+}
+
 interface StopTimerModalProps {
-  activeTimer: TimeEntry;
+  activeTimer?: TimeEntry;
   onClose: () => void;
+  // For manual entry mode - allows external handling of submission
+  onSubmit?: (data: CategorizationData) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
 const RESOURCE_TYPES = [
@@ -16,13 +28,14 @@ const RESOURCE_TYPES = [
   { value: 'image', label: 'Image' },
 ];
 
-const StopTimerModal: React.FC<StopTimerModalProps> = ({ activeTimer, onClose }) => {
+const StopTimerModal: React.FC<StopTimerModalProps> = ({ activeTimer, onClose, onSubmit, isSubmitting }) => {
   const stopTimer = useStopTimer();
   const { data: linearData, isLoading: issuesLoading } = useLinearIssues({ state: 'active', limit: 50 });
 
-  const [linearIssueId, setLinearIssueId] = useState(activeTimer.linear_issue_id || '');
-  const [linearIssueTitle, setLinearIssueTitle] = useState(activeTimer.linear_issue_title || '');
-  const [description, setDescription] = useState(activeTimer.description || '');
+  // For manual entry mode (no activeTimer), start with empty values
+  const [linearIssueId, setLinearIssueId] = useState(activeTimer?.linear_issue_id || '');
+  const [linearIssueTitle, setLinearIssueTitle] = useState(activeTimer?.linear_issue_title || '');
+  const [description, setDescription] = useState(activeTimer?.description || '');
   const [isUncategorized, setIsUncategorized] = useState(false);
   const [issueSearch, setIssueSearch] = useState('');
   const [showIssueDropdown, setShowIssueDropdown] = useState(false);
@@ -81,18 +94,30 @@ const StopTimerModal: React.FC<StopTimerModalProps> = ({ activeTimer, onClose })
 
     if (!isValid) return;
 
+    const data: CategorizationData = {
+      linear_issue_id: linearIssueId || undefined,
+      linear_issue_title: linearIssueTitle || undefined,
+      description: description || undefined,
+      is_uncategorized: isUncategorized,
+    };
+
     try {
-      await stopTimer.mutateAsync({
-        linear_issue_id: linearIssueId || undefined,
-        linear_issue_title: linearIssueTitle || undefined,
-        description: description || undefined,
-        is_uncategorized: isUncategorized,
-      });
-      onClose();
+      if (onSubmit) {
+        // Manual entry mode - use external handler
+        await onSubmit(data);
+      } else {
+        // Timer mode - stop the active timer
+        await stopTimer.mutateAsync(data);
+        onClose();
+      }
     } catch (error) {
-      console.error('Failed to stop timer:', error);
+      console.error('Failed to submit:', error);
     }
   };
+
+  // Determine loading state
+  const isPending = isSubmitting ?? stopTimer.isPending;
+  const isManualMode = !activeTimer;
 
   return createPortal(
     <div
@@ -102,7 +127,9 @@ const StopTimerModal: React.FC<StopTimerModalProps> = ({ activeTimer, onClose })
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="px-6 py-4 border-b flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Stop Timer</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {isManualMode ? 'Categorize Entry' : 'Stop Timer'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -286,10 +313,13 @@ const StopTimerModal: React.FC<StopTimerModalProps> = ({ activeTimer, onClose })
             </button>
             <button
               type="submit"
-              disabled={!isValid || stopTimer.isPending}
+              disabled={!isValid || isPending}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {stopTimer.isPending ? 'Stopping...' : 'Stop Timer'}
+              {isPending
+                ? (isManualMode ? 'Saving...' : 'Stopping...')
+                : (isManualMode ? 'Save Entry' : 'Stop Timer')
+              }
             </button>
           </div>
         </form>
