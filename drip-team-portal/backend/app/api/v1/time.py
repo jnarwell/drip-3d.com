@@ -839,22 +839,15 @@ async def get_summary_by_project(
     logger.info(f"[BY-PROJECT] LINEAR_API_KEY configured: {bool(LINEAR_API_KEY)}")
     if LINEAR_API_KEY and issue_ids:
         try:
-            # Build GraphQL query to get project info for issues
-            identifiers_str = ", ".join(f'"{id}"' for id in issue_ids)
-            graphql_query = f"""
-                query {{
-                    issues(filter: {{ identifier: {{ in: [{identifiers_str}] }} }}) {{
-                        nodes {{
-                            identifier
-                            project {{
-                                id
-                                name
-                            }}
-                        }}
-                    }}
-                }}
-            """
-            logger.info(f"[BY-PROJECT] GraphQL query: {graphql_query.strip()}")
+            # Use aliased queries to fetch each issue by identifier
+            # Linear's issue(id:) query accepts both UUIDs and identifiers like "SYS-15"
+            alias_queries = []
+            for i, identifier in enumerate(issue_ids):
+                alias = f"issue_{i}"
+                alias_queries.append(f'{alias}: issue(id: "{identifier}") {{ identifier project {{ id name }} }}')
+
+            graphql_query = "query { " + " ".join(alias_queries) + " }"
+            logger.info(f"[BY-PROJECT] Querying {len(issue_ids)} issues from Linear")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
@@ -868,25 +861,31 @@ async def get_summary_by_project(
                 logger.info(f"[BY-PROJECT] Linear API response status: {response.status_code}")
                 if response.status_code == 200:
                     data = response.json()
-                    logger.info(f"[BY-PROJECT] Linear API raw response: {data}")
 
                     # Check for GraphQL errors
                     if "errors" in data:
                         logger.error(f"[BY-PROJECT] GraphQL errors: {data['errors']}")
 
-                    issues = data.get("data", {}).get("issues", {}).get("nodes", [])
-                    logger.info(f"[BY-PROJECT] Linear returned {len(issues)} issues")
-                    for issue in issues:
-                        project = issue.get("project")
-                        issue_to_project[issue["identifier"]] = {
-                            "project_id": project.get("id") if project else None,
-                            "project_name": project.get("name") if project else "No Project"
-                        }
+                    # Parse aliased response - each key is like "issue_0", "issue_1", etc.
+                    response_data = data.get("data", {})
+                    issues_found = 0
+                    for key, issue in response_data.items():
+                        if issue:  # issue might be null if not found
+                            issues_found += 1
+                            project = issue.get("project")
+                            identifier = issue.get("identifier")
+                            if identifier:
+                                issue_to_project[identifier] = {
+                                    "project_id": project.get("id") if project else None,
+                                    "project_name": project.get("name") if project else "No Project"
+                                }
+
+                    logger.info(f"[BY-PROJECT] Linear returned {issues_found} issues")
                     logger.info(f"[BY-PROJECT] Issue to project mapping: {issue_to_project}")
                 else:
                     logger.warning(f"[BY-PROJECT] Linear API error: {response.text}")
         except Exception as e:
-            logger.warning(f"Failed to fetch Linear project info: {e}")
+            logger.warning(f"Failed to fetch Linear project info: {e}", exc_info=True)
 
     # Aggregate by project
     project_totals = {}
