@@ -1,7 +1,7 @@
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import settings
 import httpx
@@ -71,17 +71,25 @@ class Auth0:
 
 auth0 = Auth0()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
+async def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+) -> Dict[str, Any]:
     token = credentials.credentials
     payload = await auth0.verify_token(token)
-    
+
+    # Get email from token payload, or fall back to x-email header
+    # Auth0 access tokens don't include email by default, but the frontend sends it in the header
     email = payload.get("email", "")
+    if not email:
+        email = request.headers.get("x-email", "")
+
     if not email.endswith(settings.ALLOWED_EMAIL_DOMAIN):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Access restricted to {settings.ALLOWED_EMAIL_DOMAIN} email addresses"
         )
-    
+
     return {
         "email": email,
         "name": payload.get("name", ""),
