@@ -13,6 +13,7 @@ interface AnalysisOutput {
 
 interface AnalysisInput {
   input_name: string;
+  unit?: string;
   literal_value: number | string | null;
   literal_unit_id?: number | null;
   source_value_node_id?: number | null;
@@ -449,7 +450,10 @@ export default function Analysis() {
 
                                 return (
                                   <div key={idx} className="bg-white rounded border border-gray-200 p-2">
-                                    <div className="text-xs text-gray-500">{input.input_name}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {input.input_name}
+                                      {input.unit && <span className="ml-1 text-gray-400">({input.unit})</span>}
+                                    </div>
 
                                     {isEditing ? (
                                       // EDIT MODE

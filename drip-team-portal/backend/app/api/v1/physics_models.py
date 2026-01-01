@@ -1065,14 +1065,20 @@ async def list_analyses(
             ValueNode.source_model_instance_id == instance.id
         ).all()
 
-        # Get model info
+        # Get model info and input schema for units
         model_info = None
+        input_units = {}  # Map input_name -> unit
         if instance.model_version:
             model_info = {
                 "id": instance.model_version.physics_model_id,
                 "name": instance.model_version.physics_model.name if instance.model_version.physics_model else None,
                 "version": instance.model_version.version,
             }
+            # Build unit lookup from model inputs schema
+            model_inputs = instance.model_version.inputs or []
+            for inp_schema in model_inputs:
+                if isinstance(inp_schema, dict):
+                    input_units[inp_schema.get("name", "")] = inp_schema.get("unit", "")
 
         result.append({
             "id": instance.id,
@@ -1089,6 +1095,7 @@ async def list_analyses(
             "inputs": [
                 {
                     "input_name": inp.input_name,
+                    "unit": input_units.get(inp.input_name, ""),
                     "literal_value": inp.literal_value,
                     "source_lookup": inp.source_lookup,
                 }
@@ -1132,14 +1139,20 @@ async def get_analysis(
         ValueNode.source_model_instance_id == analysis_id
     ).all()
 
-    # Get model info
+    # Get model info and input schema for units
     model_info = None
+    input_units = {}  # Map input_name -> unit
     if instance.model_version:
         model_info = {
             "id": instance.model_version.physics_model_id,
             "name": instance.model_version.physics_model.name if instance.model_version.physics_model else None,
             "version": instance.model_version.version,
         }
+        # Build unit lookup from model inputs schema
+        model_inputs = instance.model_version.inputs or []
+        for inp_schema in model_inputs:
+            if isinstance(inp_schema, dict):
+                input_units[inp_schema.get("name", "")] = inp_schema.get("unit", "")
 
     return {
         "id": instance.id,
@@ -1156,6 +1169,7 @@ async def get_analysis(
         "inputs": [
             {
                 "input_name": inp.input_name,
+                "unit": input_units.get(inp.input_name, ""),
                 "literal_value": inp.literal_value,
                 "source_lookup": inp.source_lookup,
                 "source_value_node_id": inp.source_value_node_id,
