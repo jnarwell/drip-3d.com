@@ -101,7 +101,7 @@ export function useActiveTimer() {
 
 export function useTimeEntries(filters: TimeEntryFilters = {}, myEntriesOnly = true) {
   const api = useAuthenticatedApi();
-  const { user } = useDevAwareAuth();
+  const { user, isLoading: isAuthLoading, isAuthenticated } = useDevAwareAuth();
 
   // Apply current user filter by default (for /time page)
   // Set myEntriesOnly=false for team views
@@ -122,7 +122,8 @@ export function useTimeEntries(filters: TimeEntryFilters = {}, myEntriesOnly = t
       const response = await api.get(`/api/v1/time/entries?${params.toString()}`);
       return response.data;
     },
-    enabled: !myEntriesOnly || !!user?.email,
+    // Wait for auth to be ready before fetching user-specific data
+    enabled: !myEntriesOnly || (!isAuthLoading && isAuthenticated && !!user?.email),
   });
 }
 
@@ -131,7 +132,7 @@ export function useTimeSummary(
   myEntriesOnly = true
 ) {
   const api = useAuthenticatedApi();
-  const { user } = useDevAwareAuth();
+  const { user, isLoading: isAuthLoading, isAuthenticated } = useDevAwareAuth();
 
   // Apply current user filter by default
   const effectiveUserId = myEntriesOnly && user?.email && !filters.user_id
@@ -150,7 +151,8 @@ export function useTimeSummary(
       const response = await api.get(`/api/v1/time/summary?${params.toString()}`);
       return response.data;
     },
-    enabled: !myEntriesOnly || !!user?.email,
+    // Wait for auth to be ready before fetching user-specific data
+    enabled: !myEntriesOnly || (!isAuthLoading && isAuthenticated && !!user?.email),
   });
 }
 

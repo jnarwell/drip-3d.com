@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDevAwareAuth } from '../services/auth-domain';
 import { useAuthenticatedApi } from '../services/api';
 import { convertUnit, formatValueWithUnit, formatRangeWithUnit } from '../utils/unitConversion';
 
@@ -223,6 +224,7 @@ interface BackendPreference {
 export const UnitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
+  const { isLoading: isAuthLoading, isAuthenticated, user } = useDevAwareAuth();
 
   // Local state for unit settings - starts with defaults, merges with API data
   const [unitSettings, setUnitSettings] = useState<UnitSettings>(() => {
@@ -231,7 +233,7 @@ export const UnitProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : DEFAULT_UNIT_SETTINGS;
   });
 
-  // Fetch preferences from backend
+  // Fetch preferences from backend - wait until auth is ready and user email is available
   const { data: backendPreferences, isLoading } = useQuery<BackendPreference[]>({
     queryKey: ['unit-preferences'],
     queryFn: async () => {
@@ -239,6 +241,7 @@ export const UnitProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !isAuthLoading && isAuthenticated && !!user?.email,
   });
 
   // Merge backend preferences with defaults when they arrive
