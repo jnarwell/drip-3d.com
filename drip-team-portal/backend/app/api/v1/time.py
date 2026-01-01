@@ -51,10 +51,18 @@ class TimerStopRequest(BaseModel):
     component_id: Optional[int] = None
 
 
+class ManualBreakInput(BaseModel):
+    """Break for manual entry creation."""
+    started_at: datetime
+    stopped_at: datetime
+    note: Optional[str] = None
+
+
 class TimeEntryCreateRequest(BaseModel):
     """For manual time entry creation."""
     started_at: datetime
     stopped_at: datetime
+    breaks: Optional[List[ManualBreakInput]] = None
     linear_issue_id: Optional[str] = None
     linear_issue_title: Optional[str] = None
     resource_id: Optional[int] = None
@@ -63,10 +71,19 @@ class TimeEntryCreateRequest(BaseModel):
     component_id: Optional[int] = None
 
 
+class BreakUpdateInput(BaseModel):
+    """Break for updating - includes optional id for existing breaks."""
+    id: Optional[int] = None  # If provided, updates existing; if None, creates new
+    started_at: datetime
+    stopped_at: datetime
+    note: Optional[str] = None
+
+
 class TimeEntryUpdateRequest(BaseModel):
     """Update request with required edit_reason for audit trail."""
     started_at: Optional[datetime] = None
     stopped_at: Optional[datetime] = None
+    breaks: Optional[List[BreakUpdateInput]] = None  # If provided, replaces all breaks
     linear_issue_id: Optional[str] = None
     linear_issue_title: Optional[str] = None
     resource_id: Optional[int] = None
@@ -290,6 +307,7 @@ async def create_entry(
     Create a manual time entry (already completed).
 
     Useful for logging time after the fact.
+    Supports optional breaks array for break periods.
     """
     user_id = current_user["email"]
 
@@ -326,6 +344,27 @@ async def create_entry(
     db.add(entry)
     db.commit()
     db.refresh(entry)
+
+    # Create breaks if provided
+    if data.breaks:
+        for break_input in data.breaks:
+            # Validate break is within entry time range
+            if break_input.started_at < data.started_at or break_input.stopped_at > data.stopped_at:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Break times must be within entry time range"
+                )
+
+            break_entry = TimeBreak(
+                time_entry_id=entry.id,
+                started_at=break_input.started_at,
+                stopped_at=break_input.stopped_at,
+                note=break_input.note
+            )
+            db.add(break_entry)
+
+        db.commit()
+        db.refresh(entry)
 
     return entry.to_dict()
 
@@ -393,6 +432,37 @@ async def update_entry(
                     "edited_by": user_id
                 })
                 setattr(entry, field, new_value)
+
+    # Handle breaks if provided (replaces all existing breaks)
+    if data.breaks is not None:
+        # Get current breaks for history
+        current_breaks = db.query(TimeBreak).filter(TimeBreak.time_entry_id == entry_id).all()
+        old_breaks_str = str([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in current_breaks])
+        new_breaks_str = str([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in data.breaks])
+
+        if old_breaks_str != new_breaks_str:
+            changes.append({
+                "field": "breaks",
+                "old_value": old_breaks_str,
+                "new_value": new_breaks_str,
+                "reason": data.edit_reason,
+                "edited_at": datetime.now(timezone.utc).isoformat(),
+                "edited_by": user_id
+            })
+
+            # Delete existing breaks
+            for b in current_breaks:
+                db.delete(b)
+
+            # Create new breaks
+            for break_input in data.breaks:
+                break_entry = TimeBreak(
+                    time_entry_id=entry_id,
+                    started_at=break_input.started_at,
+                    stopped_at=break_input.stopped_at,
+                    note=break_input.note
+                )
+                db.add(break_entry)
 
     # Append changes to edit history
     if changes:

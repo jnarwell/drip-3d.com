@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { TimeEntry, useUpdateTimeEntry } from '../../hooks/useTimeTracking';
+import { TimeEntry, TimeBreak, useUpdateTimeEntry } from '../../hooks/useTimeTracking';
 
 interface EditEntryModalProps {
   entry: TimeEntry;
   onClose: () => void;
+}
+
+interface BreakEditInput {
+  id?: number;  // undefined for new breaks
+  tempId: string;  // for React key
+  startTime: string;  // HH:MM format
+  endTime: string;
+  date: string;  // YYYY-MM-DD
+  note: string;
 }
 
 const EDIT_REASONS = [
@@ -12,13 +21,12 @@ const EDIT_REASONS = [
   'Started earlier than recorded',
   'Ended earlier than recorded',
   'Wrong categorization',
-  'Adding break time',
+  'Adding/editing breaks',
   'Other',
 ];
 
 function formatForInput(dateString: string): string {
   const date = new Date(dateString);
-  // Format as YYYY-MM-DDTHH:MM for datetime-local input
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
@@ -37,9 +45,35 @@ function formatDateTime(dateString: string): string {
   });
 }
 
+function getDateFromIso(isoString: string): string {
+  return new Date(isoString).toISOString().split('T')[0];
+}
+
+function getTimeFromIso(isoString: string): string {
+  const date = new Date(isoString);
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function generateTempId(): string {
+  return Math.random().toString(36).substring(2, 9);
+}
+
+function initializeBreaks(breaks?: TimeBreak[]): BreakEditInput[] {
+  if (!breaks || breaks.length === 0) return [];
+  return breaks.map((b) => ({
+    id: b.id,
+    tempId: generateTempId(),
+    date: getDateFromIso(b.started_at),
+    startTime: getTimeFromIso(b.started_at),
+    endTime: b.stopped_at ? getTimeFromIso(b.stopped_at) : '',
+    note: b.note || '',
+  }));
+}
+
 const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
   const [startedAt, setStartedAt] = useState(formatForInput(entry.started_at));
   const [stoppedAt, setStoppedAt] = useState(entry.stopped_at ? formatForInput(entry.stopped_at) : '');
+  const [breaks, setBreaks] = useState<BreakEditInput[]>(() => initializeBreaks(entry.breaks));
   const [reason, setReason] = useState('');
   const [customReason, setCustomReason] = useState('');
 
@@ -61,6 +95,31 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
+  };
+
+  const addBreak = () => {
+    // Default to entry date and 12:00-12:30
+    const entryDate = new Date(startedAt).toISOString().split('T')[0];
+    setBreaks([
+      ...breaks,
+      {
+        tempId: generateTempId(),
+        date: entryDate,
+        startTime: '12:00',
+        endTime: '12:30',
+        note: '',
+      },
+    ]);
+  };
+
+  const updateBreak = (tempId: string, field: keyof BreakEditInput, value: string) => {
+    setBreaks(breaks.map((b) =>
+      b.tempId === tempId ? { ...b, [field]: value } : b
+    ));
+  };
+
+  const removeBreak = (tempId: string) => {
+    setBreaks(breaks.filter((b) => b.tempId !== tempId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,6 +144,26 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
       if (newStoppedAt !== entry.stopped_at) {
         updates.stopped_at = newStoppedAt;
       }
+    }
+
+    // Check if breaks changed
+    const originalBreakCount = entry.breaks?.length || 0;
+    const breaksChanged = breaks.length !== originalBreakCount ||
+      breaks.some((b, i) => {
+        const orig = entry.breaks?.[i];
+        if (!orig) return true;
+        return b.startTime !== getTimeFromIso(orig.started_at) ||
+               b.endTime !== (orig.stopped_at ? getTimeFromIso(orig.stopped_at) : '') ||
+               b.note !== (orig.note || '');
+      });
+
+    if (breaksChanged) {
+      // Convert breaks to ISO format for backend
+      updates.breaks = breaks.map((b) => ({
+        started_at: new Date(`${b.date}T${b.startTime}`).toISOString(),
+        stopped_at: new Date(`${b.date}T${b.endTime}`).toISOString(),
+        note: b.note || null,
+      }));
     }
 
     if (Object.keys(updates).length === 0) {
@@ -115,7 +194,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
       onClick={handleBackdropClick}
     >
       <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-md"
+        className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -166,6 +245,69 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
               <p className="text-sm text-gray-400 mt-1">
                 was {formatDateTime(entry.stopped_at)}
               </p>
+            )}
+          </div>
+
+          {/* Breaks Section */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Breaks
+              </label>
+              <button
+                type="button"
+                onClick={addBreak}
+                className="text-sm text-indigo-600 hover:text-indigo-800"
+              >
+                + Add Break
+              </button>
+            </div>
+
+            {breaks.length === 0 ? (
+              <p className="text-sm text-gray-400 italic">No breaks</p>
+            ) : (
+              <div className="space-y-3">
+                {breaks.map((b) => (
+                  <div
+                    key={b.tempId}
+                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    <div className="flex-1 grid grid-cols-2 gap-2">
+                      <input
+                        type="time"
+                        value={b.startTime}
+                        onChange={(e) => updateBreak(b.tempId, 'startTime', e.target.value)}
+                        className="border border-gray-300 rounded-md shadow-sm px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Start"
+                      />
+                      <input
+                        type="time"
+                        value={b.endTime}
+                        onChange={(e) => updateBreak(b.tempId, 'endTime', e.target.value)}
+                        className="border border-gray-300 rounded-md shadow-sm px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="End"
+                      />
+                      <input
+                        type="text"
+                        value={b.note}
+                        onChange={(e) => updateBreak(b.tempId, 'note', e.target.value)}
+                        className="col-span-2 border border-gray-300 rounded-md shadow-sm px-2 py-1 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Note (optional)"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeBreak(b.tempId)}
+                      className="p-1 text-gray-400 hover:text-red-600"
+                      title="Remove break"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
