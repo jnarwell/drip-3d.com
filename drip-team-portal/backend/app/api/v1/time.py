@@ -24,6 +24,7 @@ from app.models.time_entry import TimeEntry
 from app.models.time_break import TimeBreak
 from app.models.resources import Resource
 from app.models.component import Component
+from app.models.user import User
 
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
@@ -682,10 +683,14 @@ async def get_summary(
 
     # Group by logic
     if group_by == "user":
+        # Join User table to get names
         results = db.query(
             TimeEntry.user_id.label("key"),
+            User.name.label("user_name"),
             func.sum(TimeEntry.duration_seconds).label("total_seconds"),
             func.count(TimeEntry.id).label("entry_count")
+        ).outerjoin(
+            User, TimeEntry.user_id == User.email
         ).filter(
             TimeEntry.stopped_at.isnot(None)
         )
@@ -697,10 +702,15 @@ async def get_summary(
         if user_id:
             results = results.filter(TimeEntry.user_id == user_id)
 
-        results = results.group_by(TimeEntry.user_id).all()
+        results = results.group_by(TimeEntry.user_id, User.name).all()
 
         groups = [
-            {"key": r.key, "total_seconds": r.total_seconds or 0, "entry_count": r.entry_count}
+            {
+                "key": r.key,
+                "name": r.user_name or r.key.split("@")[0].replace(".", " ").title(),
+                "total_seconds": r.total_seconds or 0,
+                "entry_count": r.entry_count
+            }
             for r in results
         ]
 
@@ -769,6 +779,154 @@ async def get_summary(
 
     return {
         "group_by": group_by,
+        "groups": groups,
+        "start_date": start_date.isoformat() if start_date else None,
+        "end_date": end_date.isoformat() if end_date else None
+    }
+
+
+@router.get("/summary/by-project")
+async def get_summary_by_project(
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    user_id: Optional[str] = Query(None, description="Filter by user email"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get time summary grouped by Linear project.
+
+    Fetches project info from Linear API for issues in the time entries.
+    Returns total time per project with issue counts.
+    """
+    import httpx
+
+    # Build query for entries with linear_issue_id
+    query = db.query(TimeEntry).filter(
+        TimeEntry.stopped_at.isnot(None),
+        TimeEntry.linear_issue_id.isnot(None)
+    )
+
+    if start_date:
+        start_datetime = datetime.combine(start_date, datetime.min.time())
+        query = query.filter(TimeEntry.started_at >= start_datetime)
+
+    if end_date:
+        end_datetime = datetime.combine(end_date, datetime.max.time())
+        query = query.filter(TimeEntry.started_at <= end_datetime)
+
+    if user_id:
+        query = query.filter(TimeEntry.user_id == user_id)
+
+    entries = query.all()
+
+    if not entries:
+        return {
+            "group_by": "project",
+            "groups": [],
+            "start_date": start_date.isoformat() if start_date else None,
+            "end_date": end_date.isoformat() if end_date else None
+        }
+
+    # Collect unique issue identifiers
+    issue_ids = list(set(e.linear_issue_id for e in entries if e.linear_issue_id))
+    logger.info(f"[BY-PROJECT] Time entries with Linear issues: {issue_ids}")
+
+    # Fetch issue->project mapping from Linear
+    issue_to_project = {}
+    LINEAR_API_KEY = os.getenv("LINEAR_API_KEY")
+
+    logger.info(f"[BY-PROJECT] LINEAR_API_KEY configured: {bool(LINEAR_API_KEY)}")
+    if LINEAR_API_KEY and issue_ids:
+        try:
+            # Build GraphQL query to get project info for issues
+            identifiers_str = ", ".join(f'"{id}"' for id in issue_ids)
+            graphql_query = f"""
+                query {{
+                    issues(filter: {{ identifier: {{ in: [{identifiers_str}] }} }}) {{
+                        nodes {{
+                            identifier
+                            project {{
+                                id
+                                name
+                            }}
+                        }}
+                    }}
+                }}
+            """
+            logger.info(f"[BY-PROJECT] GraphQL query: {graphql_query.strip()}")
+
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://api.linear.app/graphql",
+                    json={"query": graphql_query},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": LINEAR_API_KEY
+                    }
+                )
+                logger.info(f"[BY-PROJECT] Linear API response status: {response.status_code}")
+                if response.status_code == 200:
+                    data = response.json()
+                    logger.info(f"[BY-PROJECT] Linear API raw response: {data}")
+
+                    # Check for GraphQL errors
+                    if "errors" in data:
+                        logger.error(f"[BY-PROJECT] GraphQL errors: {data['errors']}")
+
+                    issues = data.get("data", {}).get("issues", {}).get("nodes", [])
+                    logger.info(f"[BY-PROJECT] Linear returned {len(issues)} issues")
+                    for issue in issues:
+                        project = issue.get("project")
+                        issue_to_project[issue["identifier"]] = {
+                            "project_id": project.get("id") if project else None,
+                            "project_name": project.get("name") if project else "No Project"
+                        }
+                    logger.info(f"[BY-PROJECT] Issue to project mapping: {issue_to_project}")
+                else:
+                    logger.warning(f"[BY-PROJECT] Linear API error: {response.text}")
+        except Exception as e:
+            logger.warning(f"Failed to fetch Linear project info: {e}")
+
+    # Aggregate by project
+    project_totals = {}
+    for entry in entries:
+        project_info = issue_to_project.get(
+            entry.linear_issue_id,
+            {"project_id": None, "project_name": "No Project"}
+        )
+        project_key = project_info["project_id"] or "none"
+
+        if project_key not in project_totals:
+            project_totals[project_key] = {
+                "project_id": project_info["project_id"],
+                "project_name": project_info["project_name"],
+                "total_seconds": 0,
+                "entry_count": 0,
+                "issues": set()
+            }
+
+        project_totals[project_key]["total_seconds"] += entry.duration_seconds or 0
+        project_totals[project_key]["entry_count"] += 1
+        if entry.linear_issue_id:
+            project_totals[project_key]["issues"].add(entry.linear_issue_id)
+
+    # Build response groups (convert sets to counts)
+    groups = []
+    for key, data in project_totals.items():
+        groups.append({
+            "project_id": data["project_id"],
+            "project_name": data["project_name"],
+            "total_seconds": data["total_seconds"],
+            "entry_count": data["entry_count"],
+            "issue_count": len(data["issues"])
+        })
+
+    # Sort by total time descending
+    groups.sort(key=lambda x: x["total_seconds"], reverse=True)
+
+    return {
+        "group_by": "project",
         "groups": groups,
         "start_date": start_date.isoformat() if start_date else None,
         "end_date": end_date.isoformat() if end_date else None

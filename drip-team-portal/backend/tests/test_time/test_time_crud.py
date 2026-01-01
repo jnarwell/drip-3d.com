@@ -233,7 +233,7 @@ class TestListEntries:
     def test_entries_filter_by_user(self, client, auth_headers, completed_entries):
         """Filter entries by user_id."""
         response = client.get(
-            "/api/v1/time/entries?user_id=test@drip-3d.com",
+            "/api/v1/time/entries?user_id=user@drip-3d.com",
             headers=auth_headers
         )
 
@@ -274,8 +274,9 @@ class TestListEntries:
 
         assert response.status_code == 200
         data = response.json()
-        # 2 entries are from today (entries 3 and 4)
-        assert len(data["entries"]) == 2
+        # Only 1 entry from today for current user (entry3)
+        # Entry4 is from other@drip-3d.com, filtered out by API
+        assert len(data["entries"]) == 1
 
     def test_entries_filter_by_linear_issue(self, client, auth_headers, completed_entries):
         """Filter entries by Linear issue ID."""
@@ -310,7 +311,7 @@ class TestSummary:
         data = response.json()
         assert data["group_by"] == "user"
         assert "groups" in data
-        assert len(data["groups"]) == 2  # test@drip-3d.com and other@drip-3d.com
+        assert len(data["groups"]) == 2  # user@drip-3d.com and other@drip-3d.com
 
     def test_summary_groups_by_component(self, client, auth_headers, completed_entries):
         """Summary grouped by component."""

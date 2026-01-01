@@ -3,8 +3,10 @@ import TimerWidget from '../components/time/TimerWidget';
 import TimeEntryList from '../components/time/TimeEntryList';
 import ManualEntryForm from '../components/time/ManualEntryForm';
 import StopTimerModal from '../components/time/StopTimerModal';
+import TeamTimeView from '../components/time/TeamTimeView';
 import { useTimeSummary, useCreateManualEntry, ManualEntryBreak } from '../hooks/useTimeTracking';
 
+type Tab = 'my-time' | 'team';
 type EntryMode = 'timer' | 'manual';
 
 interface PendingManualEntry {
@@ -41,6 +43,7 @@ function getWeekDates() {
 }
 
 const TimeTracker: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<Tab>('my-time');
   const [mode, setMode] = useState<EntryMode>('timer');
   const [pendingManualEntry, setPendingManualEntry] = useState<PendingManualEntry | null>(null);
 
@@ -93,17 +96,46 @@ const TimeTracker: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Tabs */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Time Tracking</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Track your time and categorize your work
+            {activeTab === 'my-time'
+              ? 'Track your time and categorize your work'
+              : 'Team overview and project analytics'
+            }
           </p>
+        </div>
+        <div className="flex rounded-lg overflow-hidden border border-gray-200">
+          <button
+            onClick={() => setActiveTab('my-time')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'my-time'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            My Time
+          </button>
+          <button
+            onClick={() => setActiveTab('team')}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === 'team'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            Team
+          </button>
         </div>
       </div>
 
-      {/* Main grid */}
+      {/* Tab Content */}
+      {activeTab === 'team' ? (
+        <TeamTimeView />
+      ) : (
+      /* My Time View - Main grid */
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Timer/Manual Entry Widget */}
         <div className="lg:col-span-1">
@@ -182,6 +214,7 @@ const TimeTracker: React.FC = () => {
           <TimeEntryList />
         </div>
       </div>
+      )}
 
       {/* Categorization Modal for Manual Entry */}
       {pendingManualEntry && (

@@ -245,7 +245,7 @@ async def change_component_material(
             new_material_id=material_id,
             user_email=current_user["email"]
         )
-        
+
         # Create audit log
         audit = AuditLog(
             entity_type="component",
@@ -261,7 +261,7 @@ async def change_component_material(
         )
         db.add(audit)
         db.commit()
-        
+
         return {
             "status": "success",
             "component_id": component_id,
@@ -271,4 +271,13 @@ async def change_component_material(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        # Catch any other exceptions to ensure proper error response with CORS headers
+        import logging
+        logging.error(f"Error changing material for component {component_id}: {e}", exc_info=True)
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to change material: {str(e)}"
         )

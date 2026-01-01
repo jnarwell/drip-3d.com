@@ -203,7 +203,9 @@ TEMPERATURE_OFFSETS = {
 
 
 def convert_to_si(value: float, unit: str) -> float:
-    """Convert a value to SI base unit."""
+    """Convert a value to SI base unit. Returns None if value is None."""
+    if value is None:
+        return None
     if unit in TEMPERATURE_OFFSETS and unit not in ('K', 'kelvin', '°R', 'rankine'):
         # Temperature with offset
         factor = UNIT_TO_SI.get(unit, 1)
@@ -216,7 +218,9 @@ def convert_to_si(value: float, unit: str) -> float:
 
 
 def convert_from_si(value: float, unit: str) -> float:
-    """Convert a value from SI base unit to target unit."""
+    """Convert a value from SI base unit to target unit. Returns None if value is None."""
+    if value is None:
+        return None
     if unit in TEMPERATURE_OFFSETS and unit not in ('K', 'kelvin', '°R', 'rankine'):
         # Temperature with offset
         factor = UNIT_TO_SI.get(unit, 1)

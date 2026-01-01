@@ -177,6 +177,62 @@ This symmetric visibility enables:
 
 ---
 
+## Team View
+
+The Team View provides a comprehensive dashboard for team time tracking with aggregated metrics and visualizations.
+
+### Active Timers Bar
+
+Displays all team members currently working:
+- Shows user name, elapsed time, and current task
+- "On Break" indicator when applicable
+- Clicking opens the user's current entry details
+
+### Summary Cards
+
+Three cards showing period totals:
+
+| Card | Description |
+|------|-------------|
+| **Total Hours** | Sum of all tracked time in period |
+| **Team Members** | Count of users with entries |
+| **Entries** | Total number of time entries |
+
+### Time by User Chart
+
+Bar chart visualization showing:
+- Hours tracked per team member
+- Sorted by total time (highest first)
+- Hover for exact hours and entry count
+
+### Breakdown Table
+
+Detailed table with columns:
+- **User**: Name and email
+- **Hours**: Total hours in period
+- **Entries**: Number of entries
+- **Avg Duration**: Average entry length
+- **Top Project**: Most worked-on Linear project
+
+### Project Aggregation
+
+Time entries are aggregated by Linear project:
+- Issue IDs (e.g., "DRP-156") map to their parent project
+- "Uncategorized" bucket for entries without Linear issues
+- Breakdown shows each project's total hours and contributors
+
+### Date Range Selector
+
+Filter the view by:
+- Today
+- This Week
+- This Month
+- Custom Range (date picker)
+
+All summary data, charts, and tables update based on selected range
+
+---
+
 ## API Reference
 
 See [API_REFERENCE.md#time-tracking](API_REFERENCE.md#time-tracking) for full endpoint documentation.
@@ -187,11 +243,19 @@ See [API_REFERENCE.md#time-tracking](API_REFERENCE.md#time-tracking) for full en
 | POST | `/api/v1/time/start` | Start a new timer |
 | POST | `/api/v1/time/stop` | Stop active timer with categorization |
 | GET | `/api/v1/time/active` | Get current user's running timer |
+| GET | `/api/v1/time/team/active` | Get all team active timers |
 | GET | `/api/v1/time/entries` | List time entries (filterable) |
 | GET | `/api/v1/time/summary` | Aggregated time summaries |
+| GET | `/api/v1/time/summary/by-project` | Time aggregated by Linear project |
 | PATCH | `/api/v1/time/entries/{id}` | Edit entry (requires edit_reason) |
 | POST | `/api/v1/time/entries/{id}/breaks` | Start a break |
 | POST | `/api/v1/time/entries/{id}/breaks/{break_id}/stop` | Stop a break |
+
+**User Endpoints:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/users` | List all users (synced from Linear) |
+| POST | `/api/v1/linear-enhanced/sync-users` | Sync users from Linear |
 
 **Resource Endpoints:**
 | Method | Endpoint | Description |

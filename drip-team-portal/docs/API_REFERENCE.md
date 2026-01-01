@@ -854,6 +854,49 @@ See [PHYSICS_MODELS.md](PHYSICS_MODELS.md#real-time-collaboration-websocket) for
 
 ---
 
+## Users
+
+### List Users
+```
+GET /api/v1/users
+```
+
+Returns all known users (synced from Linear).
+
+Response:
+```json
+[
+  {
+    "id": "user_abc123",
+    "email": "jamie@drip-3d.com",
+    "name": "Jamie Marwell",
+    "avatar_url": "https://...",
+    "is_active": true,
+    "synced_at": "2025-12-31T10:00:00Z"
+  }
+]
+```
+
+### Sync Users from Linear
+```
+POST /api/v1/linear-enhanced/sync-users
+```
+
+Fetches current team members from Linear and updates local user cache.
+
+Response:
+```json
+{
+  "synced": 3,
+  "users": [
+    {"email": "jamie@drip-3d.com", "name": "Jamie Marwell"},
+    {"email": "alex@drip-3d.com", "name": "Alex Chen"}
+  ]
+}
+```
+
+---
+
 ## Time Tracking
 
 Time tracking allows team members to log work sessions with categorization.
@@ -944,6 +987,37 @@ Response:
 }
 ```
 
+### Get Team Active Timers
+```
+GET /api/v1/time/team/active
+```
+
+Returns all currently running timers across the team (symmetric visibility).
+
+Response:
+```json
+{
+  "active_timers": [
+    {
+      "id": 1,
+      "user_id": "jamie@drip-3d.com",
+      "started_at": "2025-12-31T10:00:00Z",
+      "component_id": 5,
+      "on_break": false,
+      "linear_issue_id": "DRP-156"
+    },
+    {
+      "id": 2,
+      "user_id": "alex@drip-3d.com",
+      "started_at": "2025-12-31T09:30:00Z",
+      "component_id": null,
+      "on_break": true,
+      "linear_issue_id": null
+    }
+  ]
+}
+```
+
 ### List Time Entries
 ```
 GET /api/v1/time/entries
@@ -993,10 +1067,52 @@ Response (group_by=user):
   "summary": [
     {
       "user_id": "jamie@drip-3d.com",
+      "name": "Jamie Marwell",
       "total_seconds": 28800,
       "entry_count": 5
     }
   ],
+  "period": {
+    "start": "2025-12-01",
+    "end": "2025-12-31"
+  }
+}
+```
+
+**Note:** When `group_by=user`, response includes `name` field from synced Linear users.
+
+### Get Time Summary by Project
+```
+GET /api/v1/time/summary/by-project
+Query: ?start_date=2025-12-01&end_date=2025-12-31
+```
+
+Aggregates time by Linear project (derived from issue IDs).
+
+**Query Parameters:**
+- `start_date` (optional): ISO date
+- `end_date` (optional): ISO date
+- `user_id` (optional): Filter by specific user
+
+Response:
+```json
+{
+  "projects": [
+    {
+      "project_id": "proj_abc",
+      "project_name": "Portal Development",
+      "total_seconds": 86400,
+      "entry_count": 12,
+      "users": [
+        {"user_id": "jamie@drip-3d.com", "name": "Jamie", "seconds": 57600},
+        {"user_id": "alex@drip-3d.com", "name": "Alex", "seconds": 28800}
+      ]
+    }
+  ],
+  "uncategorized": {
+    "total_seconds": 7200,
+    "entry_count": 3
+  },
   "period": {
     "start": "2025-12-01",
     "end": "2025-12-31"

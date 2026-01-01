@@ -6,9 +6,18 @@ Provides endpoints for fetching initiatives, projects, and team member data.
 import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 import httpx
+
+from app.db.database import get_db
+
+import os as _os
+if _os.getenv("DEV_MODE") == "true":
+    from app.core.security_dev import get_current_user_dev as get_current_user
+else:
+    from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/linear-enhanced", tags=["linear-enhanced"])
 
@@ -617,6 +626,70 @@ async def get_linear_issues(
         import logging
         logging.warning(f"Linear issues fetch failed: {e}")
         return {"issues": [], "count": 0, "configured": True, "error": str(e)}
+
+
+@router.post("/sync-users")
+async def sync_linear_users_to_db(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Sync team members from Linear to our User table.
+
+    Creates new users or updates names for existing users.
+    Only syncs users with @drip-3d.com email addresses.
+    """
+    from app.models.user import User
+
+    # Graceful degradation when Linear not configured
+    if not LINEAR_API_KEY:
+        return {"synced": [], "total": 0, "configured": False}
+
+    try:
+        # Get team members from Linear
+        if not is_cache_valid("team_members"):
+            await refresh_cache("team_members")
+
+        members_data = _enhanced_cache["team_members"]["data"]
+        members = members_data.get("members", [])
+
+        synced = []
+        for member in members:
+            email = member.get("email")
+            if not email or not email.endswith("@drip-3d.com"):
+                continue
+
+            name = member.get("name")
+
+            existing = db.query(User).filter(User.email == email).first()
+            if existing:
+                # Update name if changed
+                if existing.name != name and name:
+                    existing.name = name
+                    synced.append({"email": email, "name": name, "action": "updated"})
+            else:
+                # Create new user
+                new_user = User(
+                    email=email,
+                    name=name,
+                    auth0_id=f"linear:{member.get('linearId', email)}",  # Placeholder until first login
+                    is_active=True
+                )
+                db.add(new_user)
+                synced.append({"email": email, "name": name, "action": "created"})
+
+        db.commit()
+
+        return {
+            "synced": synced,
+            "total": len(synced),
+            "configured": True
+        }
+
+    except Exception as e:
+        import logging
+        logging.warning(f"Linear users sync failed: {e}")
+        return {"synced": [], "total": 0, "configured": True, "error": str(e)}
 
 
 @router.get("/health")

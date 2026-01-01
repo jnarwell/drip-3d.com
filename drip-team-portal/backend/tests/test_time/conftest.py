@@ -121,7 +121,7 @@ def test_resource(db):
         title="Test Document",
         resource_type="doc",
         url="https://example.com/test-doc",
-        added_by="test@drip-3d.com",
+        added_by="user@drip-3d.com",
         tags=["test", "documentation"],
         notes="A test resource for time tracking tests"
     )
@@ -135,7 +135,7 @@ def test_resource(db):
 def running_timer(db):
     """Create a running timer (no stopped_at) for the test user."""
     entry = TimeEntry(
-        user_id="test@drip-3d.com",
+        user_id="user@drip-3d.com",  # Must match DEV_MODE user in security_dev.py
         started_at=datetime.now(timezone.utc) - timedelta(minutes=30),
         stopped_at=None,
         linear_issue_id="DRP-100"
@@ -153,7 +153,7 @@ def completed_entries(db, test_component):
     entries = []
 
     entry1 = TimeEntry(
-        user_id="test@drip-3d.com",
+        user_id="user@drip-3d.com",  # Must match DEV_MODE user
         started_at=now - timedelta(days=1, hours=2),
         stopped_at=now - timedelta(days=1, hours=1),
         duration_seconds=3600,
@@ -165,7 +165,7 @@ def completed_entries(db, test_component):
     entries.append(entry1)
 
     entry2 = TimeEntry(
-        user_id="test@drip-3d.com",
+        user_id="user@drip-3d.com",  # Must match DEV_MODE user
         started_at=now - timedelta(days=1, hours=5),
         stopped_at=now - timedelta(days=1, hours=3),
         duration_seconds=7200,
@@ -175,7 +175,7 @@ def completed_entries(db, test_component):
     entries.append(entry2)
 
     entry3 = TimeEntry(
-        user_id="test@drip-3d.com",
+        user_id="user@drip-3d.com",  # Must match DEV_MODE user
         started_at=now - timedelta(hours=3),
         stopped_at=now - timedelta(hours=2),
         duration_seconds=3600,
@@ -212,7 +212,7 @@ def multiple_resources(db, test_component):
         title="Design Document",
         resource_type="doc",
         url="https://example.com/design",
-        added_by="test@drip-3d.com",
+        added_by="user@drip-3d.com",
         tags=["design", "phase-1"]
     )
     resources.append(resource1)
@@ -221,7 +221,7 @@ def multiple_resources(db, test_component):
         title="Research Paper",
         resource_type="paper",
         url="https://arxiv.org/paper",
-        added_by="test@drip-3d.com",
+        added_by="user@drip-3d.com",
         tags=["research", "thermal"]
     )
     resources.append(resource2)

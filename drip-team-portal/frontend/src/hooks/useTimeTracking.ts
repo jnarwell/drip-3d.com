@@ -2,6 +2,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDevAwareAuth } from '../services/auth-domain';
 import { useAuthenticatedApi } from '../services/api';
 
+export interface User {
+  email: string;
+  name: string;
+}
+
+export interface ProjectGroup {
+  project_id: string | null;
+  project_name: string;
+  total_seconds: number;
+  entry_count: number;
+  issue_count: number;
+}
+
+export interface ProjectSummary {
+  group_by: string;
+  groups: ProjectGroup[];
+  start_date: string | null;
+  end_date: string | null;
+}
+
 export interface TimeBreak {
   id: number;
   started_at: string;
@@ -63,6 +83,7 @@ export interface TimeEntryFilters {
 
 export interface TimeSummaryGroup {
   key: string;
+  name?: string;  // User name when group_by=user
   total_seconds: number;
   entry_count: number;
 }
@@ -317,6 +338,42 @@ export function useCreateManualEntry() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time', 'entries'] });
       queryClient.invalidateQueries({ queryKey: ['time', 'summary'] });
+    },
+  });
+}
+
+// =============================================================================
+// TEAM VIEW HOOKS
+// =============================================================================
+
+export function useUsers() {
+  const api = useAuthenticatedApi();
+
+  return useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await api.get('/api/v1/users');
+      // Backend returns { users: [...], count: N }
+      return response.data.users.map((u: { email: string; name: string }) => ({
+        email: u.email,
+        name: u.name,
+      }));
+    },
+  });
+}
+
+export function useProjectSummary(filters: { start_date?: string; end_date?: string } = {}) {
+  const api = useAuthenticatedApi();
+
+  return useQuery<ProjectSummary>({
+    queryKey: ['time', 'summary', 'by-project', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.start_date) params.append('start_date', filters.start_date);
+      if (filters.end_date) params.append('end_date', filters.end_date);
+
+      const response = await api.get(`/api/v1/time/summary/by-project?${params.toString()}`);
+      return response.data;
     },
   });
 }

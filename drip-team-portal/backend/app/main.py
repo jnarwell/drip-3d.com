@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from app.core.config import settings
 from app.db.database import engine
 from app.models import Base
@@ -27,12 +27,52 @@ from app.api.v1.physics_models import router as physics_models_router
 from app.api.v1.websocket import router as websocket_router
 from app.api.v1.time import router as time_router
 from app.api.v1.resources import router as resources_router
+from app.api.v1.users import router as users_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
     description="Internal validation tracking portal for DRIP project",
     version="1.0.0",
 )
+
+
+# Global exception handler to ensure CORS headers are added to error responses
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with proper CORS headers."""
+    origin = request.headers.get("origin", "")
+
+    response = JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+    # Add CORS headers for known origins
+    if origin in settings.ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
+    return response
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle unexpected exceptions with proper CORS headers."""
+    origin = request.headers.get("origin", "")
+    logging.error(f"Unexpected error: {exc}", exc_info=True)
+
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
+    # Add CORS headers for known origins
+    if origin in settings.ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
+    return response
+
 
 @app.on_event("startup")
 async def startup_event():
@@ -145,6 +185,7 @@ app.include_router(physics_models_router, tags=["physics-models"])
 app.include_router(websocket_router, tags=["websocket"])
 app.include_router(time_router, tags=["time"])
 app.include_router(resources_router, tags=["resources"])
+app.include_router(users_router, tags=["users"])
 
 @app.get("/")
 async def root():

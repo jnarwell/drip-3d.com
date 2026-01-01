@@ -75,6 +75,7 @@ backend/
 │   │   ├── user_preferences.py # User settings persistence
 │   │   ├── values.py           # Value system endpoints
 │   │   ├── time.py             # Time tracking endpoints
+│   │   ├── users.py            # User management (Linear sync)
 │   │   ├── webhooks.py         # External webhooks
 │   │   └── websocket.py        # WebSocket for real-time updates
 │   ├── models/                 # SQLAlchemy ORM (14 models)
@@ -84,7 +85,7 @@ backend/
 │   │   ├── physics_model.py    # PhysicsModel, ModelVersion, ModelInstance, ModelInput
 │   │   ├── property.py         # PropertyDefinition
 │   │   ├── resources.py        # Resource definitions, SystemConstant
-│   │   ├── time_entry.py       # TimeEntry model
+│   │   ├── time_entry.py       # TimeEntry, TimeBreak models
 │   │   ├── test.py             # TestCampaign, TestResult
 │   │   ├── units.py            # Unit, UnitConversion
 │   │   ├── user.py             # User accounts
@@ -346,6 +347,7 @@ PropertyDefinition  ValueDependency
 | `UserPreference` | User settings |
 | `AuditLog` | Change tracking |
 | `TimeEntry` | Time tracking work sessions |
+| `TimeBreak` | Break periods within time entries |
 | `Resource` | Knowledge base resources (docs, links, papers) |
 
 ### Key Relationships
@@ -416,10 +418,11 @@ LOOKUP("al_6061_t6", "E", T=373.15K)  # Young's modulus at temperature
 ## External Integrations
 
 ### Linear API
-- **Purpose**: Project progress tracking
-- **Data**: Initiatives, projects, milestones
+- **Purpose**: Project progress tracking, user sync
+- **Data**: Initiatives, projects, milestones, team members
 - **Cache**: 5-minute TTL
 - **Routers**: `linear.py`, `linear_enhanced.py`
+- **User Sync**: Team members synced via `/api/v1/linear-enhanced/sync-users`
 
 ### Materials Project
 - **Purpose**: Computational materials database
