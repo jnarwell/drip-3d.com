@@ -206,6 +206,7 @@ async def list_drive_files(
     page_size: int = Query(25, ge=1, le=100, description="Number of files per page"),
     query: Optional[str] = Query(None, description="Search query (Drive search syntax)"),
     mime_type: Optional[str] = Query(None, description="Filter by MIME type"),
+    drive_id: Optional[str] = Query(None, description="Shared drive ID (optional)"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
@@ -215,17 +216,28 @@ async def list_drive_files(
     Supports pagination via page_token and filtering by:
     - query: Google Drive search syntax (e.g., "name contains 'report'")
     - mime_type: Filter by file type (e.g., "application/pdf")
+    - drive_id: Target a specific shared drive
 
     Returns file metadata including name, type, links, and modification time.
+    Includes files from shared drives via supportsAllDrives.
     """
     google_token = await get_google_token(current_user["email"], db)
 
     # Build Drive API query
     params = {
         "pageSize": page_size,
-        "fields": "nextPageToken,files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,size,owners)",
+        "fields": "nextPageToken,files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,size,owners,driveId)",
         "orderBy": "modifiedTime desc",
+        "supportsAllDrives": "true",
+        "includeItemsFromAllDrives": "true",
     }
+
+    # Set corpora based on drive_id
+    if drive_id:
+        params["driveId"] = drive_id
+        params["corpora"] = "drive"
+    else:
+        params["corpora"] = "allDrives"
 
     if page_token:
         params["pageToken"] = page_token
@@ -289,7 +301,10 @@ async def get_drive_file(
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"https://www.googleapis.com/drive/v3/files/{file_id}",
-            params={"fields": fields},
+            params={
+                "fields": fields,
+                "supportsAllDrives": "true",
+            },
             headers={"Authorization": f"Bearer {google_token}"},
             timeout=15.0
         )
@@ -319,6 +334,7 @@ async def get_drive_file(
 async def search_drive_files(
     q: str = Query(..., description="Search term"),
     page_size: int = Query(25, ge=1, le=100),
+    drive_id: Optional[str] = Query(None, description="Shared drive ID (optional)"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
@@ -327,15 +343,25 @@ async def search_drive_files(
 
     Simple search endpoint that wraps the name contains query.
     For advanced queries, use /files with the query parameter.
+    Includes files from shared drives via supportsAllDrives.
     """
     google_token = await get_google_token(current_user["email"], db)
 
     params = {
         "pageSize": page_size,
-        "fields": "files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime)",
+        "fields": "files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,driveId)",
         "q": f"name contains '{q}' and trashed=false",
         "orderBy": "modifiedTime desc",
+        "supportsAllDrives": "true",
+        "includeItemsFromAllDrives": "true",
     }
+
+    # Set corpora based on drive_id
+    if drive_id:
+        params["driveId"] = drive_id
+        params["corpora"] = "drive"
+    else:
+        params["corpora"] = "allDrives"
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
