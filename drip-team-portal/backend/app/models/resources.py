@@ -14,16 +14,16 @@ from app.db.database import Base
 resource_components = Table(
     'resource_components',
     Base.metadata,
-    Column('resource_id', Integer, ForeignKey('resources.id'), primary_key=True),
-    Column('component_id', Integer, ForeignKey('components.id'), primary_key=True),
+    Column('resource_id', Integer, ForeignKey('resources.id', ondelete='CASCADE'), primary_key=True),
+    Column('component_id', Integer, ForeignKey('components.id', ondelete='CASCADE'), primary_key=True),
 )
 
 # Many-to-many: Resources <-> PhysicsModels
 resource_physics_models = Table(
     'resource_physics_models',
     Base.metadata,
-    Column('resource_id', Integer, ForeignKey('resources.id'), primary_key=True),
-    Column('physics_model_id', Integer, ForeignKey('physics_models.id'), primary_key=True),
+    Column('resource_id', Integer, ForeignKey('resources.id', ondelete='CASCADE'), primary_key=True),
+    Column('physics_model_id', Integer, ForeignKey('physics_models.id', ondelete='CASCADE'), primary_key=True),
 )
 
 
@@ -71,11 +71,11 @@ class Resource(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(300), nullable=False)
-    resource_type = Column(String(50), nullable=False)  # doc, folder, image, link, paper, video, spreadsheet
+    resource_type = Column(String(50), nullable=False, index=True)  # doc, folder, image, link, paper, video, spreadsheet
     url = Column(String(2000), nullable=True)
 
     # Ownership
-    added_by = Column(String(200), nullable=False)  # User email
+    added_by = Column(String(200), nullable=False, index=True)  # User email
     added_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Metadata

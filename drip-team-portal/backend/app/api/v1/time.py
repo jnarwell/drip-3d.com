@@ -9,7 +9,7 @@ Provides:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func, and_, or_
 from typing import Optional, List
 from pydantic import BaseModel
@@ -261,11 +261,19 @@ async def list_entries(
     List time entries with optional filters.
 
     Returns entries sorted by started_at descending (most recent first).
+    Users can only view their own entries (user_id filter is ignored for security).
     """
-    print(f"📋 [TIME] LIST: user_id filter={user_id}, backend_user={current_user.get('email')}")
-    query = db.query(TimeEntry)
+    current_user_email = current_user.get('email')
+    logger.info(f"GET /entries - user={current_user_email}, requested_filter={user_id}")
 
-    # Apply filters
+    # Use selectinload to prevent N+1 queries when calling to_dict()
+    query = db.query(TimeEntry).options(selectinload(TimeEntry.breaks))
+
+    # SECURITY: Always filter by current user - users can only see their own entries
+    # The user_id parameter is accepted but ignored to prevent cross-user access
+    query = query.filter(TimeEntry.user_id == current_user_email)
+
+    # Apply date filters
     # Note: Use naive datetimes for SQLite compatibility (SQLite stores naive)
     if start_date:
         start_datetime = datetime.combine(start_date, datetime.min.time())
@@ -274,9 +282,6 @@ async def list_entries(
     if end_date:
         end_datetime = datetime.combine(end_date, datetime.max.time())
         query = query.filter(TimeEntry.started_at <= end_datetime)
-
-    if user_id:
-        query = query.filter(TimeEntry.user_id == user_id)
 
     if component_id:
         query = query.filter(TimeEntry.component_id == component_id)

@@ -6,7 +6,7 @@ linked to components and physics models.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_, String
 from typing import Optional, List
 from pydantic import BaseModel
@@ -76,7 +76,12 @@ async def list_resources(
 
     Returns resources sorted by added_at descending (most recent first).
     """
-    query = db.query(Resource)
+    # Use selectinload to prevent N+1 queries when calling to_dict()
+    query = db.query(Resource).options(
+        selectinload(Resource.components),
+        selectinload(Resource.physics_models),
+        selectinload(Resource.collections)
+    )
 
     # Apply filters - support both 'type' and 'resource_type', with comma-separated values
     type_filter = type or resource_type

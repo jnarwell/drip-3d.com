@@ -272,6 +272,13 @@ async def add_resource_to_collection(
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
 
+    # Verify user owns this resource (can only add own resources to collections)
+    if resource.added_by != user_email:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only add your own resources to collections"
+        )
+
     # Check if already in collection
     if resource in collection.resources:
         return {"added": False, "message": "Resource already in collection"}

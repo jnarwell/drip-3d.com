@@ -7,18 +7,29 @@ Tokens are automatically refreshed when expired using the stored refresh token.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timedelta
 import os
 import httpx
 import logging
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception
 
 from app.db.database import get_db
 from app.models.google_token import GoogleToken
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _is_retryable_error(exception: Exception) -> bool:
+    """Check if the exception is retryable (transient errors)."""
+    if isinstance(exception, httpx.HTTPStatusError):
+        # Retry on 429 (rate limit), 500, 502, 503, 504 (server errors)
+        return exception.response.status_code in (429, 500, 502, 503, 504)
+    if isinstance(exception, (httpx.TimeoutException, httpx.ConnectError)):
+        return True
+    return False
 
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
@@ -347,10 +358,13 @@ async def search_drive_files(
     """
     google_token = await get_google_token(current_user["email"], db)
 
+    # Escape single quotes and backslashes to prevent Drive query injection
+    escaped_q = q.replace("\\", "\\\\").replace("'", "\\'")
+
     params = {
         "pageSize": page_size,
         "fields": "files(id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,driveId)",
-        "q": f"name contains '{q}' and trashed=false",
+        "q": f"name contains '{escaped_q}' and trashed=false",
         "orderBy": "modifiedTime desc",
         "supportsAllDrives": "true",
         "includeItemsFromAllDrives": "true",

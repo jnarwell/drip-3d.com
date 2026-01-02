@@ -43,7 +43,7 @@ class TimeEntry(Base):
     # Categorization (at least one should be populated, or is_uncategorized=True)
     linear_issue_id = Column(String(50), nullable=True, index=True)  # "DRP-156"
     linear_issue_title = Column(String(500), nullable=True)  # Cache for display
-    resource_id = Column(Integer, ForeignKey("resources.id"), nullable=True)
+    resource_id = Column(Integer, ForeignKey("resources.id", ondelete="SET NULL"), nullable=True, index=True)
     description = Column(Text, nullable=True)
     is_uncategorized = Column(Boolean, default=False)  # N/A flag
 

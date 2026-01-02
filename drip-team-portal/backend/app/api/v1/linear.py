@@ -7,9 +7,14 @@ import os
 import asyncio
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import JSONResponse
 import httpx
+
+if os.getenv("DEV_MODE") == "true":
+    from app.core.security_dev import get_current_user_dev as get_current_user
+else:
+    from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/linear", tags=["linear"])
 
@@ -196,11 +201,14 @@ async def refresh_cache() -> Dict[str, Any]:
         raise e
 
 @router.get("/progress")
-async def get_progress_data(force_refresh: bool = False):
+async def get_progress_data(
+    force_refresh: bool = False,
+    current_user: dict = Depends(get_current_user)
+):
     """
     Get Linear progress data for website display.
     Returns cached data if available and fresh, otherwise fetches from Linear API.
-    
+
     Query Parameters:
     - force_refresh: Set to true to bypass cache and fetch fresh data
     """
@@ -220,7 +228,9 @@ async def get_progress_data(force_refresh: bool = False):
         raise HTTPException(status_code=500, detail=f"Failed to fetch progress data: {str(e)}")
 
 @router.get("/milestones")
-async def get_upcoming_milestones():
+async def get_upcoming_milestones(
+    current_user: dict = Depends(get_current_user)
+):
     """
     Get upcoming project completion milestones.
     Returns the next 3 upcoming project deadlines plus one week for celebration.
@@ -299,7 +309,9 @@ async def force_refresh_data(background_tasks: BackgroundTasks):
         raise HTTPException(status_code=500, detail=f"Failed to refresh data: {str(e)}")
 
 @router.get("/health")
-async def linear_health_check():
+async def linear_health_check(
+    current_user: dict = Depends(get_current_user)
+):
     """Check Linear API connectivity and cache status"""
     try:
         client = LinearClient()
