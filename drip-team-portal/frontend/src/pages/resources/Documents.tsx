@@ -1,6 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocation } from 'react-router-dom';
 import { useAuthenticatedApi } from '../../services/api';
+
+interface GoogleConnectionStatus {
+  connected: boolean;
+  email?: string;
+}
 
 // Resource model from backend (filtered to doc types)
 interface Resource {
@@ -46,6 +52,7 @@ const DOC_TYPE_INFO: Record<string, { label: string; icon: string; color: string
 const Documents: React.FC = () => {
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
+  const location = useLocation();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
@@ -53,6 +60,54 @@ const Documents: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBrowseModal, setShowBrowseModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [connectingGoogle, setConnectingGoogle] = useState(false);
+
+  // Check if we just connected (from OAuth callback)
+  const justConnected = location.state?.googleConnected === true;
+
+  // Check Google Drive connection status
+  const { data: googleStatus, isLoading: googleStatusLoading } = useQuery<GoogleConnectionStatus>({
+    queryKey: ['google-connection-status'],
+    queryFn: async () => {
+      try {
+        const response = await api.get('/api/v1/google-oauth/status');
+        return response.data;
+      } catch {
+        return { connected: false };
+      }
+    },
+    staleTime: 60000, // Cache for 1 minute
+  });
+
+  const isGoogleConnected = googleStatus?.connected || false;
+
+  // Handle Connect Google Drive button
+  const handleConnectGoogle = async () => {
+    setConnectingGoogle(true);
+    try {
+      const response = await api.get('/api/v1/google-oauth/auth-url', {
+        params: {
+          redirect_uri: `${window.location.origin}/oauth/google/callback`
+        }
+      });
+      // Redirect to Google OAuth
+      window.location.href = response.data.auth_url;
+    } catch (err) {
+      console.error('Failed to get auth URL:', err);
+      setConnectingGoogle(false);
+    }
+  };
+
+  // Handle Disconnect Google Drive
+  const disconnectGoogle = useMutation({
+    mutationFn: async () => {
+      await api.delete('/api/v1/google-oauth/disconnect');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['google-connection-status'] });
+      queryClient.invalidateQueries({ queryKey: ['drive-files'] });
+    },
+  });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -240,16 +295,80 @@ const Documents: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Success message after connecting */}
+      {justConnected && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
+          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-green-800">Google Drive connected successfully!</span>
+        </div>
+      )}
+
+      {/* Google Drive Connection Banner */}
+      {!googleStatusLoading && !isGoogleConnected && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <svg className="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.24 8.79l-4.79 8.3h9.58l-4.79-8.3zm0-2.62L19.46 18H4.98L12.24 6.17zM22 18l-9.76-16.9L2.24 18H22z"/>
+              </svg>
+              <div>
+                <p className="font-medium text-blue-900">Connect Google Drive</p>
+                <p className="text-sm text-blue-700">Browse and link files directly from your Google Drive</p>
+              </div>
+            </div>
+            <button
+              onClick={handleConnectGoogle}
+              disabled={connectingGoogle}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              {connectingGoogle ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Connecting...
+                </>
+              ) : (
+                'Connect Drive'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl font-bold text-gray-900">Documents</h2>
+            {isGoogleConnected && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12.24 8.79l-4.79 8.3h9.58l-4.79-8.3zm0-2.62L19.46 18H4.98L12.24 6.17zM22 18l-9.76-16.9L2.24 18H22z"/>
+                </svg>
+                Drive Connected
+              </span>
+            )}
+          </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowBrowseModal(true)}
-              className="px-4 py-2 text-sm font-medium text-indigo-600 bg-white border border-indigo-600 rounded-md hover:bg-indigo-50"
-            >
-              Browse Drive
-            </button>
+            {isGoogleConnected && (
+              <>
+                <button
+                  onClick={() => setShowBrowseModal(true)}
+                  className="px-4 py-2 text-sm font-medium text-indigo-600 bg-white border border-indigo-600 rounded-md hover:bg-indigo-50"
+                >
+                  Browse Drive
+                </button>
+                <button
+                  onClick={() => disconnectGoogle.mutate()}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:text-red-600"
+                  title="Disconnect Google Drive"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </>
+            )}
             <button
               onClick={() => { resetForm(); setShowAddModal(true); }}
               className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"

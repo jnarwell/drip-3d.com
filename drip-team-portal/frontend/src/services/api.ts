@@ -202,3 +202,30 @@ export const getDriveFile = async (fileId: string) => {
   const response = await api.get(`/api/v1/drive/files/${fileId}`);
   return response.data;
 };
+
+// Google OAuth API functions
+export const getGoogleAuthUrl = async (redirectUri: string) => {
+  const response = await api.get('/api/v1/google-oauth/auth-url', {
+    params: { redirect_uri: redirectUri }
+  });
+  return response.data;
+};
+
+export const postGoogleCallback = async (code: string, state?: string, redirectUri?: string) => {
+  const response = await api.post('/api/v1/google-oauth/callback', {
+    code,
+    state,
+    redirect_uri: redirectUri,
+  });
+  return response.data;
+};
+
+export const getGoogleConnectionStatus = async () => {
+  const response = await api.get('/api/v1/google-oauth/status');
+  return response.data;
+};
+
+export const disconnectGoogle = async () => {
+  const response = await api.delete('/api/v1/google-oauth/disconnect');
+  return response.data;
+};

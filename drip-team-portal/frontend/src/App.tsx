@@ -21,6 +21,7 @@ import ModelBuilder from './pages/ModelBuilder';
 import Analysis from './pages/analysis/Analysis';
 import AnalysisCreator from './pages/analysis/AnalysisCreator';
 import TimeTracker from './pages/TimeTracker';
+import OAuthCallback from './pages/OAuthCallback';
 
 // Company pages
 import HomePage from './pages/company/HomePage';
@@ -60,6 +61,11 @@ function AppRoutes() {
     <TeamPortalErrorBoundary>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/oauth/google/callback" element={
+          <DomainAwareProtectedRoute>
+            <OAuthCallback />
+          </DomainAwareProtectedRoute>
+        } />
         <Route
           path="/"
           element={
