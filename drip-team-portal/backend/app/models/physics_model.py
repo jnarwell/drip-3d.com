@@ -22,7 +22,7 @@ from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     pass  # Avoid circular imports
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.database import Base
 from app.models.values import ComputationStatus
@@ -44,8 +44,8 @@ class PhysicsModel(Base):
     description = Column(Text)
     category = Column(String(50), index=True)  # "thermal", "mechanical", "fluid", "electrical"
     created_by = Column(String(100))  # Email of creator
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     versions = relationship(
@@ -146,7 +146,7 @@ class PhysicsModelVersion(Base):
     equation_latex = Column(Text)  # LaTeX rendering for display
 
     created_by = Column(String(100))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationships
     physics_model = relationship("PhysicsModel", back_populates="versions")
@@ -186,7 +186,7 @@ class ModelInstance(Base):
     description = Column(Text)  # Optional description for analyses
 
     created_by = Column(String(100))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_computed = Column(DateTime)  # When outputs were last calculated
     computation_status = Column(SQLEnum(ComputationStatus))  # Reuse from values.py
 

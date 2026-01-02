@@ -31,6 +31,38 @@ def _is_retryable_error(exception: Exception) -> bool:
         return True
     return False
 
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception(_is_retryable_error),
+    reraise=True
+)
+async def _make_drive_request(
+    url: str,
+    token: str,
+    params: Dict[str, Any],
+    timeout: float = 15.0
+) -> httpx.Response:
+    """
+    Make a request to Google Drive API with retry logic.
+
+    Retries on transient errors (429, 500, 502, 503, 504) with exponential backoff.
+    """
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            url,
+            params=params,
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=timeout
+        )
+        # Raise for retryable status codes so tenacity can retry
+        if response.status_code in (429, 500, 502, 503, 504):
+            logger.warning(f"Drive API returned {response.status_code}, will retry...")
+            response.raise_for_status()
+        return response
+
+
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
 else:
@@ -265,28 +297,37 @@ async def list_drive_files(
     if q_parts:
         params["q"] = " and ".join(q_parts)
 
-    # Call Google Drive API
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
+    # Call Google Drive API with retry logic
+    try:
+        response = await _make_drive_request(
             "https://www.googleapis.com/drive/v3/files",
-            params=params,
-            headers={"Authorization": f"Bearer {google_token}"},
-            timeout=15.0
+            google_token,
+            params
         )
-
-        if response.status_code == 401:
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
             raise HTTPException(
                 status_code=401,
                 detail="Google token invalid. Please reconnect Google Drive."
             )
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Google Drive API error after retries: {e.response.text}"
+        )
 
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f"Google Drive API error: {response.text}"
-            )
+    if response.status_code == 401:
+        raise HTTPException(
+            status_code=401,
+            detail="Google token invalid. Please reconnect Google Drive."
+        )
 
-        data = response.json()
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Google Drive API error: {response.text}"
+        )
+
+    data = response.json()
 
     return DriveListResponse(
         files=[DriveFile(**f) for f in data.get("files", [])],
@@ -309,36 +350,42 @@ async def get_drive_file(
 
     fields = "id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,createdTime,size,owners,shared,permissions"
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
+    try:
+        response = await _make_drive_request(
             f"https://www.googleapis.com/drive/v3/files/{file_id}",
-            params={
-                "fields": fields,
-                "supportsAllDrives": "true",
-            },
-            headers={"Authorization": f"Bearer {google_token}"},
-            timeout=15.0
+            google_token,
+            {"fields": fields, "supportsAllDrives": "true"}
         )
-
-        if response.status_code == 401:
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
             raise HTTPException(
                 status_code=401,
                 detail="Google token invalid. Please reconnect Google Drive."
             )
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Google Drive API error after retries: {e.response.text}"
+        )
 
-        if response.status_code == 404:
-            raise HTTPException(
-                status_code=404,
-                detail="File not found or you don't have access."
-            )
+    if response.status_code == 401:
+        raise HTTPException(
+            status_code=401,
+            detail="Google token invalid. Please reconnect Google Drive."
+        )
 
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f"Google Drive API error: {response.text}"
-            )
+    if response.status_code == 404:
+        raise HTTPException(
+            status_code=404,
+            detail="File not found or you don't have access."
+        )
 
-        return response.json()
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Google Drive API error: {response.text}"
+        )
+
+    return response.json()
 
 
 @router.get("/search")
@@ -377,27 +424,36 @@ async def search_drive_files(
     else:
         params["corpora"] = "allDrives"
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
+    try:
+        response = await _make_drive_request(
             "https://www.googleapis.com/drive/v3/files",
-            params=params,
-            headers={"Authorization": f"Bearer {google_token}"},
-            timeout=15.0
+            google_token,
+            params
         )
-
-        if response.status_code == 401:
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 401:
             raise HTTPException(
                 status_code=401,
                 detail="Google token invalid. Please reconnect Google Drive."
             )
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Google Drive API error after retries: {e.response.text}"
+        )
 
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=f"Google Drive API error: {response.text}"
-            )
+    if response.status_code == 401:
+        raise HTTPException(
+            status_code=401,
+            detail="Google token invalid. Please reconnect Google Drive."
+        )
 
-        data = response.json()
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Google Drive API error: {response.text}"
+        )
+
+    data = response.json()
 
     return {
         "files": data.get("files", []),

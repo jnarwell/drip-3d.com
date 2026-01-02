@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
+from app.core.rate_limit import limiter
 from app.db.database import engine
 from app.models import Base
 import logging
@@ -39,6 +42,10 @@ app = FastAPI(
     description="Internal validation tracking portal for DRIP project",
     version="1.0.0",
 )
+
+# Configure rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 # Global exception handler to ensure CORS headers are added to error responses

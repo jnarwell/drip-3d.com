@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum as SQLEnum, DateTime, JSON, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 from app.db.database import Base
@@ -34,7 +34,7 @@ class PropertyDefinition(Base):
     description = Column(String)
     value_type = Column(SQLEnum(ValueType), default=ValueType.SINGLE)
     is_custom = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     created_by = Column(String)
     
     # Relationships
@@ -62,7 +62,7 @@ class ComponentProperty(Base):
     notes = Column(String)
     source = Column(String)  # Where this data came from
     conditions = Column(JSON)  # Any conditions this value applies under
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     updated_by = Column(String)
     
     # Material inheritance tracking

@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, JSON, DateTime
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.database import Base
 
 class AuditLog(Base):
@@ -11,4 +11,4 @@ class AuditLog(Base):
     action = Column(String, nullable=False)
     user = Column(String, nullable=False)
     details = Column(JSON)
-    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)

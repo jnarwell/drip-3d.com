@@ -1,7 +1,7 @@
 """Contact model for team members and external contacts."""
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.database import Base
 
@@ -33,8 +33,8 @@ class Contact(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Link to User if internal
 
     # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     created_by = Column(String(200), nullable=True)  # User email who added this contact
 
     # Relationships

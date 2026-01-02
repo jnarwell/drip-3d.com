@@ -11,6 +11,7 @@ httpx==0.25.2
 tenacity>=8.2.0  # Retry logic for external API calls
 pydantic[email]==2.5.0
 pydantic-settings==2.1.0
+slowapi==0.1.9  # Rate limiting
 auth0-python==4.7.0
 gql==3.4.1
 aiohttp==3.8.6

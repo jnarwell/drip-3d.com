@@ -1,7 +1,7 @@
 """Models for Resources: System Constants and Project Resources"""
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, JSON, ForeignKey, Table, func
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.database import Base
 
@@ -45,7 +45,7 @@ class SystemConstant(Base):
     description = Column(String(500))  # "Standard acceleration due to gravity"
     category = Column(String(50), nullable=False)  # "Physics", "Mathematics", "Chemistry"
     is_editable = Column(Boolean, default=True)  # Can users modify this?
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     created_by = Column(String(100))
 
     def __repr__(self):

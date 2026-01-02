@@ -1,6 +1,6 @@
 """Google OAuth tokens for Drive access."""
 from sqlalchemy import Column, Integer, String, DateTime, Text
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.db.database import Base
 
@@ -25,8 +25,8 @@ class GoogleToken(Base):
     expires_at = Column(DateTime, nullable=True)
 
     # Audit fields
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<GoogleToken {self.id}: {self.user_email}>"
@@ -35,7 +35,7 @@ class GoogleToken(Base):
         """Check if the access token has expired."""
         if not self.expires_at:
             return True
-        return datetime.utcnow() >= self.expires_at
+        return datetime.now(timezone.utc) >= self.expires_at
 
     def to_dict(self) -> dict:
         """Return dictionary representation (without sensitive tokens)."""

@@ -269,10 +269,10 @@ const Documents: React.FC = () => {
   });
 
   // Fetch collections
-  const { data: collectionsResponse } = useQuery<{ collections: Collection[] } | Collection[]>({
+  const { data: collectionsResponse, isLoading: collectionsLoading } = useQuery<{ collections: Collection[] } | Collection[]>({
     queryKey: ['collections'],
     queryFn: async () => {
-      const response = await api.get('/api/v1/collections');
+      const response = await api.get('/api/v1/collections?include_resources=true');
       return response.data;
     },
   });
@@ -350,10 +350,31 @@ const Documents: React.FC = () => {
     },
   });
 
-  // Get collections that contain a specific document
+  // Memoized map of document ID -> collection IDs for O(1) lookup
+  const docCollectionsMap = useMemo(() => {
+    const map = new Map<number, number[]>();
+    collections.forEach(c => {
+      c.resource_ids?.forEach(rid => {
+        const existing = map.get(rid) || [];
+        map.set(rid, [...existing, c.id]);
+      });
+    });
+    return map;
+  }, [collections]);
+
+  // Get collections for a document using memoized map
   const getDocumentCollections = (docId: number): Collection[] => {
-    return collections.filter(c => c.resource_ids?.includes(docId));
+    const collectionIds = docCollectionsMap.get(docId) || [];
+    return collections.filter(c => collectionIds.includes(c.id));
   };
+
+  // Memoized filtered documents by selected collection
+  const filteredByCollection = useMemo(() => {
+    if (!selectedCollection) return documentList;
+    const collection = collections.find(c => c.id === selectedCollection);
+    if (!collection?.resource_ids) return [];
+    return documentList.filter(doc => collection.resource_ids!.includes(doc.id));
+  }, [documentList, selectedCollection, collections]);
 
   // Reset collection form
   const resetCollectionForm = () => {
@@ -709,9 +730,7 @@ const Documents: React.FC = () => {
 
           {/* Document Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredDocuments
-              .filter(doc => !selectedCollection || collections.find(c => c.id === selectedCollection)?.resource_ids?.includes(doc.id))
-              .map(doc => {
+            {filteredByCollection.map(doc => {
               const typeInfo = DOC_TYPE_INFO[doc.resource_type] || DOC_TYPE_INFO.other;
               const docUrl = getResourceUrl(doc);
               const docCollections = getDocumentCollections(doc.id);
@@ -843,7 +862,7 @@ const Documents: React.FC = () => {
             })}
           </div>
 
-          {filteredDocuments.filter(doc => !selectedCollection || collections.find(c => c.id === selectedCollection)?.resource_ids?.includes(doc.id)).length === 0 && (
+          {filteredByCollection.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No documents found matching your criteria.
             </div>
@@ -1059,10 +1078,10 @@ const Documents: React.FC = () => {
 
       {/* Delete Collection Confirmation */}
       {showDeleteConfirm !== null && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" role="alertdialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-desc">
           <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Collection</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 id="delete-confirm-title" className="text-lg font-medium text-gray-900 mb-2">Delete Collection</h3>
+            <p id="delete-confirm-desc" className="text-sm text-gray-600 mb-4">
               Are you sure you want to delete "{collections.find(c => c.id === showDeleteConfirm)?.name}"?
               Documents in this collection will not be deleted.
             </p>

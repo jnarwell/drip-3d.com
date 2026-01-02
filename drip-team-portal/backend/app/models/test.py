@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, JSON, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 from app.db.database import Base
 
@@ -35,8 +35,8 @@ class Test(Base):
     linear_issue_id = Column(String)
     linear_sync_status = Column(String)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     test_results = relationship("TestResult", back_populates="test")
 
@@ -58,7 +58,7 @@ class TestResult(Base):
     
     evidence_files = Column(JSON)
     
-    executed_at = Column(DateTime, default=datetime.utcnow)
+    executed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     executed_by = Column(String)
     notes = Column(Text)
     
