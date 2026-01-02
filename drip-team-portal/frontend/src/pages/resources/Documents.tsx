@@ -370,10 +370,27 @@ const Documents: React.FC = () => {
 
   // Memoized filtered documents by selected collection
   const filteredByCollection = useMemo(() => {
+    // Debug logging - check types
+    if (selectedCollection) {
+      const collection = collections.find(c => c.id === selectedCollection);
+      console.log('[Debug] selectedCollection:', selectedCollection, 'type:', typeof selectedCollection);
+      console.log('[Debug] collection.id:', collection?.id, 'type:', typeof collection?.id);
+      console.log('[Debug] resource_ids:', collection?.resource_ids);
+      console.log('[Debug] resource_ids types:', collection?.resource_ids?.map(id => typeof id));
+      console.log('[Debug] doc IDs:', documentList.slice(0, 3).map(d => ({ id: d.id, type: typeof d.id })));
+    }
+
     if (!selectedCollection) return documentList;
     const collection = collections.find(c => c.id === selectedCollection);
-    if (!collection?.resource_ids) return [];
-    return documentList.filter(doc => collection.resource_ids!.includes(doc.id));
+    if (!collection?.resource_ids || collection.resource_ids.length === 0) {
+      console.log('[Debug] No resource_ids or empty - returning empty array');
+      return [];
+    }
+    // Ensure numeric comparison
+    const resourceIdSet = new Set(collection.resource_ids.map(id => Number(id)));
+    const filtered = documentList.filter(doc => resourceIdSet.has(Number(doc.id)));
+    console.log('[Debug] Filtered result:', filtered.length, 'of', documentList.length, 'documents');
+    return filtered;
   }, [documentList, selectedCollection, collections]);
 
   // Reset collection form
@@ -428,9 +445,6 @@ const Documents: React.FC = () => {
     allDocumentsList.forEach((doc: Resource) => doc.tags?.forEach(tag => tags.add(tag)));
     return ['all', ...Array.from(tags).sort()];
   }, [allDocumentsList]);
-
-  // Documents are now filtered server-side
-  const filteredDocuments = documentList;
 
   const resetForm = () => {
     setFormData({
@@ -599,45 +613,53 @@ const Documents: React.FC = () => {
                 <span>All Documents</span>
                 <span className="text-xs text-gray-500">{allDocumentsList.length}</span>
               </button>
-              {collections.map(collection => (
-                <div key={collection.id} className="group relative">
-                  <button
-                    onClick={() => setSelectedCollection(collection.id)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 ${
-                      selectedCollection === collection.id ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50 text-gray-700'
-                    }`}
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: collection.color || '#6B7280' }}
-                    />
-                    <span className="truncate flex-1">{collection.name}</span>
-                    <span className="text-xs text-gray-500">{collection.resource_count}</span>
-                  </button>
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex gap-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); openEditCollection(collection); }}
-                      className="p-1 text-gray-400 hover:text-gray-600"
-                      title="Edit collection"
-                      aria-label={`Edit collection ${collection.name}`}
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(collection.id); }}
-                      className="p-1 text-gray-400 hover:text-red-600"
-                      title="Delete collection"
-                      aria-label={`Delete collection ${collection.name}`}
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
+              {collectionsLoading ? (
+                <div className="animate-pulse space-y-2 mt-2">
+                  <div className="h-8 bg-gray-200 rounded" />
+                  <div className="h-8 bg-gray-200 rounded" />
+                  <div className="h-8 bg-gray-200 rounded" />
                 </div>
-              ))}
+              ) : (
+                collections.map(collection => (
+                  <div key={collection.id} className="group relative">
+                    <button
+                      onClick={() => setSelectedCollection(collection.id)}
+                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 ${
+                        selectedCollection === collection.id ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50 text-gray-700'
+                      }`}
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: collection.color || '#6B7280' }}
+                      />
+                      <span className="truncate flex-1">{collection.name}</span>
+                      <span className="text-xs text-gray-500">{collection.resource_count}</span>
+                    </button>
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); openEditCollection(collection); }}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                        title="Edit collection"
+                        aria-label={`Edit collection ${collection.name}`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(collection.id); }}
+                        className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete collection"
+                        aria-label={`Delete collection ${collection.name}`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
