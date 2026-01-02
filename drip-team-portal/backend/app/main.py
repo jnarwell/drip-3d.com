@@ -31,6 +31,7 @@ from app.api.v1.resources import router as resources_router
 from app.api.v1.users import router as users_router
 from app.api.v1.contacts import router as contacts_router
 from app.api.v1.drive import router as drive_router
+from app.api.v1.google_oauth import router as google_oauth_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -99,6 +100,7 @@ async def startup_event():
             from app.models.user_preferences import UserUnitPreference
             from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
             from app.models.contact import Contact
+            from app.models.google_token import GoogleToken
 
             # Create all tables (safe - won't modify existing tables)
             logging.info("Creating database tables...")
@@ -193,6 +195,7 @@ app.include_router(resources_router, tags=["resources"])
 app.include_router(users_router, tags=["users"])
 app.include_router(contacts_router, tags=["contacts"])
 app.include_router(drive_router, tags=["drive"])
+app.include_router(google_oauth_router, tags=["google-oauth"])
 
 @app.get("/")
 async def root():

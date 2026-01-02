@@ -1,18 +1,22 @@
 """
 Google Drive API - List and access user's Drive files.
 
-Uses Auth0 Token Vault to exchange the user's Auth0 token for a Google access token.
-This allows access to the user's Google Drive without storing tokens.
+Uses stored OAuth tokens from the database (obtained via /google-oauth endpoints).
+Tokens are automatically refreshed when expired using the stored refresh token.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel
+from datetime import datetime, timedelta
 import os
 import httpx
 import logging
 
-from app.services.token_vault_service import get_token_vault_service, TokenVaultService
+from app.db.database import get_db
+from app.models.google_token import GoogleToken
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +26,9 @@ else:
     from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/drive", tags=["drive"])
+
+# Google OAuth token refresh endpoint
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 
 # =============================================================================
@@ -46,8 +53,9 @@ class DriveListResponse(BaseModel):
 
 
 class DriveTokenStatus(BaseModel):
+    connected: bool
     has_token: bool
-    token_preview: Optional[str] = None
+    is_expired: Optional[bool] = None
     message: str
 
 
@@ -55,57 +63,137 @@ class DriveTokenStatus(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
-def extract_auth0_token(request: Request) -> str:
-    """Extract the Auth0 access token from the Authorization header."""
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        return auth_header[7:]  # Remove "Bearer " prefix
-    return auth_header
+async def refresh_google_token(token: GoogleToken, db: Session) -> str:
+    """
+    Refresh an expired Google access token using the refresh token.
+
+    Updates the token in the database and returns the new access token.
+    """
+    if not token.refresh_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Google token expired and no refresh token available. Please reconnect Google Drive."
+        )
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(
+                GOOGLE_TOKEN_URL,
+                data={
+                    "client_id": settings.GOOGLE_CLIENT_ID,
+                    "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                    "refresh_token": token.refresh_token,
+                    "grant_type": "refresh_token",
+                },
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=10.0
+            )
+
+            if response.status_code != 200:
+                logger.error(f"Google token refresh failed: {response.status_code} - {response.text}")
+                raise HTTPException(
+                    status_code=401,
+                    detail="Failed to refresh Google token. Please reconnect Google Drive."
+                )
+
+            data = response.json()
+
+        except httpx.TimeoutException:
+            raise HTTPException(
+                status_code=504,
+                detail="Google token refresh timed out. Please try again."
+            )
+
+    new_access_token = data.get("access_token")
+    expires_in = data.get("expires_in", 3600)
+
+    if not new_access_token:
+        raise HTTPException(
+            status_code=401,
+            detail="No access token received from Google. Please reconnect."
+        )
+
+    # Update token in database
+    token.access_token = new_access_token
+    token.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+    token.updated_at = datetime.utcnow()
+    db.commit()
+
+    logger.debug(f"Refreshed Google token for user: {token.user_email}")
+
+    return new_access_token
 
 
-async def get_google_token_from_vault(
-    request: Request,
-    token_vault: TokenVaultService = Depends(get_token_vault_service)
-) -> Optional[str]:
-    """Get Google token via Token Vault exchange."""
-    auth0_token = extract_auth0_token(request)
-    if not auth0_token:
-        return None
-    return await token_vault.get_google_token(auth0_token)
+async def get_google_token(
+    user_email: str,
+    db: Session
+) -> str:
+    """
+    Get a valid Google access token for the user.
+
+    Fetches from database and auto-refreshes if expired.
+    """
+    token = db.query(GoogleToken).filter(GoogleToken.user_email == user_email).first()
+
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": "google_not_connected",
+                "message": "Google Drive not connected. Please connect your Google account first.",
+                "action": "connect_google"
+            }
+        )
+
+    # Check if token is expired
+    if token.is_expired():
+        logger.debug(f"Token expired for {user_email}, refreshing...")
+        return await refresh_google_token(token, db)
+
+    return token.access_token
 
 
 # =============================================================================
-# TEST ENDPOINT - Verify token exchange
+# TEST ENDPOINT - Verify connection status
 # =============================================================================
 
 @router.get("/test", response_model=DriveTokenStatus)
-async def test_drive_token(
-    request: Request,
-    current_user: dict = Depends(get_current_user),
-    token_vault: TokenVaultService = Depends(get_token_vault_service)
+async def test_drive_connection(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """
-    Test endpoint to verify Token Vault exchange is working.
+    Test endpoint to verify Google Drive connection status.
 
-    Returns whether a Google token can be obtained via Token Vault.
-    Use this to verify the Auth0 Token Vault is correctly configured.
+    Returns whether the user has connected Google Drive and token validity.
     """
-    auth0_token = extract_auth0_token(request)
-    google_token = await token_vault.get_google_token(auth0_token)
+    user_email = current_user["email"]
+    token = db.query(GoogleToken).filter(GoogleToken.user_email == user_email).first()
 
-    if google_token:
-        preview = f"{google_token[:20]}..." if len(google_token) > 20 else google_token
+    if not token:
         return DriveTokenStatus(
-            has_token=True,
-            token_preview=preview,
-            message="Token Vault exchange successful - Google token obtained"
-        )
-    else:
-        return DriveTokenStatus(
+            connected=False,
             has_token=False,
-            token_preview=None,
-            message="Token Vault exchange failed. Ensure user logged in via Google and Token Vault is enabled."
+            is_expired=None,
+            message="Google Drive not connected. Use /google-oauth/auth-url to connect."
         )
+
+    is_expired = token.is_expired()
+
+    if is_expired and not token.refresh_token:
+        return DriveTokenStatus(
+            connected=False,
+            has_token=True,
+            is_expired=True,
+            message="Google token expired and cannot be refreshed. Please reconnect."
+        )
+
+    return DriveTokenStatus(
+        connected=True,
+        has_token=True,
+        is_expired=is_expired,
+        message="Google Drive connected" + (" (token will auto-refresh)" if is_expired else "")
+    )
 
 
 # =============================================================================
@@ -114,13 +202,12 @@ async def test_drive_token(
 
 @router.get("/files", response_model=DriveListResponse)
 async def list_drive_files(
-    request: Request,
     page_token: Optional[str] = Query(None, description="Token for pagination"),
     page_size: int = Query(25, ge=1, le=100, description="Number of files per page"),
     query: Optional[str] = Query(None, description="Search query (Drive search syntax)"),
     mime_type: Optional[str] = Query(None, description="Filter by MIME type"),
-    current_user: dict = Depends(get_current_user),
-    token_vault: TokenVaultService = Depends(get_token_vault_service)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     List files from user's Google Drive.
@@ -131,14 +218,7 @@ async def list_drive_files(
 
     Returns file metadata including name, type, links, and modification time.
     """
-    auth0_token = extract_auth0_token(request)
-    google_token = await token_vault.get_google_token(auth0_token)
-
-    if not google_token:
-        raise HTTPException(
-            status_code=401,
-            detail="Could not obtain Google token. Please ensure you're logged in with Google."
-        )
+    google_token = await get_google_token(current_user["email"], db)
 
     # Build Drive API query
     params = {
@@ -167,13 +247,14 @@ async def list_drive_files(
         response = await client.get(
             "https://www.googleapis.com/drive/v3/files",
             params=params,
-            headers={"Authorization": f"Bearer {google_token}"}
+            headers={"Authorization": f"Bearer {google_token}"},
+            timeout=15.0
         )
 
         if response.status_code == 401:
             raise HTTPException(
                 status_code=401,
-                detail="Google token expired or invalid. Please re-authenticate."
+                detail="Google token invalid. Please reconnect Google Drive."
             )
 
         if response.status_code != 200:
@@ -193,23 +274,15 @@ async def list_drive_files(
 @router.get("/files/{file_id}")
 async def get_drive_file(
     file_id: str,
-    request: Request,
-    current_user: dict = Depends(get_current_user),
-    token_vault: TokenVaultService = Depends(get_token_vault_service)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get metadata for a single Drive file.
 
     Returns detailed file information including permissions and sharing status.
     """
-    auth0_token = extract_auth0_token(request)
-    google_token = await token_vault.get_google_token(auth0_token)
-
-    if not google_token:
-        raise HTTPException(
-            status_code=401,
-            detail="Could not obtain Google token. Please ensure you're logged in with Google."
-        )
+    google_token = await get_google_token(current_user["email"], db)
 
     fields = "id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,createdTime,size,owners,shared,permissions"
 
@@ -217,13 +290,14 @@ async def get_drive_file(
         response = await client.get(
             f"https://www.googleapis.com/drive/v3/files/{file_id}",
             params={"fields": fields},
-            headers={"Authorization": f"Bearer {google_token}"}
+            headers={"Authorization": f"Bearer {google_token}"},
+            timeout=15.0
         )
 
         if response.status_code == 401:
             raise HTTPException(
                 status_code=401,
-                detail="Google token expired or invalid. Please re-authenticate."
+                detail="Google token invalid. Please reconnect Google Drive."
             )
 
         if response.status_code == 404:
@@ -243,11 +317,10 @@ async def get_drive_file(
 
 @router.get("/search")
 async def search_drive_files(
-    q: str,
-    request: Request,
+    q: str = Query(..., description="Search term"),
     page_size: int = Query(25, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
-    token_vault: TokenVaultService = Depends(get_token_vault_service)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Search for files in Google Drive.
@@ -255,14 +328,7 @@ async def search_drive_files(
     Simple search endpoint that wraps the name contains query.
     For advanced queries, use /files with the query parameter.
     """
-    auth0_token = extract_auth0_token(request)
-    google_token = await token_vault.get_google_token(auth0_token)
-
-    if not google_token:
-        raise HTTPException(
-            status_code=401,
-            detail="Could not obtain Google token. Please ensure you're logged in with Google."
-        )
+    google_token = await get_google_token(current_user["email"], db)
 
     params = {
         "pageSize": page_size,
@@ -275,13 +341,14 @@ async def search_drive_files(
         response = await client.get(
             "https://www.googleapis.com/drive/v3/files",
             params=params,
-            headers={"Authorization": f"Bearer {google_token}"}
+            headers={"Authorization": f"Bearer {google_token}"},
+            timeout=15.0
         )
 
         if response.status_code == 401:
             raise HTTPException(
                 status_code=401,
-                detail="Google token expired or invalid. Please re-authenticate."
+                detail="Google token invalid. Please reconnect Google Drive."
             )
 
         if response.status_code != 200:

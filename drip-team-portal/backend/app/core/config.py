@@ -47,7 +47,12 @@ class Settings(BaseSettings):
     AUTH0_API_AUDIENCE: str
     AUTH0_CLIENT_ID: str
     AUTH0_CLIENT_SECRET: str
-    
+
+    # Google OAuth for Drive access
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "https://team.drip-3d.com/oauth/google/callback"
+
     LINEAR_API_KEY: str = ""
     LINEAR_WEBHOOK_SECRET: str = ""
     DRIP_TEAM_ID: str = ""
