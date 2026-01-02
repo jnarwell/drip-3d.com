@@ -143,7 +143,8 @@ const Documents: React.FC = () => {
     queryKey: ['drive-files'],
     queryFn: async () => {
       const response = await api.get('/api/v1/drive/files');
-      return response.data;
+      // API returns { files: [...], nextPageToken: ... }
+      return response.data.files || [];
     },
     enabled: showBrowseModal,
   });
