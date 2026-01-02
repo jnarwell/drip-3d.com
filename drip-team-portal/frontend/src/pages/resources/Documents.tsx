@@ -75,7 +75,96 @@ interface DriveFile {
   name: string;
   mimeType: string;
   webViewLink: string;
+  modifiedTime?: string;
+  size?: string;
+  iconLink?: string;
+  thumbnailLink?: string;
 }
+
+// Drive file type info with SVG icons
+const getDriveFileInfo = (mimeType: string): { label: string; color: string; bgColor: string } => {
+  if (mimeType.includes('folder')) {
+    return { label: 'Folder', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+  }
+  if (mimeType.includes('document')) {
+    return { label: 'Doc', color: 'text-blue-600', bgColor: 'bg-blue-50' };
+  }
+  if (mimeType.includes('spreadsheet')) {
+    return { label: 'Sheet', color: 'text-green-600', bgColor: 'bg-green-50' };
+  }
+  if (mimeType.includes('presentation')) {
+    return { label: 'Slides', color: 'text-orange-600', bgColor: 'bg-orange-50' };
+  }
+  if (mimeType.includes('pdf')) {
+    return { label: 'PDF', color: 'text-red-600', bgColor: 'bg-red-50' };
+  }
+  if (mimeType.includes('video')) {
+    return { label: 'Video', color: 'text-purple-600', bgColor: 'bg-purple-50' };
+  }
+  if (mimeType.includes('image')) {
+    return { label: 'Image', color: 'text-pink-600', bgColor: 'bg-pink-50' };
+  }
+  return { label: 'File', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+};
+
+// SVG icon component for drive files
+const DriveFileIcon: React.FC<{ mimeType: string; className?: string }> = ({ mimeType, className = 'w-5 h-5' }) => {
+  if (mimeType.includes('folder')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('document')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('spreadsheet')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 4a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H5zm0 2h3v2H5V6zm0 4h3v2H5v-2zm0 4h3v2H5v-2zm5-8h5v2h-5V6zm0 4h5v2h-5v-2zm0 4h5v2h-5v-2z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('presentation')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('pdf')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('video')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+      </svg>
+    );
+  }
+  if (mimeType.includes('image')) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+      </svg>
+    );
+  }
+  // Default file icon
+  return (
+    <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+    </svg>
+  );
+};
 
 const DOC_TYPE_INFO: Record<string, { label: string; icon: string; color: string }> = {
   doc: { label: 'Document', icon: 'DOC', color: 'bg-blue-100 text-blue-800' },
@@ -122,6 +211,10 @@ const Documents: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showBulkAddModal, setShowBulkAddModal] = useState(false);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Drive browser state
+  const [selectedDriveFile, setSelectedDriveFile] = useState<DriveFile | null>(null);
+  const [driveViewMode, setDriveViewMode] = useState<'list' | 'grid'>('list');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -1120,51 +1213,174 @@ const Documents: React.FC = () => {
       {/* Browse Drive Modal */}
       {showBrowseModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="browse-drive-title">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
-            <h3 id="browse-drive-title" className="text-lg font-medium text-gray-900 mb-4">Browse Google Drive</h3>
-            <input
-              type="text"
-              value={driveSearchTerm}
-              onChange={(e) => setDriveSearchTerm(e.target.value)}
-              placeholder="Search files..."
-              className="mb-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            {driveLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-xl">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 id="browse-drive-title" className="text-lg font-semibold text-gray-900">Browse Google Drive</h3>
+                <button
+                  onClick={() => { setShowBrowseModal(false); setSelectedDriveFile(null); }}
+                  className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-                {driveFiles?.map(file => (
+              {/* Search and view toggle */}
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={driveSearchTerm}
+                    onChange={(e) => setDriveSearchTerm(e.target.value)}
+                    placeholder="Search files..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  />
+                </div>
+                {/* View toggle */}
+                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                   <button
-                    key={file.id}
-                    onClick={() => handleDriveFileSelect(file)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
+                    onClick={() => setDriveViewMode('list')}
+                    className={`p-2 ${driveViewMode === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}
+                    aria-label="List view"
+                    title="List view"
                   >
-                    <span className="text-xs font-bold text-gray-500">
-                      {file.mimeType.includes('document') ? 'DOC' :
-                       file.mimeType.includes('spreadsheet') ? 'XLS' :
-                       file.mimeType.includes('presentation') ? 'PPT' :
-                       file.mimeType.includes('pdf') ? 'PDF' :
-                       file.mimeType.includes('video') ? 'VID' : 'FILE'}
-                    </span>
-                    <span className="text-sm text-gray-900 truncate">{file.name}</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
                   </button>
-                ))}
-                {(!driveFiles || driveFiles.length === 0) && (
-                  <div className="text-center py-8 text-gray-500">
-                    No files found in Drive
-                  </div>
-                )}
+                  <button
+                    onClick={() => setDriveViewMode('grid')}
+                    className={`p-2 ${driveViewMode === 'grid' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:bg-gray-50'}`}
+                    aria-label="Grid view"
+                    title="Grid view"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            )}
-            <div className="mt-4 flex justify-end">
-              <button
-                onClick={() => setShowBrowseModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
+            </div>
+
+            {/* File list/grid */}
+            <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+              {driveLoading ? (
+                <div className="flex items-center justify-center h-48">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : driveViewMode === 'list' ? (
+                /* List View */
+                <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+                  {driveFiles?.map(file => {
+                    const fileInfo = getDriveFileInfo(file.mimeType);
+                    const isSelected = selectedDriveFile?.id === file.id;
+                    return (
+                      <button
+                        key={file.id}
+                        onClick={() => setSelectedDriveFile(isSelected ? null : file)}
+                        onDoubleClick={() => handleDriveFileSelect(file)}
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
+                          isSelected
+                            ? 'bg-indigo-50 border-l-2 border-l-indigo-500'
+                            : 'hover:bg-gray-50 border-l-2 border-l-transparent'
+                        }`}
+                      >
+                        <div className={`w-9 h-9 rounded-lg ${fileInfo.bgColor} ${fileInfo.color} flex items-center justify-center flex-shrink-0`}>
+                          <DriveFileIcon mimeType={file.mimeType} className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-sm font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">{fileInfo.label}</p>
+                        </div>
+                        {isSelected && (
+                          <svg className="w-5 h-5 text-indigo-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {(!driveFiles || driveFiles.length === 0) && (
+                    <div className="text-center py-12 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-sm">No files found</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Grid View */
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {driveFiles?.map(file => {
+                    const fileInfo = getDriveFileInfo(file.mimeType);
+                    const isSelected = selectedDriveFile?.id === file.id;
+                    return (
+                      <button
+                        key={file.id}
+                        onClick={() => setSelectedDriveFile(isSelected ? null : file)}
+                        onDoubleClick={() => handleDriveFileSelect(file)}
+                        className={`p-3 rounded-lg border-2 transition-all text-center ${
+                          isSelected
+                            ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className={`w-12 h-12 rounded-lg ${fileInfo.bgColor} ${fileInfo.color} flex items-center justify-center mx-auto mb-2`}>
+                          <DriveFileIcon mimeType={file.mimeType} className="w-6 h-6" />
+                        </div>
+                        <p className={`text-xs font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>
+                          {file.name}
+                        </p>
+                      </button>
+                    );
+                  })}
+                  {(!driveFiles || driveFiles.length === 0) && (
+                    <div className="col-span-full text-center py-12 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <p className="text-sm">No files found</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-white">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-500">
+                  {selectedDriveFile ? (
+                    <span className="text-indigo-600 font-medium">Selected: {selectedDriveFile.name}</span>
+                  ) : (
+                    <span>Click to select, double-click to add</span>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowBrowseModal(false); setSelectedDriveFile(null); }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => selectedDriveFile && handleDriveFileSelect(selectedDriveFile)}
+                    disabled={!selectedDriveFile}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add File
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
