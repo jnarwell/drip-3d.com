@@ -167,7 +167,7 @@ export const getDocuments = async (options?: {
 }) => {
   const params = new URLSearchParams();
   // Filter to document-type resources
-  params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
+  params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image');
   if (options?.type && options.type !== 'all') {
     params.set('type', options.type);
   }

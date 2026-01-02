@@ -173,6 +173,8 @@ const DOC_TYPE_INFO: Record<string, { label: string; icon: string; color: string
   pdf: { label: 'PDF', icon: 'PDF', color: 'bg-red-100 text-red-800' },
   paper: { label: 'Paper', icon: 'TXT', color: 'bg-yellow-100 text-yellow-800' },
   video: { label: 'Video', icon: 'VID', color: 'bg-purple-100 text-purple-800' },
+  image: { label: 'Image', icon: 'IMG', color: 'bg-pink-100 text-pink-800' },
+  link: { label: 'Link', icon: 'URL', color: 'bg-cyan-100 text-cyan-800' },
   other: { label: 'Other', icon: 'FILE', color: 'bg-gray-100 text-gray-800' },
 };
 
@@ -293,7 +295,7 @@ const Documents: React.FC = () => {
     queryKey: ['documents-all'],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
+      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image');
       const response = await api.get(`/api/v1/resources?${params.toString()}`);
       return response.data;
     },
@@ -305,7 +307,7 @@ const Documents: React.FC = () => {
     queryKey: ['documents', debouncedSearch, selectedType, selectedTag, sortBy, sortOrder, showStarred],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
+      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image');
       if (debouncedSearch) {
         params.append('search', debouncedSearch);
       }
@@ -693,12 +695,13 @@ const Documents: React.FC = () => {
 
   const handleDriveFileSelect = (file: DriveFile) => {
     // Infer resource type from MIME type
-    let resourceType = 'other';
+    let resourceType = 'link';
     if (file.mimeType.includes('document')) resourceType = 'doc';
     else if (file.mimeType.includes('spreadsheet')) resourceType = 'spreadsheet';
     else if (file.mimeType.includes('presentation')) resourceType = 'slides';
     else if (file.mimeType.includes('pdf')) resourceType = 'pdf';
     else if (file.mimeType.includes('video')) resourceType = 'video';
+    else if (file.mimeType.startsWith('image/') || file.mimeType === 'application/vnd.google-apps.photo') resourceType = 'image';
 
     setFormData({
       ...formData,
