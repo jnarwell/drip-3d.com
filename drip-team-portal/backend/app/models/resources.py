@@ -97,6 +97,11 @@ class Resource(Base):
         back_populates="resources"
     )
     time_entries = relationship("TimeEntry", back_populates="resource")
+    collections = relationship(
+        "Collection",
+        secondary="resource_collections",
+        back_populates="resources"
+    )
 
     def __repr__(self):
         return f"<Resource {self.id}: {self.title} ({self.resource_type})>"
@@ -115,4 +120,5 @@ class Resource(Base):
             "notes": self.notes,
             "component_ids": [c.id for c in self.components] if self.components else [],
             "physics_model_ids": [p.id for p in self.physics_models] if self.physics_models else [],
+            "collection_ids": [c.id for c in self.collections] if self.collections else [],
         }

@@ -7,6 +7,7 @@ from app.models.audit import AuditLog
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType, ValueType, UnitSystem
 from app.models.material import Material, MaterialProperty, MaterialPropertyTemplate
 from app.models.resources import SystemConstant, Resource, resource_components, resource_physics_models
+from app.models.collection import Collection, resource_collections
 from app.models.time_entry import TimeEntry
 from app.models.time_break import TimeBreak
 from app.models.values import ValueNode, ValueDependency, NodeType, ComputationStatus, PropertyValueLink, MaterialPropertyValueLink
@@ -35,6 +36,9 @@ __all__ = [
     "Resource",
     "resource_components",
     "resource_physics_models",
+    # Collections
+    "Collection",
+    "resource_collections",
     # Time Tracking
     "TimeEntry",
     "TimeBreak",

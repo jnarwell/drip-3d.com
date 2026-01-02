@@ -7,7 +7,7 @@ linked to components and physics models.
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, String
 from typing import Optional, List
 from pydantic import BaseModel
 import os
@@ -61,9 +61,11 @@ class ResourceUpdateRequest(BaseModel):
 @router.get("")
 async def list_resources(
     resource_type: Optional[str] = Query(None, description="Filter by type (doc, link, paper, etc.)"),
+    type: Optional[str] = Query(None, description="Alias for resource_type, supports comma-separated"),
+    tag: Optional[str] = Query(None, description="Filter by tag"),
     component_id: Optional[int] = Query(None, description="Filter by linked component"),
     physics_model_id: Optional[int] = Query(None, description="Filter by linked physics model"),
-    search: Optional[str] = Query(None, description="Search in title and notes"),
+    search: Optional[str] = Query(None, description="Search in title, notes, and tags"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -76,9 +78,14 @@ async def list_resources(
     """
     query = db.query(Resource)
 
-    # Apply filters
-    if resource_type:
-        query = query.filter(Resource.resource_type == resource_type)
+    # Apply filters - support both 'type' and 'resource_type', with comma-separated values
+    type_filter = type or resource_type
+    if type_filter:
+        types = [t.strip() for t in type_filter.split(",")]
+        if len(types) == 1:
+            query = query.filter(Resource.resource_type == types[0])
+        else:
+            query = query.filter(Resource.resource_type.in_(types))
 
     if component_id:
         query = query.join(resource_components).filter(
@@ -90,12 +97,20 @@ async def list_resources(
             resource_physics_models.c.physics_model_id == physics_model_id
         )
 
+    # Filter by tag (check if tag exists in JSON array)
+    if tag:
+        # Cast JSON array to text and check for tag value
+        query = query.filter(Resource.tags.cast(String).ilike(f'%"{tag}"%'))
+
     if search:
         search_pattern = f"%{search}%"
+        logger.info(f"GET /resources - Search: '{search}' -> pattern: '{search_pattern}'")
         query = query.filter(
             or_(
                 Resource.title.ilike(search_pattern),
-                Resource.notes.ilike(search_pattern)
+                Resource.notes.ilike(search_pattern),
+                # Also search in tags (cast JSON to string)
+                Resource.tags.cast(String).ilike(search_pattern)
             )
         )
 
@@ -104,6 +119,9 @@ async def list_resources(
 
     # Get paginated results
     resources = query.order_by(Resource.added_at.desc()).offset(offset).limit(limit).all()
+
+    # Debug logging
+    logger.info(f"GET /resources - type={type_filter}, tag={tag}, search={search}, total={total}")
 
     return {
         "resources": [r.to_dict() for r in resources],
@@ -131,7 +149,7 @@ async def create_resource(
     user_id = current_user["email"]
 
     # Validate resource_type
-    valid_types = {"doc", "folder", "image", "link", "paper", "video", "spreadsheet"}
+    valid_types = {"doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
     if data.resource_type not in valid_types:
         logger.warning(f"POST /resources - Invalid resource_type: '{data.resource_type}' (valid: {valid_types})")
         raise HTTPException(
@@ -215,7 +233,7 @@ async def update_resource(
         resource.title = data.title
 
     if data.resource_type is not None:
-        valid_types = {"doc", "folder", "image", "link", "paper", "video", "spreadsheet"}
+        valid_types = {"doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
         if data.resource_type not in valid_types:
             raise HTTPException(
                 status_code=400,
@@ -297,7 +315,9 @@ async def list_resource_types(
             {"id": "image", "name": "Image", "icon": "Image"},
             {"id": "link", "name": "Link", "icon": "Link"},
             {"id": "paper", "name": "Research Paper", "icon": "BookOpen"},
-            {"id": "video", "name": "Video", "icon": "Video"},
+            {"id": "pdf", "name": "PDF", "icon": "FileText"},
+            {"id": "slides", "name": "Slides", "icon": "Presentation"},
             {"id": "spreadsheet", "name": "Spreadsheet", "icon": "Table"},
+            {"id": "video", "name": "Video", "icon": "Video"},
         ]
     }
