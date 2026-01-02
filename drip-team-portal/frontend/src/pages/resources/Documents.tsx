@@ -215,6 +215,8 @@ const Documents: React.FC = () => {
   // Drive browser state
   const [selectedDriveFile, setSelectedDriveFile] = useState<DriveFile | null>(null);
   const [driveViewMode, setDriveViewMode] = useState<'list' | 'grid'>('list');
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [folderPath, setFolderPath] = useState<Array<{ id: string; name: string }>>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -334,15 +336,60 @@ const Documents: React.FC = () => {
 
   // Fetch Drive files for browse modal
   const { data: driveFiles, isLoading: driveLoading } = useQuery<DriveFile[]>({
-    queryKey: ['drive-files', driveSearchTerm],
+    queryKey: ['drive-files', driveSearchTerm, currentFolderId],
     queryFn: async () => {
-      const params = driveSearchTerm ? `?query=${encodeURIComponent(driveSearchTerm)}` : '';
-      const response = await api.get(`/api/v1/drive/files${params}`);
+      const searchParams = new URLSearchParams();
+      if (driveSearchTerm) {
+        searchParams.append('query', driveSearchTerm);
+      }
+      if (currentFolderId) {
+        searchParams.append('parent', currentFolderId);
+      }
+      const queryString = searchParams.toString();
+      const response = await api.get(`/api/v1/drive/files${queryString ? `?${queryString}` : ''}`);
       // API returns { files: [...], nextPageToken: ... }
       return response.data.files || [];
     },
     enabled: showBrowseModal,
   });
+
+  // Folder navigation handlers
+  const navigateToFolder = (file: DriveFile) => {
+    setFolderPath([...folderPath, { id: file.id, name: file.name }]);
+    setCurrentFolderId(file.id);
+    setSelectedDriveFile(null);
+  };
+
+  const navigateUp = () => {
+    if (folderPath.length === 0) return;
+    const newPath = folderPath.slice(0, -1);
+    setFolderPath(newPath);
+    setCurrentFolderId(newPath.length > 0 ? newPath[newPath.length - 1].id : null);
+    setSelectedDriveFile(null);
+  };
+
+  const navigateToBreadcrumb = (index: number) => {
+    if (index === -1) {
+      // Navigate to root
+      setFolderPath([]);
+      setCurrentFolderId(null);
+    } else {
+      const newPath = folderPath.slice(0, index + 1);
+      setFolderPath(newPath);
+      setCurrentFolderId(newPath[newPath.length - 1].id);
+    }
+    setSelectedDriveFile(null);
+  };
+
+  const handleDriveItemDoubleClick = (file: DriveFile) => {
+    if (file.mimeType === 'application/vnd.google-apps.folder') {
+      navigateToFolder(file);
+    } else {
+      handleDriveFileSelect(file);
+    }
+  };
+
+  const isFolder = (file: DriveFile) => file.mimeType === 'application/vnd.google-apps.folder';
 
   // Create document mutation
   const createDocument = useMutation({
@@ -1219,7 +1266,7 @@ const Documents: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 id="browse-drive-title" className="text-lg font-semibold text-gray-900">Browse Google Drive</h3>
                 <button
-                  onClick={() => { setShowBrowseModal(false); setSelectedDriveFile(null); }}
+                  onClick={() => { setShowBrowseModal(false); setSelectedDriveFile(null); setCurrentFolderId(null); setFolderPath([]); }}
                   className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
                   aria-label="Close"
                 >
@@ -1266,6 +1313,41 @@ const Documents: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Breadcrumb navigation */}
+            <div className="px-6 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-1 text-sm overflow-x-auto">
+              {folderPath.length > 0 && (
+                <button
+                  onClick={navigateUp}
+                  className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded flex-shrink-0"
+                  title="Go up one level"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={() => navigateToBreadcrumb(-1)}
+                className={`px-2 py-1 rounded hover:bg-gray-200 flex-shrink-0 ${folderPath.length === 0 ? 'text-gray-900 font-medium' : 'text-gray-600'}`}
+              >
+                My Drive
+              </button>
+              {folderPath.map((folder, index) => (
+                <React.Fragment key={folder.id}>
+                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <button
+                    onClick={() => navigateToBreadcrumb(index)}
+                    className={`px-2 py-1 rounded hover:bg-gray-200 truncate max-w-[150px] ${index === folderPath.length - 1 ? 'text-gray-900 font-medium' : 'text-gray-600'}`}
+                    title={folder.name}
+                  >
+                    {folder.name}
+                  </button>
+                </React.Fragment>
+              ))}
             </div>
 
             {/* File list/grid */}

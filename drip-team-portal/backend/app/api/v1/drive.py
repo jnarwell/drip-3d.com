@@ -250,6 +250,7 @@ async def list_drive_files(
     query: Optional[str] = Query(None, description="Search query (Drive search syntax)"),
     mime_type: Optional[str] = Query(None, description="Filter by MIME type"),
     drive_id: Optional[str] = Query(None, description="Shared drive ID (optional)"),
+    parent: Optional[str] = Query(None, description="Parent folder ID to list contents of"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
@@ -260,6 +261,7 @@ async def list_drive_files(
     - query: Google Drive search syntax (e.g., "name contains 'report'")
     - mime_type: Filter by file type (e.g., "application/pdf")
     - drive_id: Target a specific shared drive
+    - parent: List contents of a specific folder by ID
 
     Returns file metadata including name, type, links, and modification time.
     Includes files from shared drives via supportsAllDrives.
@@ -286,7 +288,12 @@ async def list_drive_files(
         params["pageToken"] = page_token
 
     # Build q parameter for filtering
-    q_parts = []
+    q_parts = ["trashed=false"]
+
+    # Filter by parent folder
+    if parent:
+        q_parts.append(f"'{parent}' in parents")
+
     if query:
         # If query looks like Drive syntax (contains operators), use as-is
         # Otherwise, wrap in name contains for simple search
@@ -298,8 +305,6 @@ async def list_drive_files(
             q_parts.append(f"name contains '{escaped_query}'")
     if mime_type:
         q_parts.append(f"mimeType='{mime_type}'")
-    # Exclude trashed files
-    q_parts.append("trashed=false")
 
     if q_parts:
         params["q"] = " and ".join(q_parts)
