@@ -1362,16 +1362,18 @@ const Documents: React.FC = () => {
                   {driveFiles?.map(file => {
                     const fileInfo = getDriveFileInfo(file.mimeType);
                     const isSelected = selectedDriveFile?.id === file.id;
+                    const isFolderItem = isFolder(file);
                     return (
                       <button
                         key={file.id}
                         onClick={() => setSelectedDriveFile(isSelected ? null : file)}
-                        onDoubleClick={() => handleDriveFileSelect(file)}
+                        onDoubleClick={() => handleDriveItemDoubleClick(file)}
                         className={`w-full text-left px-4 py-3 flex items-center gap-3 transition-colors ${
                           isSelected
                             ? 'bg-indigo-50 border-l-2 border-l-indigo-500'
                             : 'hover:bg-gray-50 border-l-2 border-l-transparent'
                         }`}
+                        title={isFolderItem ? 'Double-click to open folder' : 'Double-click to add'}
                       >
                         <div className={`w-9 h-9 rounded-lg ${fileInfo.bgColor} ${fileInfo.color} flex items-center justify-center flex-shrink-0`}>
                           <DriveFileIcon mimeType={file.mimeType} className="w-5 h-5" />
@@ -1382,11 +1384,15 @@ const Documents: React.FC = () => {
                           </p>
                           <p className="text-xs text-gray-500">{fileInfo.label}</p>
                         </div>
-                        {isSelected && (
+                        {isFolderItem ? (
+                          <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        ) : isSelected ? (
                           <svg className="w-5 h-5 text-indigo-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
-                        )}
+                        ) : null}
                       </button>
                     );
                   })}
@@ -1405,12 +1411,14 @@ const Documents: React.FC = () => {
                   {driveFiles?.map(file => {
                     const fileInfo = getDriveFileInfo(file.mimeType);
                     const isSelected = selectedDriveFile?.id === file.id;
+                    const isFolderItem = isFolder(file);
                     return (
                       <button
                         key={file.id}
                         onClick={() => setSelectedDriveFile(isSelected ? null : file)}
-                        onDoubleClick={() => handleDriveFileSelect(file)}
-                        className={`p-3 rounded-lg border-2 transition-all text-center ${
+                        onDoubleClick={() => handleDriveItemDoubleClick(file)}
+                        title={isFolderItem ? 'Double-click to open folder' : 'Double-click to add'}
+                        className={`p-3 rounded-lg border-2 transition-all text-center relative ${
                           isSelected
                             ? 'border-indigo-500 bg-indigo-50 shadow-sm'
                             : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
@@ -1422,6 +1430,13 @@ const Documents: React.FC = () => {
                         <p className={`text-xs font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>
                           {file.name}
                         </p>
+                        {isFolderItem && (
+                          <div className="absolute top-1 right-1 text-gray-400">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        )}
                       </button>
                     );
                   })}
