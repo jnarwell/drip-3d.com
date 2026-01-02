@@ -78,11 +78,12 @@ async def get_current_user(
     token = credentials.credentials
     payload = await auth0.verify_token(token)
 
-    # Get email from token payload, or fall back to x-email header
-    # Auth0 access tokens don't include email by default, but the frontend sends it in the header
-    email = payload.get("email", "")
-    if not email:
-        email = request.headers.get("x-email", "")
+    # Get email from custom claim (Auth0 Action), standard claim, or x-email header
+    email = (
+        payload.get("https://drip-3d.com/email") or
+        payload.get("email") or
+        request.headers.get("x-email", "")
+    )
 
     if not email.endswith(settings.ALLOWED_EMAIL_DOMAIN):
         raise HTTPException(
