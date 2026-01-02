@@ -803,7 +803,7 @@ const Documents: React.FC = () => {
 
           {/* Filters */}
           <div className="mb-6 space-y-4 sm:space-y-0 sm:flex sm:gap-4">
-            <div className="flex-1">
+            <div className="flex-1 min-w-[200px]">
               <input
                 type="text"
                 value={searchTerm}
