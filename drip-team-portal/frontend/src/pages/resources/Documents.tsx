@@ -24,10 +24,11 @@ interface Resource {
 
 // API may return paginated response or plain array
 interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  size: number;
+  items?: T[];
+  resources?: T[];
+  total?: number;
+  page?: number;
+  size?: number;
 }
 
 type ApiResponse<T> = T[] | PaginatedResponse<T>;
@@ -135,6 +136,7 @@ const Documents: React.FC = () => {
   const documentList = useMemo(() => {
     if (!documentsResponse) return [];
     if (Array.isArray(documentsResponse)) return documentsResponse;
+    if (documentsResponse.resources && Array.isArray(documentsResponse.resources)) return documentsResponse.resources;
     if (documentsResponse.items && Array.isArray(documentsResponse.items)) return documentsResponse.items;
     return [];
   }, [documentsResponse]);

@@ -187,6 +187,19 @@ export const createDocument = async (docData: {
   return response.data;
 };
 
+export const updateDocument = async (id: number, updateData: {
+  title?: string;
+  resource_type?: string;
+  url?: string;
+  google_drive_file_id?: string;
+  tags?: string[];
+  notes?: string | null;
+  component_ids?: number[];
+}) => {
+  const response = await api.patch(`/api/v1/resources/${id}`, updateData);
+  return response.data;
+};
+
 export const deleteDocument = async (id: number) => {
   const response = await api.delete(`/api/v1/resources/${id}`);
   return response.data;

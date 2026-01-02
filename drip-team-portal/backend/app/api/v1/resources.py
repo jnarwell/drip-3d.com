@@ -11,6 +11,9 @@ from sqlalchemy import or_
 from typing import Optional, List
 from pydantic import BaseModel
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.db.database import get_db
 from app.models.resources import Resource, resource_components, resource_physics_models
@@ -121,14 +124,19 @@ async def create_resource(
 
     Can optionally link to components and physics models during creation.
     """
+    # Log received payload for debugging
+    logger.info(f"POST /resources - Received payload: {data.model_dump()}")
+    logger.info(f"POST /resources - User: {current_user.get('email', 'unknown')}")
+
     user_id = current_user["email"]
 
     # Validate resource_type
     valid_types = {"doc", "folder", "image", "link", "paper", "video", "spreadsheet"}
     if data.resource_type not in valid_types:
+        logger.warning(f"POST /resources - Invalid resource_type: '{data.resource_type}' (valid: {valid_types})")
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid resource_type. Must be one of: {', '.join(valid_types)}"
+            detail=f"Invalid resource_type '{data.resource_type}'. Must be one of: {', '.join(sorted(valid_types))}"
         )
 
     # Create resource
@@ -145,21 +153,28 @@ async def create_resource(
     # Link to components if provided
     if data.component_ids:
         components = db.query(Component).filter(Component.id.in_(data.component_ids)).all()
+        found_ids = [c.id for c in components]
         if len(components) != len(data.component_ids):
-            raise HTTPException(status_code=400, detail="One or more component IDs not found")
+            missing = set(data.component_ids) - set(found_ids)
+            logger.warning(f"POST /resources - Component IDs not found: {missing} (requested: {data.component_ids}, found: {found_ids})")
+            raise HTTPException(status_code=400, detail=f"Component IDs not found: {list(missing)}")
         resource.components = components
 
     # Link to physics models if provided
     if data.physics_model_ids:
         models = db.query(PhysicsModel).filter(PhysicsModel.id.in_(data.physics_model_ids)).all()
+        found_ids = [m.id for m in models]
         if len(models) != len(data.physics_model_ids):
-            raise HTTPException(status_code=400, detail="One or more physics model IDs not found")
+            missing = set(data.physics_model_ids) - set(found_ids)
+            logger.warning(f"POST /resources - PhysicsModel IDs not found: {missing} (requested: {data.physics_model_ids}, found: {found_ids})")
+            raise HTTPException(status_code=400, detail=f"PhysicsModel IDs not found: {list(missing)}")
         resource.physics_models = models
 
     db.add(resource)
     db.commit()
     db.refresh(resource)
 
+    logger.info(f"POST /resources - Created resource id={resource.id}")
     return resource.to_dict()
 
 
