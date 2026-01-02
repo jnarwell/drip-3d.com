@@ -61,11 +61,8 @@ function AppRoutes() {
     <TeamPortalErrorBoundary>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/oauth/google/callback" element={
-          <DomainAwareProtectedRoute>
-            <OAuthCallback />
-          </DomainAwareProtectedRoute>
-        } />
+        {/* OAuth callback doesn't need protection - backend gets user from state param */}
+        <Route path="/oauth/google/callback" element={<OAuthCallback />} />
         <Route
           path="/"
           element={

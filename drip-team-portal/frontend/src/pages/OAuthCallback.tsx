@@ -1,26 +1,33 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuthenticatedApi } from '../services/api';
+import { api } from '../services/api';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
 
 const OAuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const api = useAuthenticatedApi();
+  const hasRun = useRef(false);
 
   const [status, setStatus] = useState<CallbackStatus>('processing');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
+    // Prevent double execution in React strict mode
+    if (hasRun.current) return;
+    hasRun.current = true;
+
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
       const error = searchParams.get('error');
       const errorDescription = searchParams.get('error_description');
 
+      console.log('[OAuthCallback] Processing callback', { code: code?.slice(0, 20), state, error });
+
       // Check for OAuth errors from Google
       if (error) {
+        console.error('[OAuthCallback] OAuth error:', error, errorDescription);
         setStatus('error');
         setErrorMessage(errorDescription || error);
         return;
@@ -28,19 +35,23 @@ const OAuthCallback: React.FC = () => {
 
       // Validate required parameters
       if (!code) {
+        console.error('[OAuthCallback] Missing code parameter');
         setStatus('error');
         setErrorMessage('Missing authorization code from Google');
         return;
       }
 
       try {
+        console.log('[OAuthCallback] Posting to backend...');
         // Exchange the code for tokens via our backend
-        await api.post('/api/v1/google-oauth/callback', {
+        // Use basic api (not authenticated) - backend handles user identification via state
+        const response = await api.post('/api/v1/google-oauth/callback', {
           code,
           state,
           redirect_uri: `${window.location.origin}/oauth/google/callback`,
         });
 
+        console.log('[OAuthCallback] Success:', response.data);
         setStatus('success');
 
         // Redirect to documents page after short delay
@@ -51,6 +62,7 @@ const OAuthCallback: React.FC = () => {
         }, 1500);
 
       } catch (err: unknown) {
+        console.error('[OAuthCallback] Error:', err);
         setStatus('error');
         if (err && typeof err === 'object' && 'response' in err) {
           const axiosError = err as { response?: { data?: { detail?: string } } };
@@ -62,7 +74,7 @@ const OAuthCallback: React.FC = () => {
     };
 
     handleCallback();
-  }, [searchParams, api, navigate]);
+  }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
