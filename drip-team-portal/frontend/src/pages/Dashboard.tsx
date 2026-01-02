@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="text-red-600 text-xl mb-2">⚠️ Failed to load dashboard</div>
+          <div className="text-red-600 text-xl mb-2">Failed to load dashboard</div>
           <p className="text-gray-600">Please try refreshing the page or contact support.</p>
           <button 
             onClick={() => window.location.reload()} 

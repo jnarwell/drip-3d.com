@@ -136,34 +136,34 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({ componentId, curren
 
   const setMaterial = useMutation({
     mutationFn: async (materialId: number) => {
-      console.log('🔄 Starting material change mutation:', { componentId, materialId });
+      console.log('[MaterialSelector] Starting material change mutation:', { componentId, materialId });
       const response = await api.put(`/api/v1/components/${componentId}/material?material_id=${materialId}`);
-      console.log('✅ Material change response:', response.data);
+      console.log('[MaterialSelector] Material change response:', response.data);
       return response.data;
     },
     onSuccess: (data) => {
-      console.log('🎉 Material change successful, invalidating queries...', data);
+      console.log('[MaterialSelector] Material change successful, invalidating queries...', data);
       
       // Add small delay to ensure backend commit is complete
       setTimeout(() => {
-        console.log('🔄 Invalidating component-properties query...');
+        console.log('[MaterialSelector] Invalidating component-properties query...');
         queryClient.invalidateQueries({ queryKey: ['component-properties', componentId] });
-        console.log('🔄 Invalidating component-materials query...');
+        console.log('[MaterialSelector] Invalidating component-materials query...');
         queryClient.invalidateQueries({ queryKey: ['component-materials', componentId] });
       }, 100);
       
       const selectedMaterial = materials?.find(m => m.id === data.changes?.new_material_id);
-      console.log('📋 Selected material:', selectedMaterial);
+      console.log('[MaterialSelector] Selected material:', selectedMaterial);
       
       if (selectedMaterial && onMaterialSet) {
-        console.log('📞 Calling onMaterialSet callback...');
+        console.log('[MaterialSelector] Calling onMaterialSet callback...');
         onMaterialSet(selectedMaterial, data.changes?.properties_added || []);
       }
       
       setIsOpen(false);
     },
     onError: (error) => {
-      console.error('❌ Material change error:', error);
+      console.error('[MaterialSelector] Material change error:', error);
     },
   });
 
@@ -483,7 +483,7 @@ const MaterialSelector: React.FC<MaterialSelectorProps> = ({ componentId, curren
                     <button
                       key={material.id}
                       onClick={() => {
-                        console.log('🎯 Local material clicked:', material.name, 'ID:', material.id);
+                        console.log('[MaterialSelector] Local material clicked:', material.name, 'ID:', material.id);
                         setMaterial.mutate(material.id);
                       }}
                       className="w-full p-4 text-left hover:bg-gray-50 transition-colors"

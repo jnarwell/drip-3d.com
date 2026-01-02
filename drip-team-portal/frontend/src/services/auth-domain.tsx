@@ -54,7 +54,7 @@ export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = 
 
   // Local dev mode - bypass Auth0 entirely
   if (isLocalDev()) {
-    console.log('🔧 Running in LOCAL DEV MODE - Auth0 bypassed');
+    console.log('[Auth] Running in LOCAL DEV MODE - Auth0 bypassed');
     return (
       <MockAuthContext.Provider
         value={{
@@ -80,6 +80,10 @@ export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = 
     );
   }
 
+  // Skip Auth0 callback processing on Google OAuth callback path
+  // (Auth0 would try to process ?code= as its own callback and fail)
+  const skipCallback = window.location.pathname === '/oauth/google/callback';
+
   return (
     <Auth0Provider
       domain={authConfig.domain}
@@ -89,6 +93,7 @@ export const DomainAwareAuthProvider: React.FC<{ children: React.ReactNode }> = 
         audience: authConfig.audience,
         scope: authConfig.scope,
       }}
+      skipRedirectCallback={skipCallback}
     >
       {children}
     </Auth0Provider>

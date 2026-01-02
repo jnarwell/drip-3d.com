@@ -109,14 +109,24 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
   };
 
   const entries = data?.entries || [];
+  const totalSeconds = entries.reduce((sum, e) => sum + (e.duration_seconds || 0), 0);
+
+  const Header = () => (
+    <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
+      <div className="flex items-center gap-4">
+        <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
+        {totalSeconds > 0 && (
+          <span className="text-lg font-bold text-indigo-600">{formatDuration(totalSeconds)}</span>
+        )}
+      </div>
+      <DateRangeSelector value={dateRange} onChange={setDateRange} />
+    </div>
+  );
 
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
-        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
-          <DateRangeSelector value={dateRange} onChange={setDateRange} />
-        </div>
+        <Header />
         <div className="flex items-center justify-center flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
         </div>
@@ -127,10 +137,7 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
-        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
-          <DateRangeSelector value={dateRange} onChange={setDateRange} />
-        </div>
+        <Header />
         <div className="flex items-center justify-center flex-1 text-red-600">
           Failed to load time entries
         </div>
@@ -141,10 +148,7 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
   if (entries.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
-        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
-          <DateRangeSelector value={dateRange} onChange={setDateRange} />
-        </div>
+        <Header />
         <div className="flex items-center justify-center flex-1">
           <div className="text-center">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -174,10 +178,7 @@ const TimeEntryList: React.FC<TimeEntryListProps> = ({ filters = {} }) => {
   return (
     <>
       <div className="bg-white rounded-lg shadow flex flex-col h-[calc(100vh-12rem)]">
-        <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
-          <h2 className="text-lg font-semibold text-gray-900">Time Entries</h2>
-          <DateRangeSelector value={dateRange} onChange={setDateRange} />
-        </div>
+        <Header />
         <div className="divide-y divide-gray-100 overflow-y-auto flex-1">
           {sortedDateKeys.map((dateKey) => (
             <div key={dateKey}>

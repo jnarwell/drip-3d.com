@@ -368,3 +368,50 @@ if isinstance(value, str):
 **Fix**: Normalize datetimes before comparison: `dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt`
 
 **Prevention**: Always normalize timezone in datetime operations, don't assume tzinfo survives storage
+
+---
+
+## Build Learnings - Resources Upgrade (Jan 1, 2026)
+
+### 🔴 BLOCKER: TeamTimeView.tsx TypeScript Error
+
+**Symptom**: `Type 'TimeSummaryGroup[]' is not assignable to type 'IssueGroup[]'`
+
+**File**: `src/components/time/TeamTimeView.tsx:94`
+
+**Root cause**: `TimeSummaryGroup.name` is `string | undefined`, but `IssueGroup.name` expects `string`
+
+**Status**: Instance A fixing
+
+**Impact**: Railway build fails, cannot deploy
+
+---
+
+### Active: Drive Browsing 401 in Dev Mode
+
+**Symptom**: `GET /api/v1/drive/files` returns 401 Unauthorized
+
+**Root cause**: Dev mode bypasses Auth0, so no Google token is available in JWT claims
+
+**Status**: Expected behavior - will work after deploy with real auth
+
+**Workaround**: Test Drive features on deployed Railway instance
+
+---
+
+### Active: Contacts Expandable Rows Incomplete
+
+**File**: `Contacts.tsx`
+
+**Status**: Instance B context maxed mid-implementation
+
+**Remaining work**: Secondary email, phone, notes in expandable row with copy buttons
+
+---
+
+### Resolved This Session (Jan 1, 2026)
+
+- ✅ Resources 500 error - missing `google_drive_file_id` column (migration applied)
+- ✅ Contacts 422 error - schema mismatch (updated to `email`/`secondary_email`/`phone`)
+- ✅ Documents/Contacts not displaying - wrong property name (`contacts` vs `items`)
+- ✅ Frontend crash on iterate - added array guards

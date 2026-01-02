@@ -40,13 +40,13 @@ interface DriveFile {
 }
 
 const DOC_TYPE_INFO: Record<string, { label: string; icon: string; color: string }> = {
-  doc: { label: 'Document', icon: '📄', color: 'bg-blue-100 text-blue-800' },
-  spreadsheet: { label: 'Spreadsheet', icon: '📊', color: 'bg-green-100 text-green-800' },
-  slides: { label: 'Slides', icon: '📽️', color: 'bg-orange-100 text-orange-800' },
-  pdf: { label: 'PDF', icon: '📕', color: 'bg-red-100 text-red-800' },
-  paper: { label: 'Paper', icon: '📜', color: 'bg-yellow-100 text-yellow-800' },
-  video: { label: 'Video', icon: '🎥', color: 'bg-purple-100 text-purple-800' },
-  other: { label: 'Other', icon: '📎', color: 'bg-gray-100 text-gray-800' },
+  doc: { label: 'Document', icon: 'DOC', color: 'bg-blue-100 text-blue-800' },
+  spreadsheet: { label: 'Spreadsheet', icon: 'XLS', color: 'bg-green-100 text-green-800' },
+  slides: { label: 'Slides', icon: 'PPT', color: 'bg-orange-100 text-orange-800' },
+  pdf: { label: 'PDF', icon: 'PDF', color: 'bg-red-100 text-red-800' },
+  paper: { label: 'Paper', icon: 'TXT', color: 'bg-yellow-100 text-yellow-800' },
+  video: { label: 'Video', icon: 'VID', color: 'bg-purple-100 text-purple-800' },
+  other: { label: 'Other', icon: 'FILE', color: 'bg-gray-100 text-gray-800' },
 };
 
 const Documents: React.FC = () => {
@@ -59,6 +59,7 @@ const Documents: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBrowseModal, setShowBrowseModal] = useState(false);
+  const [driveSearchTerm, setDriveSearchTerm] = useState('');
   const [saving, setSaving] = useState(false);
   const [connectingGoogle, setConnectingGoogle] = useState(false);
 
@@ -140,9 +141,10 @@ const Documents: React.FC = () => {
 
   // Fetch Drive files for browse modal
   const { data: driveFiles, isLoading: driveLoading } = useQuery<DriveFile[]>({
-    queryKey: ['drive-files'],
+    queryKey: ['drive-files', driveSearchTerm],
     queryFn: async () => {
-      const response = await api.get('/api/v1/drive/files');
+      const params = driveSearchTerm ? `?query=${encodeURIComponent(driveSearchTerm)}` : '';
+      const response = await api.get(`/api/v1/drive/files${params}`);
       // API returns { files: [...], nextPageToken: ... }
       return response.data.files || [];
     },
@@ -354,7 +356,7 @@ const Documents: React.FC = () => {
             {isGoogleConnected && (
               <>
                 <button
-                  onClick={() => setShowBrowseModal(true)}
+                  onClick={() => { setDriveSearchTerm(''); setShowBrowseModal(true); }}
                   className="px-4 py-2 text-sm font-medium text-indigo-600 bg-white border border-indigo-600 rounded-md hover:bg-indigo-50"
                 >
                   Browse Drive
@@ -570,6 +572,13 @@ const Documents: React.FC = () => {
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Browse Google Drive</h3>
+            <input
+              type="text"
+              value={driveSearchTerm}
+              onChange={(e) => setDriveSearchTerm(e.target.value)}
+              placeholder="Search files..."
+              className="mb-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+            />
             {driveLoading ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -582,12 +591,12 @@ const Documents: React.FC = () => {
                     onClick={() => handleDriveFileSelect(file)}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
                   >
-                    <span className="text-xl">
-                      {file.mimeType.includes('document') ? '📄' :
-                       file.mimeType.includes('spreadsheet') ? '📊' :
-                       file.mimeType.includes('presentation') ? '📽️' :
-                       file.mimeType.includes('pdf') ? '📕' :
-                       file.mimeType.includes('video') ? '🎥' : '📎'}
+                    <span className="text-xs font-bold text-gray-500">
+                      {file.mimeType.includes('document') ? 'DOC' :
+                       file.mimeType.includes('spreadsheet') ? 'XLS' :
+                       file.mimeType.includes('presentation') ? 'PPT' :
+                       file.mimeType.includes('pdf') ? 'PDF' :
+                       file.mimeType.includes('video') ? 'VID' : 'FILE'}
                     </span>
                     <span className="text-sm text-gray-900 truncate">{file.name}</span>
                   </button>
