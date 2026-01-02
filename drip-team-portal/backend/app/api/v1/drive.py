@@ -304,6 +304,9 @@ async def list_drive_files(
     if q_parts:
         params["q"] = " and ".join(q_parts)
 
+    # Log the query being sent for debugging
+    logger.info(f"Drive API request - user={current_user['email']}, query_param={query}, built_q={params.get('q')}")
+
     # Call Google Drive API with retry logic
     try:
         response = await _make_drive_request(
@@ -312,6 +315,7 @@ async def list_drive_files(
             params
         )
     except httpx.HTTPStatusError as e:
+        logger.error(f"Drive API HTTPStatusError: {e.response.status_code} - {e.response.text}")
         if e.response.status_code == 401:
             raise HTTPException(
                 status_code=401,
@@ -321,6 +325,24 @@ async def list_drive_files(
             status_code=e.response.status_code,
             detail=f"Google Drive API error after retries: {e.response.text}"
         )
+    except httpx.TimeoutException as e:
+        logger.error(f"Drive API timeout: {e}")
+        raise HTTPException(
+            status_code=504,
+            detail="Google Drive API timed out. Please try again."
+        )
+    except httpx.ConnectError as e:
+        logger.error(f"Drive API connection error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Could not connect to Google Drive API. Please try again."
+        )
+    except Exception as e:
+        logger.exception(f"Drive API unexpected error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error accessing Google Drive: {type(e).__name__}"
+        )
 
     if response.status_code == 401:
         raise HTTPException(
@@ -329,17 +351,32 @@ async def list_drive_files(
         )
 
     if response.status_code != 200:
+        logger.error(f"Drive API non-200 response: {response.status_code} - {response.text}")
         raise HTTPException(
             status_code=response.status_code,
             detail=f"Google Drive API error: {response.text}"
         )
 
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception as e:
+        logger.exception(f"Drive API JSON parse error: {e}, response={response.text[:500]}")
+        raise HTTPException(
+            status_code=500,
+            detail="Invalid response from Google Drive API"
+        )
 
-    return DriveListResponse(
-        files=[DriveFile(**f) for f in data.get("files", [])],
-        nextPageToken=data.get("nextPageToken")
-    )
+    try:
+        return DriveListResponse(
+            files=[DriveFile(**f) for f in data.get("files", [])],
+            nextPageToken=data.get("nextPageToken")
+        )
+    except Exception as e:
+        logger.exception(f"Drive API response mapping error: {e}, data keys={list(data.keys()) if data else 'None'}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error processing Google Drive response"
+        )
 
 
 @router.get("/files/{file_id}")
@@ -431,6 +468,9 @@ async def search_drive_files(
     else:
         params["corpora"] = "allDrives"
 
+    # Log the search query for debugging
+    logger.info(f"Drive search - user={current_user['email']}, search_term={q}, built_q={params.get('q')}")
+
     try:
         response = await _make_drive_request(
             "https://www.googleapis.com/drive/v3/files",
@@ -438,6 +478,7 @@ async def search_drive_files(
             params
         )
     except httpx.HTTPStatusError as e:
+        logger.error(f"Drive search HTTPStatusError: {e.response.status_code} - {e.response.text}")
         if e.response.status_code == 401:
             raise HTTPException(
                 status_code=401,
@@ -447,6 +488,24 @@ async def search_drive_files(
             status_code=e.response.status_code,
             detail=f"Google Drive API error after retries: {e.response.text}"
         )
+    except httpx.TimeoutException as e:
+        logger.error(f"Drive search timeout: {e}")
+        raise HTTPException(
+            status_code=504,
+            detail="Google Drive API timed out. Please try again."
+        )
+    except httpx.ConnectError as e:
+        logger.error(f"Drive search connection error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Could not connect to Google Drive API. Please try again."
+        )
+    except Exception as e:
+        logger.exception(f"Drive search unexpected error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error accessing Google Drive: {type(e).__name__}"
+        )
 
     if response.status_code == 401:
         raise HTTPException(
@@ -455,12 +514,20 @@ async def search_drive_files(
         )
 
     if response.status_code != 200:
+        logger.error(f"Drive search non-200 response: {response.status_code} - {response.text}")
         raise HTTPException(
             status_code=response.status_code,
             detail=f"Google Drive API error: {response.text}"
         )
 
-    data = response.json()
+    try:
+        data = response.json()
+    except Exception as e:
+        logger.exception(f"Drive search JSON parse error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Invalid response from Google Drive API"
+        )
 
     return {
         "files": data.get("files", []),

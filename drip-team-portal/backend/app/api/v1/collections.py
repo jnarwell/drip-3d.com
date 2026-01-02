@@ -8,9 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 import os
 import logging
+import re
 
 from app.db.database import get_db
 from app.models.collection import Collection, resource_collections
@@ -31,16 +32,46 @@ router = APIRouter(prefix="/api/v1/collections", tags=["collections"])
 # PYDANTIC SCHEMAS
 # =============================================================================
 
+# Input length limits
+MAX_NAME_LENGTH = 200
+MAX_DESCRIPTION_LENGTH = 2000
+HEX_COLOR_PATTERN = re.compile(r'^#[0-9A-Fa-f]{6}$')
+
+
 class CollectionCreateRequest(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=MAX_NAME_LENGTH)
+    description: Optional[str] = Field(None, max_length=MAX_DESCRIPTION_LENGTH)
     color: Optional[str] = None  # Hex code, e.g., "#FF5733"
+
+    @field_validator('color')
+    @classmethod
+    def validate_color(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not HEX_COLOR_PATTERN.match(v):
+            raise ValueError("Color must be a valid hex code (e.g., '#FF5733')")
+        return v.upper()  # Normalize to uppercase
 
 
 class CollectionUpdateRequest(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=MAX_NAME_LENGTH)
+    description: Optional[str] = Field(None, max_length=MAX_DESCRIPTION_LENGTH)
     color: Optional[str] = None
+
+    @field_validator('color')
+    @classmethod
+    def validate_color(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if not HEX_COLOR_PATTERN.match(v):
+            raise ValueError("Color must be a valid hex code (e.g., '#FF5733')")
+        return v.upper()  # Normalize to uppercase
 
 
 # =============================================================================
@@ -87,13 +118,7 @@ async def create_collection(
     user_email = current_user["email"]
     logger.info(f"POST /collections - User: {user_email}, Name: {data.name}")
 
-    # Validate color format if provided
-    if data.color and not data.color.startswith("#"):
-        raise HTTPException(
-            status_code=400,
-            detail="Color must be a hex code starting with '#' (e.g., '#FF5733')"
-        )
-
+    # Color validation is handled by Pydantic field_validator
     collection = Collection(
         name=data.name,
         description=data.description,
@@ -173,11 +198,7 @@ async def update_collection(
         collection.description = data.description
 
     if data.color is not None:
-        if data.color and not data.color.startswith("#"):
-            raise HTTPException(
-                status_code=400,
-                detail="Color must be a hex code starting with '#' (e.g., '#FF5733')"
-            )
+        # Color validation is handled by Pydantic field_validator
         collection.color = data.color
 
     db.commit()

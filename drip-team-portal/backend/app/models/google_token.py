@@ -35,7 +35,13 @@ class GoogleToken(Base):
         """Check if the access token has expired."""
         if not self.expires_at:
             return True
-        return datetime.now(timezone.utc) >= self.expires_at
+        # Handle both naive and timezone-aware datetimes from database
+        now = datetime.now(timezone.utc)
+        expires = self.expires_at
+        if expires.tzinfo is None:
+            # Treat naive datetime as UTC
+            expires = expires.replace(tzinfo=timezone.utc)
+        return now >= expires
 
     def to_dict(self) -> dict:
         """Return dictionary representation (without sensitive tokens)."""

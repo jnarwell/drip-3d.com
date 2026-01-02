@@ -9,7 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_, String
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from urllib.parse import urlparse
 import os
 import logging
 
@@ -33,26 +34,89 @@ router = APIRouter(prefix="/api/v1/resources", tags=["resources"])
 # PYDANTIC SCHEMAS
 # =============================================================================
 
+# Input length limits
+MAX_TITLE_LENGTH = 500
+MAX_URL_LENGTH = 2000
+MAX_NOTES_LENGTH = 10000
+MAX_TAG_LENGTH = 100
+MAX_TAGS_COUNT = 50
+MAX_DRIVE_FILE_ID_LENGTH = 100
+
+
+def _validate_url(url: Optional[str]) -> Optional[str]:
+    """Validate URL format and scheme."""
+    if url is None:
+        return None
+    url = url.strip()
+    if not url:
+        return None
+    if len(url) > MAX_URL_LENGTH:
+        raise ValueError(f"URL must be at most {MAX_URL_LENGTH} characters")
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            raise ValueError("URL must use http or https scheme")
+        if not parsed.netloc:
+            raise ValueError("URL must have a valid host")
+    except Exception as e:
+        raise ValueError(f"Invalid URL: {e}")
+    return url
+
+
 class ResourceCreateRequest(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=MAX_TITLE_LENGTH)
     resource_type: str  # doc, folder, image, link, paper, video, spreadsheet
-    url: Optional[str] = None
-    google_drive_file_id: Optional[str] = None  # Google Drive file ID
+    url: Optional[str] = Field(None, max_length=MAX_URL_LENGTH)
+    google_drive_file_id: Optional[str] = Field(None, max_length=MAX_DRIVE_FILE_ID_LENGTH)
     tags: Optional[List[str]] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=MAX_NOTES_LENGTH)
     component_ids: Optional[List[int]] = None
     physics_model_ids: Optional[List[int]] = None
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_url(v)
+
+    @field_validator('tags')
+    @classmethod
+    def validate_tags(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is None:
+            return None
+        if len(v) > MAX_TAGS_COUNT:
+            raise ValueError(f"Maximum {MAX_TAGS_COUNT} tags allowed")
+        for tag in v:
+            if len(tag) > MAX_TAG_LENGTH:
+                raise ValueError(f"Tag must be at most {MAX_TAG_LENGTH} characters")
+        return v
 
 
 class ResourceUpdateRequest(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=MAX_TITLE_LENGTH)
     resource_type: Optional[str] = None
-    url: Optional[str] = None
-    google_drive_file_id: Optional[str] = None  # Google Drive file ID
+    url: Optional[str] = Field(None, max_length=MAX_URL_LENGTH)
+    google_drive_file_id: Optional[str] = Field(None, max_length=MAX_DRIVE_FILE_ID_LENGTH)
     tags: Optional[List[str]] = None
-    notes: Optional[str] = None
+    notes: Optional[str] = Field(None, max_length=MAX_NOTES_LENGTH)
     component_ids: Optional[List[int]] = None
     physics_model_ids: Optional[List[int]] = None
+
+    @field_validator('url')
+    @classmethod
+    def validate_url(cls, v: Optional[str]) -> Optional[str]:
+        return _validate_url(v)
+
+    @field_validator('tags')
+    @classmethod
+    def validate_tags(cls, v: Optional[List[str]]) -> Optional[List[str]]:
+        if v is None:
+            return None
+        if len(v) > MAX_TAGS_COUNT:
+            raise ValueError(f"Maximum {MAX_TAGS_COUNT} tags allowed")
+        for tag in v:
+            if len(tag) > MAX_TAG_LENGTH:
+                raise ValueError(f"Tag must be at most {MAX_TAG_LENGTH} characters")
+        return v
 
 
 # =============================================================================
