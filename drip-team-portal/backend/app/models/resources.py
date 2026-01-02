@@ -85,6 +85,9 @@ class Resource(Base):
     # Google Drive integration
     google_drive_file_id = Column(String(100), nullable=True, index=True)  # Drive file ID for linked docs
 
+    # User preferences
+    is_starred = Column(Boolean, default=False, nullable=False, index=True)  # Favorited by user
+
     # Relationships
     components = relationship(
         "Component",
@@ -118,6 +121,7 @@ class Resource(Base):
             "added_at": self.added_at.isoformat() if self.added_at else None,
             "tags": self.tags,
             "notes": self.notes,
+            "is_starred": self.is_starred,
             "component_ids": [c.id for c in self.components] if self.components else [],
             "physics_model_ids": [p.id for p in self.physics_models] if self.physics_models else [],
             "collection_ids": [c.id for c in self.collections] if self.collections else [],

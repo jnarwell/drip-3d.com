@@ -131,6 +131,9 @@ async def list_resources(
     component_id: Optional[int] = Query(None, description="Filter by linked component"),
     physics_model_id: Optional[int] = Query(None, description="Filter by linked physics model"),
     search: Optional[str] = Query(None, description="Search in title, notes, and tags"),
+    starred: Optional[bool] = Query(None, description="Filter to only starred resources"),
+    sort_by: Optional[str] = Query(None, description="Sort field: title, added_at, resource_type"),
+    sort_order: Optional[str] = Query("desc", description="Sort order: asc or desc"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -139,7 +142,8 @@ async def list_resources(
     """
     List resources with optional filters.
 
-    Returns resources sorted by added_at descending (most recent first).
+    Supports sorting via sort_by (title, added_at, resource_type) and sort_order (asc, desc).
+    Default sort: added_at desc (most recent first).
     """
     # Use selectinload to prevent N+1 queries when calling to_dict()
     query = db.query(Resource).options(
@@ -172,6 +176,10 @@ async def list_resources(
         # Cast JSON array to text and check for tag value
         query = query.filter(Resource.tags.cast(String).ilike(f'%"{tag}"%'))
 
+    # Filter by starred status
+    if starred is not None:
+        query = query.filter(Resource.is_starred == starred)
+
     if search:
         search_pattern = f"%{search}%"
         logger.info(f"GET /resources - Search: '{search}' -> pattern: '{search_pattern}'")
@@ -187,11 +195,25 @@ async def list_resources(
     # Get total count
     total = query.count()
 
+    # Build sort order
+    sort_column = Resource.added_at  # default
+    if sort_by == "title":
+        sort_column = Resource.title
+    elif sort_by == "resource_type":
+        sort_column = Resource.resource_type
+    elif sort_by == "added_at":
+        sort_column = Resource.added_at
+
+    if sort_order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+
     # Get paginated results
-    resources = query.order_by(Resource.added_at.desc()).offset(offset).limit(limit).all()
+    resources = query.offset(offset).limit(limit).all()
 
     # Debug logging
-    logger.info(f"GET /resources - type={type_filter}, tag={tag}, search={search}, total={total}")
+    logger.info(f"GET /resources - type={type_filter}, tag={tag}, starred={starred}, search={search}, sort={sort_by}:{sort_order}, total={total}")
 
     return {
         "resources": [r.to_dict() for r in resources],
@@ -368,6 +390,70 @@ async def delete_resource(
     db.commit()
 
     return {"deleted": True, "id": resource_id}
+
+
+@router.post("/{resource_id}/star")
+async def toggle_star(
+    resource_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Toggle the starred status of a resource.
+
+    Returns the new starred status.
+    """
+    resource = db.query(Resource).filter(Resource.id == resource_id).first()
+
+    if not resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    # Toggle the starred status
+    resource.is_starred = not resource.is_starred
+    db.commit()
+
+    logger.info(f"POST /resources/{resource_id}/star - starred={resource.is_starred}")
+
+    return {"starred": resource.is_starred, "id": resource_id}
+
+
+class BulkDeleteRequest(BaseModel):
+    ids: List[int] = Field(..., min_length=1, max_length=100)
+
+
+@router.delete("/bulk")
+async def bulk_delete_resources(
+    data: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete multiple resources at once.
+
+    Only deletes resources owned by the current user.
+    """
+    user_email = current_user["email"]
+
+    # Get all requested resources owned by the user
+    resources = db.query(Resource).filter(
+        Resource.id.in_(data.ids),
+        Resource.added_by == user_email
+    ).all()
+
+    if not resources:
+        raise HTTPException(
+            status_code=400,
+            detail="No valid resources found. You can only delete your own resources."
+        )
+
+    deleted_count = len(resources)
+    for resource in resources:
+        db.delete(resource)
+
+    db.commit()
+
+    logger.info(f"Bulk deleted {deleted_count} resources by {user_email}")
+    return {"deleted": deleted_count}
 
 
 # =============================================================================

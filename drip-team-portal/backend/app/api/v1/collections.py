@@ -346,3 +346,55 @@ async def remove_resource_from_collection(
 
     logger.info(f"Removed resource {resource_id} from collection {collection_id}")
     return {"removed": True, "collection_id": collection_id, "resource_id": resource_id}
+
+
+class BulkAddRequest(BaseModel):
+    resource_ids: List[int] = Field(..., min_length=1, max_length=100)
+
+
+@router.post("/{collection_id}/resources/bulk")
+async def bulk_add_resources_to_collection(
+    collection_id: int,
+    data: BulkAddRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Add multiple resources to a collection at once.
+
+    Only adds resources owned by the current user.
+    Skips resources already in the collection.
+    """
+    user_email = current_user["email"]
+
+    collection = db.query(Collection).filter(
+        Collection.id == collection_id,
+        Collection.created_by == user_email
+    ).first()
+
+    if not collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
+    # Get all requested resources owned by the user
+    resources = db.query(Resource).filter(
+        Resource.id.in_(data.resource_ids),
+        Resource.added_by == user_email
+    ).all()
+
+    if not resources:
+        raise HTTPException(
+            status_code=400,
+            detail="No valid resources found. You can only add your own resources."
+        )
+
+    # Add resources not already in collection
+    added_count = 0
+    for resource in resources:
+        if resource not in collection.resources:
+            collection.resources.append(resource)
+            added_count += 1
+
+    db.commit()
+
+    logger.info(f"Bulk added {added_count} resources to collection {collection_id}")
+    return {"added": added_count, "collection_id": collection_id}

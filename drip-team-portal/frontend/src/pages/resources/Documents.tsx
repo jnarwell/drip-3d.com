@@ -55,6 +55,8 @@ interface Resource {
   component_ids: number[];
   created_at: string;
   created_by: string | null;
+  is_starred: boolean;
+  added_at: string | null;
 }
 
 // API may return paginated response or plain array
@@ -94,6 +96,9 @@ const Documents: React.FC = () => {
   const debouncedSearch = useDebounce(searchTerm, 300);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedTag, setSelectedTag] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'added_at' | 'title' | 'resource_type'>('added_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showStarred, setShowStarred] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBrowseModal, setShowBrowseModal] = useState(false);
   const [driveSearchTerm, setDriveSearchTerm] = useState('');
@@ -112,6 +117,13 @@ const Documents: React.FC = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [addToCollectionDropdown, setAddToCollectionDropdown] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Bulk selection state
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showBulkAddModal, setShowBulkAddModal] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -194,9 +206,9 @@ const Documents: React.FC = () => {
     staleTime: 60000, // Cache for 1 minute
   });
 
-  // Fetch documents (filtered by search/type/tag)
+  // Fetch documents (filtered by search/type/tag/starred, sorted)
   const { data: documentsResponse, isLoading, error } = useQuery<ApiResponse<Resource>>({
-    queryKey: ['documents', debouncedSearch, selectedType, selectedTag],
+    queryKey: ['documents', debouncedSearch, selectedType, selectedTag, sortBy, sortOrder, showStarred],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
@@ -209,6 +221,11 @@ const Documents: React.FC = () => {
       if (selectedTag !== 'all') {
         params.append('tag', selectedTag);
       }
+      if (showStarred) {
+        params.append('starred', 'true');
+      }
+      params.append('sort_by', sortBy);
+      params.append('sort_order', sortOrder);
       const response = await api.get(`/api/v1/resources?${params.toString()}`);
       return response.data;
     },
@@ -265,6 +282,17 @@ const Documents: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['documents-all'] });
       queryClient.invalidateQueries({ queryKey: ['collections'] });
+    },
+  });
+
+  const toggleStar = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await api.post(`/api/v1/resources/${id}/star`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['documents-all'] });
     },
   });
 
@@ -349,6 +377,57 @@ const Documents: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
     },
   });
+
+  // Bulk add to collection mutation
+  const bulkAddToCollectionMutation = useMutation({
+    mutationFn: async ({ collectionId, resourceIds }: { collectionId: number; resourceIds: number[] }) => {
+      const response = await api.post(`/api/v1/collections/${collectionId}/resources/bulk`, { resource_ids: resourceIds });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      setSelectedIds(new Set());
+      setBulkMode(false);
+      setShowBulkAddModal(false);
+    },
+  });
+
+  // Bulk delete resources mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      await api.delete('/api/v1/resources/bulk', { data: { ids } });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['documents-all'] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      setSelectedIds(new Set());
+      setBulkMode(false);
+      setShowBulkDeleteConfirm(false);
+    },
+  });
+
+  // Bulk selection helpers
+  const toggleSelectDoc = (docId: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedIds(new Set(filteredByCollection.map(doc => doc.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setBulkMode(false);
+  };
 
   // Memoized map of document ID -> collection IDs for O(1) lookup
   const docCollectionsMap = useMemo(() => {
@@ -704,6 +783,16 @@ const Documents: React.FC = () => {
                 </>
               )}
               <button
+                onClick={() => { setBulkMode(!bulkMode); if (bulkMode) setSelectedIds(new Set()); }}
+                className={`px-4 py-2 text-sm font-medium rounded-md border ${
+                  bulkMode
+                    ? 'bg-indigo-100 text-indigo-700 border-indigo-300'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {bulkMode ? 'Cancel Select' : 'Select'}
+              </button>
+              <button
                 onClick={() => { resetForm(); setShowAddModal(true); }}
                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700"
               >
@@ -748,7 +837,65 @@ const Documents: React.FC = () => {
                 ))}
               </select>
             </div>
+            {/* Sort dropdown */}
+            <div className="sm:w-44">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'added_at' | 'title' | 'resource_type')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+              >
+                <option value="added_at">Date Added</option>
+                <option value="title">Name</option>
+                <option value="resource_type">Type</option>
+              </select>
+            </div>
+            {/* Sort order toggle */}
+            <button
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              {sortOrder === 'asc' ? (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                </svg>
+              )}
+            </button>
+            {/* Starred filter */}
+            <button
+              onClick={() => setShowStarred(!showStarred)}
+              className={`px-3 py-2 border rounded-md flex items-center gap-1.5 ${
+                showStarred
+                  ? 'bg-yellow-50 border-yellow-300 text-yellow-700'
+                  : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+              }`}
+              title={showStarred ? 'Showing starred only' : 'Show all'}
+            >
+              <svg className="w-5 h-5" fill={showStarred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              <span className="text-sm font-medium">Starred</span>
+            </button>
           </div>
+
+          {/* Bulk mode select all bar */}
+          {bulkMode && (
+            <div className="mb-4 flex items-center gap-4 p-3 bg-indigo-50 rounded-lg">
+              <button
+                onClick={selectAll}
+                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                Select All ({filteredByCollection.length})
+              </button>
+              <span className="text-sm text-gray-600">
+                {selectedIds.size} selected
+              </span>
+            </div>
+          )}
 
           {/* Document Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -756,14 +903,28 @@ const Documents: React.FC = () => {
               const typeInfo = DOC_TYPE_INFO[doc.resource_type] || DOC_TYPE_INFO.other;
               const docUrl = getResourceUrl(doc);
               const docCollections = getDocumentCollections(doc.id);
+              const isSelected = selectedIds.has(doc.id);
               return (
                 <div
                   key={doc.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                    isSelected ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200'
+                  }`}
+                  onClick={bulkMode ? () => toggleSelectDoc(doc.id) : undefined}
+                  style={bulkMode ? { cursor: 'pointer' } : undefined}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="text-lg flex-shrink-0">{typeInfo.icon}</span>
+                      {bulkMode && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectDoc(doc.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 flex-shrink-0"
+                          aria-label={`Select ${doc.title}`}
+                        />
+                      )}
                       <div className="min-w-0">
                         {docUrl ? (
                           <a
@@ -783,6 +944,16 @@ const Documents: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      {/* Star toggle */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); toggleStar.mutate(doc.id); }}
+                        className={`p-1 ${doc.is_starred ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}`}
+                        title={doc.is_starred ? 'Remove from starred' : 'Add to starred'}
+                      >
+                        <svg className="w-4 h-4" fill={doc.is_starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
+                      </button>
                       {/* Add to Collection dropdown */}
                       <div className="relative" ref={addToCollectionDropdown === doc.id ? dropdownRef : undefined}>
                         <button
@@ -1120,6 +1291,115 @@ const Documents: React.FC = () => {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
               >
                 {deleteCollectionMutation.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Action Floating Bar */}
+      {bulkMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-lg shadow-xl px-6 py-3 flex items-center gap-4 z-40">
+          <span className="text-sm font-medium">
+            {selectedIds.size} selected
+          </span>
+          <div className="w-px h-6 bg-gray-600" />
+          <button
+            onClick={() => setShowBulkAddModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Add to Collection
+          </button>
+          <button
+            onClick={() => setShowBulkDeleteConfirm(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete
+          </button>
+          <button
+            onClick={clearSelection}
+            className="px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Bulk Add to Collection Modal */}
+      {showBulkAddModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="bulk-add-title">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 id="bulk-add-title" className="text-lg font-medium text-gray-900 mb-4">
+              Add {selectedIds.size} documents to collection
+            </h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {collections.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">
+                  No collections yet. Create one first.
+                </p>
+              ) : (
+                collections.map(collection => (
+                  <button
+                    key={collection.id}
+                    onClick={() => bulkAddToCollectionMutation.mutate({
+                      collectionId: collection.id,
+                      resourceIds: Array.from(selectedIds)
+                    })}
+                    disabled={bulkAddToCollectionMutation.isPending}
+                    className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 flex items-center gap-3 transition-colors disabled:opacity-50"
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: collection.color || '#6B7280' }}
+                    />
+                    <span className="text-sm font-medium text-gray-900 flex-1">{collection.name}</span>
+                    <span className="text-xs text-gray-500">{collection.resource_count} docs</span>
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowBulkAddModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                disabled={bulkAddToCollectionMutation.isPending}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" role="alertdialog" aria-modal="true" aria-labelledby="bulk-delete-title" aria-describedby="bulk-delete-desc">
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+            <h3 id="bulk-delete-title" className="text-lg font-medium text-gray-900 mb-2">Delete Documents</h3>
+            <p id="bulk-delete-desc" className="text-sm text-gray-600 mb-4">
+              Are you sure you want to delete {selectedIds.size} document{selectedIds.size !== 1 ? 's' : ''}?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                disabled={bulkDeleteMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))}
+                disabled={bulkDeleteMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                {bulkDeleteMutation.isPending ? 'Deleting...' : `Delete ${selectedIds.size} Documents`}
               </button>
             </div>
           </div>

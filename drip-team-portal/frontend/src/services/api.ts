@@ -157,20 +157,41 @@ export const deleteContact = async (id: number) => {
 };
 
 // Documents API functions (uses existing /resources endpoint filtered by doc types)
-export const getDocuments = async (type?: string, tag?: string, search?: string) => {
+export const getDocuments = async (options?: {
+  type?: string;
+  tag?: string;
+  search?: string;
+  starred?: boolean;
+  sort_by?: 'title' | 'added_at' | 'resource_type';
+  sort_order?: 'asc' | 'desc';
+}) => {
   const params = new URLSearchParams();
   // Filter to document-type resources
   params.append('type', 'doc,paper,spreadsheet,slides,pdf,video');
-  if (type && type !== 'all') {
-    params.set('type', type);
+  if (options?.type && options.type !== 'all') {
+    params.set('type', options.type);
   }
-  if (tag && tag !== 'all') {
-    params.append('tag', tag);
+  if (options?.tag && options.tag !== 'all') {
+    params.append('tag', options.tag);
   }
-  if (search) {
-    params.append('search', search);
+  if (options?.search) {
+    params.append('search', options.search);
+  }
+  if (options?.starred !== undefined) {
+    params.append('starred', String(options.starred));
+  }
+  if (options?.sort_by) {
+    params.append('sort_by', options.sort_by);
+  }
+  if (options?.sort_order) {
+    params.append('sort_order', options.sort_order);
   }
   const response = await api.get(`/api/v1/resources?${params.toString()}`);
+  return response.data;
+};
+
+export const toggleStar = async (id: number) => {
+  const response = await api.post(`/api/v1/resources/${id}/star`);
   return response.data;
 };
 
@@ -294,5 +315,16 @@ export const addToCollection = async (collectionId: number, resourceId: number) 
 
 export const removeFromCollection = async (collectionId: number, resourceId: number) => {
   const response = await api.delete(`/api/v1/collections/${collectionId}/resources/${resourceId}`);
+  return response.data;
+};
+
+// Bulk operations
+export const bulkAddToCollection = async (collectionId: number, resourceIds: number[]) => {
+  const response = await api.post(`/api/v1/collections/${collectionId}/resources/bulk`, { resource_ids: resourceIds });
+  return response.data;
+};
+
+export const bulkDeleteResources = async (ids: number[]) => {
+  const response = await api.delete('/api/v1/resources/bulk', { data: { ids } });
   return response.data;
 };
