@@ -242,3 +242,57 @@ export const disconnectGoogle = async () => {
   const response = await api.delete('/api/v1/google-oauth/disconnect');
   return response.data;
 };
+
+// Collection types (matches API contract from Instance A)
+export interface Collection {
+  id: number;
+  name: string;
+  description: string | null;
+  color: string | null;  // hex like "#3B82F6"
+  resource_count: number;
+  resource_ids?: number[];  // included when fetching single collection
+  created_at: string;
+}
+
+export interface CollectionCreate {
+  name: string;
+  description?: string | null;
+  color?: string;
+}
+
+export interface CollectionUpdate {
+  name?: string;
+  description?: string | null;
+  color?: string;
+}
+
+// Collections API functions
+export const getCollections = async () => {
+  const response = await api.get('/api/v1/collections');
+  return response.data;
+};
+
+export const createCollection = async (data: CollectionCreate) => {
+  const response = await api.post('/api/v1/collections', data);
+  return response.data;
+};
+
+export const updateCollection = async (id: number, data: CollectionUpdate) => {
+  const response = await api.patch(`/api/v1/collections/${id}`, data);
+  return response.data;
+};
+
+export const deleteCollection = async (id: number) => {
+  const response = await api.delete(`/api/v1/collections/${id}`);
+  return response.data;
+};
+
+export const addToCollection = async (collectionId: number, resourceId: number) => {
+  const response = await api.post(`/api/v1/collections/${collectionId}/resources/${resourceId}`);
+  return response.data;
+};
+
+export const removeFromCollection = async (collectionId: number, resourceId: number) => {
+  const response = await api.delete(`/api/v1/collections/${collectionId}/resources/${resourceId}`);
+  return response.data;
+};
