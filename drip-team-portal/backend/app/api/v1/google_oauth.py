@@ -109,22 +109,32 @@ async def get_auth_url(
 @router.post("/callback", response_model=CallbackResponse)
 async def handle_callback(
     data: CallbackRequest,
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    db: Session = Depends(get_db)
 ):
     """
     Handle the OAuth callback from Google.
 
+    This endpoint is PUBLIC (no auth required) because it's called during
+    the OAuth flow. The user email comes from the 'state' parameter which
+    was set when the flow started.
+
     Exchanges the authorization code for access and refresh tokens,
     then stores them in the database.
     """
-    user_email = current_user["email"]
+    # Get user email from state parameter (set when OAuth flow started)
+    user_email = data.state
 
-    # Verify state matches (CSRF protection)
-    if data.state and data.state != user_email:
+    # Validate email is present and belongs to our domain
+    if not user_email:
         raise HTTPException(
             status_code=400,
-            detail="Invalid state parameter. Please try again."
+            detail="Missing state parameter. Please try again."
+        )
+
+    if not user_email.endswith(settings.ALLOWED_EMAIL_DOMAIN):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access restricted to {settings.ALLOWED_EMAIL_DOMAIN} email addresses"
         )
 
     if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
