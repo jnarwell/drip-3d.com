@@ -288,7 +288,14 @@ async def list_drive_files(
     # Build q parameter for filtering
     q_parts = []
     if query:
-        q_parts.append(query)
+        # If query looks like Drive syntax (contains operators), use as-is
+        # Otherwise, wrap in name contains for simple search
+        if any(op in query.lower() for op in ['contains', '=', ' and ', ' or ', ' not ']):
+            q_parts.append(query)
+        else:
+            # Simple search term - escape and wrap
+            escaped_query = query.replace("\\", "\\\\").replace("'", "\\'")
+            q_parts.append(f"name contains '{escaped_query}'")
     if mime_type:
         q_parts.append(f"mimeType='{mime_type}'")
     # Exclude trashed files

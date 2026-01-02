@@ -18,7 +18,7 @@ import logging
 from app.db.database import get_db
 from app.models.google_token import GoogleToken
 from app.core.config import settings
-from app.main import limiter
+from app.core.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +108,9 @@ async def get_auth_url(
 
 
 @router.post("/callback", response_model=CallbackResponse)
+@limiter.limit("10/minute")
 async def handle_callback(
+    request: Request,
     data: CallbackRequest,
     db: Session = Depends(get_db)
 ):
@@ -121,6 +123,8 @@ async def handle_callback(
 
     Exchanges the authorization code for access and refresh tokens,
     then stores them in the database.
+
+    Rate limited: 10 requests/minute per IP
     """
     # Get user email from state parameter (set when OAuth flow started)
     user_email = data.state

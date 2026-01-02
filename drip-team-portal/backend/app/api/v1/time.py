@@ -8,7 +8,7 @@ Provides:
 - Summary aggregation by user/component
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func, and_, or_
 from typing import Optional, List
@@ -25,6 +25,7 @@ from app.models.time_break import TimeBreak
 from app.models.resources import Resource
 from app.models.component import Component
 from app.models.user import User
+from app.core.rate_limit import limiter
 
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
@@ -304,7 +305,9 @@ async def list_entries(
 
 
 @router.post("/entries")
+@limiter.limit("60/minute")
 async def create_entry(
+    request: Request,
     data: TimeEntryCreateRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -314,6 +317,7 @@ async def create_entry(
 
     Useful for logging time after the fact.
     Supports optional breaks array for break periods.
+    Rate limited: 60 requests/minute per IP
     """
     user_id = current_user["email"]
 

@@ -5,11 +5,11 @@ Resources are documents, links, papers, images, etc. that can be
 linked to components and physics models.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import or_, String
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import os
 import logging
 
@@ -19,6 +19,7 @@ from app.db.database import get_db
 from app.models.resources import Resource, resource_components, resource_physics_models
 from app.models.component import Component
 from app.models.physics_model import PhysicsModel
+from app.core.rate_limit import limiter
 
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
@@ -137,7 +138,9 @@ async def list_resources(
 
 
 @router.post("")
+@limiter.limit("30/minute")
 async def create_resource(
+    request: Request,
     data: ResourceCreateRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -146,6 +149,7 @@ async def create_resource(
     Create a new resource.
 
     Can optionally link to components and physics models during creation.
+    Rate limited: 30 requests/minute per IP
     """
     # Log received payload for debugging
     logger.info(f"POST /resources - Received payload: {data.model_dump()}")

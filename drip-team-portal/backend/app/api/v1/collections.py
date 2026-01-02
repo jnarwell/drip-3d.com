@@ -4,17 +4,18 @@ Collections API - CRUD endpoints for organizing resources into collections.
 Collections allow users to group related documents, links, and other resources.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import os
 import logging
 
 from app.db.database import get_db
 from app.models.collection import Collection, resource_collections
 from app.models.resources import Resource
+from app.core.rate_limit import limiter
 
 if os.getenv("DEV_MODE") == "true":
     from app.core.security_dev import get_current_user_dev as get_current_user
@@ -70,7 +71,9 @@ async def list_collections(
 
 
 @router.post("")
+@limiter.limit("20/minute")
 async def create_collection(
+    request: Request,
     data: CollectionCreateRequest,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -79,6 +82,7 @@ async def create_collection(
     Create a new collection.
 
     Collection names must be unique per user.
+    Rate limited: 20 requests/minute per IP
     """
     user_email = current_user["email"]
     logger.info(f"POST /collections - User: {user_email}, Name: {data.name}")
