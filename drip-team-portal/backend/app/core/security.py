@@ -90,17 +90,11 @@ async def get_current_user(
             detail=f"Access restricted to {settings.ALLOWED_EMAIL_DOMAIN} email addresses"
         )
 
-    # Extract Google tokens from custom claims (added by Auth0 action)
-    google_access_token = payload.get("https://drip-3d.com/google_access_token")
-    google_refresh_token = payload.get("https://drip-3d.com/google_refresh_token")
-
     return {
         "email": email,
         "name": payload.get("name", ""),
         "sub": payload.get("sub", ""),
         "permissions": payload.get("permissions", []),
-        "google_access_token": google_access_token,
-        "google_refresh_token": google_refresh_token,
     }
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):

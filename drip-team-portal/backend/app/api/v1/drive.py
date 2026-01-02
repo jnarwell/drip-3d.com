@@ -1,18 +1,18 @@
 """
 Google Drive API - List and access user's Drive files.
 
-Uses the Google access token from JWT claims to access the user's Drive.
-The Google token is passed through from Auth0 via a custom claim set by an Auth0 Action.
+Uses Auth0 Token Vault to exchange the user's Auth0 token for a Google access token.
+This allows access to the user's Google Drive without storing tokens.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, List
 from pydantic import BaseModel
-from jose import jwt
 import os
 import httpx
 import logging
+
+from app.services.token_vault_service import get_token_vault_service, TokenVaultService
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,6 @@ else:
     from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/v1/drive", tags=["drive"])
-security = HTTPBearer()
-
-# Custom claim namespace for Google token (configured in Auth0 Action)
-GOOGLE_TOKEN_CLAIM = "https://drip-3d.com/google_access_token"
 
 
 # =============================================================================
@@ -49,104 +45,66 @@ class DriveListResponse(BaseModel):
     nextPageToken: Optional[str] = None
 
 
-# =============================================================================
-# HELPER FUNCTIONS
-# =============================================================================
-
-async def extract_google_token(
-    request: Request,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> Optional[str]:
-    """
-    Extract Google access token from the Auth0 JWT claims.
-
-    The token is injected as a custom claim by an Auth0 Action when
-    the user logs in via Google social connection.
-    """
-    auth0_token = credentials.credentials
-
-    try:
-        # Decode without verification just to read claims
-        # (The main get_current_user already verified the token)
-        unverified = jwt.get_unverified_claims(auth0_token)
-
-        # Check for Google token in custom claim
-        google_token = unverified.get(GOOGLE_TOKEN_CLAIM)
-
-        if google_token:
-            logger.debug("Found Google token in JWT claims")
-            return google_token
-
-        # Fallback: check header (for testing/dev)
-        header_token = request.headers.get("x-google-token")
-        if header_token:
-            logger.debug("Found Google token in x-google-token header")
-            return header_token
-
-        return None
-
-    except Exception as e:
-        logger.warning(f"Error extracting Google token: {e}")
-        return None
-
-
-def require_google_token(google_token: Optional[str] = Depends(extract_google_token)) -> str:
-    """Dependency that requires a valid Google token."""
-    if not google_token:
-        raise HTTPException(
-            status_code=403,
-            detail={
-                "error": "google_token_required",
-                "message": "Google Drive access requires Google authentication. Please re-login with Google.",
-                "hint": "Ensure Auth0 Action is configured to pass through Google token."
-            }
-        )
-    return google_token
-
-
-def get_google_token(current_user: dict) -> str:
-    """Extract Google access token from current user claims (legacy helper)."""
-    token = current_user.get("google_access_token")
-    if not token:
-        raise HTTPException(
-            status_code=401,
-            detail="Google access token not available. Please re-authenticate with Google."
-        )
-    return token
-
-
-# =============================================================================
-# TEST ENDPOINT - Verify token extraction
-# =============================================================================
-
 class DriveTokenStatus(BaseModel):
     has_token: bool
     token_preview: Optional[str] = None
     message: str
 
 
+# =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+def extract_auth0_token(request: Request) -> str:
+    """Extract the Auth0 access token from the Authorization header."""
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:]  # Remove "Bearer " prefix
+    return auth_header
+
+
+async def get_google_token_from_vault(
+    request: Request,
+    token_vault: TokenVaultService = Depends(get_token_vault_service)
+) -> Optional[str]:
+    """Get Google token via Token Vault exchange."""
+    auth0_token = extract_auth0_token(request)
+    if not auth0_token:
+        return None
+    return await token_vault.get_google_token(auth0_token)
+
+
+# =============================================================================
+# TEST ENDPOINT - Verify token exchange
+# =============================================================================
+
 @router.get("/test", response_model=DriveTokenStatus)
 async def test_drive_token(
-    google_token: Optional[str] = Depends(extract_google_token)
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    token_vault: TokenVaultService = Depends(get_token_vault_service)
 ):
     """
-    Test endpoint to verify Google token extraction.
+    Test endpoint to verify Token Vault exchange is working.
 
-    Returns whether a Google token is available and a preview of the first 20 chars.
-    Use this to verify the Auth0 Action is correctly passing the Google token.
+    Returns whether a Google token can be obtained via Token Vault.
+    Use this to verify the Auth0 Token Vault is correctly configured.
     """
+    auth0_token = extract_auth0_token(request)
+    google_token = await token_vault.get_google_token(auth0_token)
+
     if google_token:
         preview = f"{google_token[:20]}..." if len(google_token) > 20 else google_token
         return DriveTokenStatus(
             has_token=True,
             token_preview=preview,
-            message="Google token found in JWT claims"
+            message="Token Vault exchange successful - Google token obtained"
         )
     else:
         return DriveTokenStatus(
             has_token=False,
             token_preview=None,
-            message="No Google token found. Ensure Auth0 Action is configured to pass Google token in claim: " + GOOGLE_TOKEN_CLAIM
+            message="Token Vault exchange failed. Ensure user logged in via Google and Token Vault is enabled."
         )
 
 
@@ -156,11 +114,13 @@ async def test_drive_token(
 
 @router.get("/files", response_model=DriveListResponse)
 async def list_drive_files(
+    request: Request,
     page_token: Optional[str] = Query(None, description="Token for pagination"),
     page_size: int = Query(25, ge=1, le=100, description="Number of files per page"),
     query: Optional[str] = Query(None, description="Search query (Drive search syntax)"),
     mime_type: Optional[str] = Query(None, description="Filter by MIME type"),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    token_vault: TokenVaultService = Depends(get_token_vault_service)
 ):
     """
     List files from user's Google Drive.
@@ -171,7 +131,14 @@ async def list_drive_files(
 
     Returns file metadata including name, type, links, and modification time.
     """
-    token = get_google_token(current_user)
+    auth0_token = extract_auth0_token(request)
+    google_token = await token_vault.get_google_token(auth0_token)
+
+    if not google_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not obtain Google token. Please ensure you're logged in with Google."
+        )
 
     # Build Drive API query
     params = {
@@ -200,7 +167,7 @@ async def list_drive_files(
         response = await client.get(
             "https://www.googleapis.com/drive/v3/files",
             params=params,
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {google_token}"}
         )
 
         if response.status_code == 401:
@@ -226,14 +193,23 @@ async def list_drive_files(
 @router.get("/files/{file_id}")
 async def get_drive_file(
     file_id: str,
-    current_user: dict = Depends(get_current_user)
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    token_vault: TokenVaultService = Depends(get_token_vault_service)
 ):
     """
     Get metadata for a single Drive file.
 
     Returns detailed file information including permissions and sharing status.
     """
-    token = get_google_token(current_user)
+    auth0_token = extract_auth0_token(request)
+    google_token = await token_vault.get_google_token(auth0_token)
+
+    if not google_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not obtain Google token. Please ensure you're logged in with Google."
+        )
 
     fields = "id,name,mimeType,webViewLink,iconLink,thumbnailLink,modifiedTime,createdTime,size,owners,shared,permissions"
 
@@ -241,7 +217,7 @@ async def get_drive_file(
         response = await client.get(
             f"https://www.googleapis.com/drive/v3/files/{file_id}",
             params={"fields": fields},
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {google_token}"}
         )
 
         if response.status_code == 401:
@@ -267,9 +243,11 @@ async def get_drive_file(
 
 @router.get("/search")
 async def search_drive_files(
-    q: str = Query(..., description="Search term"),
+    q: str,
+    request: Request,
     page_size: int = Query(25, ge=1, le=100),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    token_vault: TokenVaultService = Depends(get_token_vault_service)
 ):
     """
     Search for files in Google Drive.
@@ -277,7 +255,14 @@ async def search_drive_files(
     Simple search endpoint that wraps the name contains query.
     For advanced queries, use /files with the query parameter.
     """
-    token = get_google_token(current_user)
+    auth0_token = extract_auth0_token(request)
+    google_token = await token_vault.get_google_token(auth0_token)
+
+    if not google_token:
+        raise HTTPException(
+            status_code=401,
+            detail="Could not obtain Google token. Please ensure you're logged in with Google."
+        )
 
     params = {
         "pageSize": page_size,
@@ -290,7 +275,7 @@ async def search_drive_files(
         response = await client.get(
             "https://www.googleapis.com/drive/v3/files",
             params=params,
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {google_token}"}
         )
 
         if response.status_code == 401:
