@@ -116,7 +116,6 @@ const Documents: React.FC = () => {
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [addToCollectionDropdown, setAddToCollectionDropdown] = useState<number | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Bulk selection state
   const [bulkMode, setBulkMode] = useState(false);
@@ -650,101 +649,74 @@ const Documents: React.FC = () => {
         </div>
       )}
 
-      {/* Mobile sidebar toggle */}
-      <div className="md:hidden mb-4">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-white shadow rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-          aria-label={sidebarOpen ? "Close collections sidebar" : "Open collections sidebar"}
-          aria-expanded={sidebarOpen}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          Collections ({collections.length})
-          <svg className={`w-4 h-4 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Collections Sidebar - hidden on mobile unless toggled */}
-        <div className={`w-full md:w-64 flex-shrink-0 ${sidebarOpen ? 'block' : 'hidden'} md:block`}>
-          <div className="bg-white shadow rounded-lg p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-semibold text-gray-900">Collections</h3>
-              <button
-                onClick={() => { resetCollectionForm(); setEditingCollection(null); setShowCollectionModal(true); }}
-                className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                aria-label="Create new collection"
-              >
-                + New
-              </button>
+      {/* Main Content */}
+      <div className="bg-white shadow rounded-lg p-6">
+        {/* Collections Bar */}
+        <div className="mb-6 flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setSelectedCollection(null)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              selectedCollection === null
+                ? 'bg-indigo-100 text-indigo-700'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            All ({allDocumentsList.length})
+          </button>
+          {collectionsLoading ? (
+            <div className="animate-pulse flex gap-2">
+              <div className="h-7 w-20 bg-gray-200 rounded-full" />
+              <div className="h-7 w-24 bg-gray-200 rounded-full" />
             </div>
-            <div className="space-y-1">
-              <button
-                onClick={() => setSelectedCollection(null)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between ${
-                  selectedCollection === null ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50 text-gray-700'
-                }`}
-              >
-                <span>All Documents</span>
-                <span className="text-xs text-gray-500">{allDocumentsList.length}</span>
-              </button>
-              {collectionsLoading ? (
-                <div className="animate-pulse space-y-2 mt-2">
-                  <div className="h-8 bg-gray-200 rounded" />
-                  <div className="h-8 bg-gray-200 rounded" />
-                  <div className="h-8 bg-gray-200 rounded" />
+          ) : (
+            collections.map(collection => (
+              <div key={collection.id} className="group relative">
+                <button
+                  onClick={() => setSelectedCollection(collection.id)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                    selectedCollection === collection.id
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full"
+                    style={{ backgroundColor: collection.color || '#6B7280' }}
+                  />
+                  {collection.name}
+                  <span className="text-xs opacity-70">({collection.resource_count})</span>
+                </button>
+                {/* Edit/Delete on hover */}
+                <div className="absolute -top-1 -right-1 hidden group-hover:flex gap-0.5 bg-white rounded-full shadow-sm border border-gray-200 p-0.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openEditCollection(collection); }}
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100"
+                    title="Edit"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(collection.id); }}
+                    className="p-1 text-gray-400 hover:text-red-600 rounded-full hover:bg-gray-100"
+                    title="Delete"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-              ) : (
-                collections.map(collection => (
-                  <div key={collection.id} className="group relative">
-                    <button
-                      onClick={() => setSelectedCollection(collection.id)}
-                      className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 ${
-                        selectedCollection === collection.id ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50 text-gray-700'
-                      }`}
-                    >
-                      <span
-                        className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: collection.color || '#6B7280' }}
-                      />
-                      <span className="truncate flex-1">{collection.name}</span>
-                      <span className="text-xs text-gray-500">{collection.resource_count}</span>
-                    </button>
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex gap-1">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openEditCollection(collection); }}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                        title="Edit collection"
-                        aria-label={`Edit collection ${collection.name}`}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(collection.id); }}
-                        className="p-1 text-gray-400 hover:text-red-600"
-                        title="Delete collection"
-                        aria-label={`Delete collection ${collection.name}`}
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+              </div>
+            ))
+          )}
+          <button
+            onClick={() => { resetCollectionForm(); setEditingCollection(null); setShowCollectionModal(true); }}
+            className="px-3 py-1.5 rounded-full text-sm font-medium text-indigo-600 border border-dashed border-indigo-300 hover:bg-indigo-50 transition-colors"
+          >
+            + New
+          </button>
         </div>
-
-        {/* Main Content */}
-        <div className="flex-1 bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">
@@ -1061,7 +1033,6 @@ const Documents: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
 
       {/* Add Document Modal */}
       {showAddModal && (
