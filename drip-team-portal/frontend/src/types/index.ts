@@ -178,4 +178,184 @@ export interface DashboardStats {
     description: string;
     mitigation: string;
   }>;
+  // New test protocol stats
+  totalProtocols?: number;
+  totalTestRuns?: number;
+  completedTestRuns?: number;
+  passedTestRuns?: number;
+  failedTestRuns?: number;
+  testPassRate?: number;
+  testRunsInProgress?: number;
+}
+
+// === Test Protocol Types ===
+
+export enum TestRunStatus {
+  SETUP = "SETUP",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  ABORTED = "ABORTED"
+}
+
+export enum ValidationStatus {
+  PASS = "PASS",
+  WARNING = "WARNING",
+  FAIL = "FAIL"
+}
+
+export interface InputSchemaItem {
+  name: string;
+  unit_id?: number;
+  required: boolean;
+  description?: string;
+  default_value?: number;
+}
+
+export interface OutputSchemaItem {
+  name: string;
+  unit_id?: number;
+  target?: number;
+  tolerance_pct?: number;
+  min_value?: number;
+  max_value?: number;
+  description?: string;
+}
+
+export interface TestProtocol {
+  id: number;
+  name: string;
+  description?: string;
+  category?: string;
+  input_schema?: InputSchemaItem[];
+  output_schema?: OutputSchemaItem[];
+  setup_checklist?: string[];
+  procedure?: string;
+  equipment?: string[];
+  model_id?: number;
+  version: number;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  run_count?: number;
+}
+
+export interface TestProtocolDetail extends TestProtocol {
+  recent_runs?: TestRunSummary[];
+  model_name?: string;
+}
+
+export interface TestRunSummary {
+  id: number;
+  run_number?: number;
+  status: TestRunStatus;
+  result?: TestResultStatus;
+  operator?: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface TestRun extends TestRunSummary {
+  protocol_id: number;
+  component_id?: number;
+  analysis_id?: number;
+  configuration?: Record<string, any>;
+  notes?: string;
+  created_at: string;
+}
+
+export interface TestMeasurement {
+  id: number;
+  run_id: number;
+  parameter_name: string;
+  measured_value: number;
+  unit_id?: number;
+  unit_symbol?: string;
+  notes?: string;
+  timestamp: string;
+}
+
+export interface TestValidation {
+  id: number;
+  run_id: number;
+  parameter_name: string;
+  predicted_value?: number;
+  measured_value?: number;
+  unit_id?: number;
+  unit_symbol?: string;
+  error_absolute?: number;
+  error_pct?: number;
+  tolerance_pct?: number;
+  status?: ValidationStatus;
+  created_at: string;
+}
+
+export interface ProtocolStats {
+  protocol_id: number;
+  protocol_name: string;
+  total_runs: number;
+  passed: number;
+  failed: number;
+  partial: number;
+  pass_rate: number;
+  avg_duration_minutes?: number;
+}
+
+// Create/Update types for API calls
+export interface TestProtocolCreate {
+  name: string;
+  description?: string;
+  category?: string;
+  input_schema?: InputSchemaItem[];
+  output_schema?: OutputSchemaItem[];
+  setup_checklist?: string[];
+  procedure?: string;
+  equipment?: string[];
+  model_id?: number;
+}
+
+export interface TestProtocolUpdate {
+  name?: string;
+  description?: string;
+  category?: string;
+  input_schema?: InputSchemaItem[];
+  output_schema?: OutputSchemaItem[];
+  setup_checklist?: string[];
+  procedure?: string;
+  equipment?: string[];
+  model_id?: number;
+  is_active?: boolean;
+}
+
+export interface TestRunCreate {
+  protocol_id: number;
+  component_id?: number;
+  analysis_id?: number;
+  operator?: string;
+  configuration?: Record<string, any>;
+  notes?: string;
+}
+
+export interface TestRunStart {
+  configuration?: Record<string, any>;
+  operator?: string;
+}
+
+export interface TestRunComplete {
+  result: TestResultStatus;
+  notes?: string;
+}
+
+export interface TestMeasurementCreate {
+  parameter_name: string;
+  measured_value: number;
+  unit_id?: number;
+  notes?: string;
+}
+
+export interface TestRunDetail extends TestRun {
+  protocol_name?: string;
+  component_name?: string;
+  measurements: TestMeasurement[];
+  validations: TestValidation[];
 }

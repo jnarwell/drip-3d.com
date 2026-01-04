@@ -13,6 +13,15 @@ from app.models.time_break import TimeBreak
 from app.models.values import ValueNode, ValueDependency, NodeType, ComputationStatus, PropertyValueLink, MaterialPropertyValueLink
 from app.models.units import Unit, UnitConversion, UnitAlias
 from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
+from app.models.test_protocol import (
+    TestProtocol,
+    TestRun,
+    TestMeasurement,
+    TestValidation,
+    TestRunStatus,
+    TestResultStatus as TestProtocolResultStatus,
+    ValidationStatus,
+)
 
 __all__ = [
     "Base",
@@ -58,4 +67,12 @@ __all__ = [
     "PhysicsModelVersion",
     "ModelInstance",
     "ModelInput",
+    # Test Protocol System
+    "TestProtocol",
+    "TestRun",
+    "TestMeasurement",
+    "TestValidation",
+    "TestRunStatus",
+    "TestProtocolResultStatus",
+    "ValidationStatus",
 ]

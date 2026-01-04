@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { DashboardStats } from '../types';
@@ -115,6 +116,72 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Test Protocol Stats */}
+      {(stats?.totalProtocols !== undefined || stats?.totalTestRuns !== undefined) && (
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Test Protocol Status</h2>
+            <Link
+              to="/testing"
+              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              View All Protocols →
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-gray-900">{stats?.totalProtocols || 0}</div>
+              <div className="text-sm text-gray-600">Active Protocols</div>
+            </div>
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">{stats?.testRunsInProgress || 0}</div>
+              <div className="text-sm text-gray-600">Runs In Progress</div>
+            </div>
+            <div className="text-center p-3 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">{stats?.passedTestRuns || 0}</div>
+              <div className="text-sm text-gray-600">Passed</div>
+            </div>
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="text-2xl font-bold text-red-600">{stats?.failedTestRuns || 0}</div>
+              <div className="text-sm text-gray-600">Failed</div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Test Runs Completed</span>
+                <span>{stats?.completedTestRuns || 0}/{stats?.totalTestRuns || 0}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-indigo-500 h-2 rounded-full"
+                  style={{
+                    width: `${((stats?.completedTestRuns || 0) / (stats?.totalTestRuns || 1)) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Pass Rate</span>
+                <span>{stats?.testPassRate !== undefined ? `${(stats.testPassRate * 100).toFixed(1)}%` : 'N/A'}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full ${
+                    (stats?.testPassRate || 0) >= 0.9 ? 'bg-green-500' :
+                    (stats?.testPassRate || 0) >= 0.7 ? 'bg-yellow-500' : 'bg-red-500'
+                  }`}
+                  style={{
+                    width: `${(stats?.testPassRate || 0) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Test Campaign Progress */}

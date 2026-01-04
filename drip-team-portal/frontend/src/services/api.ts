@@ -328,3 +328,116 @@ export const bulkDeleteResources = async (ids: number[]) => {
   const response = await api.delete('/api/v1/resources/bulk', { data: { ids } });
   return response.data;
 };
+
+// ============== TEST PROTOCOLS API ==============
+
+import type {
+  TestProtocolCreate,
+  TestProtocolUpdate,
+  TestRunCreate,
+  TestRunStart,
+  TestRunComplete,
+  TestMeasurementCreate,
+} from '../types';
+
+// Test Protocols
+export const testProtocolsApi = {
+  list: async (params?: { category?: string; is_active?: boolean; search?: string }) => {
+    const response = await api.get('/api/v1/test-protocols', { params });
+    return response.data;
+  },
+
+  getCategories: async () => {
+    const response = await api.get('/api/v1/test-protocols/categories');
+    return response.data;
+  },
+
+  get: async (id: number) => {
+    const response = await api.get(`/api/v1/test-protocols/${id}`);
+    return response.data;
+  },
+
+  create: async (data: TestProtocolCreate) => {
+    const response = await api.post('/api/v1/test-protocols', data);
+    return response.data;
+  },
+
+  update: async (id: number, data: TestProtocolUpdate) => {
+    const response = await api.patch(`/api/v1/test-protocols/${id}`, data);
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await api.delete(`/api/v1/test-protocols/${id}`);
+    return response.data;
+  },
+
+  getStats: async (id: number) => {
+    const response = await api.get(`/api/v1/test-protocols/${id}/stats`);
+    return response.data;
+  },
+};
+
+// Test Runs
+export const testRunsApi = {
+  list: async (protocolId: number, params?: { status?: string; result?: string }) => {
+    const response = await api.get(`/api/v1/test-protocols/${protocolId}/runs`, { params });
+    return response.data;
+  },
+
+  get: async (runId: number) => {
+    const response = await api.get(`/api/v1/test-protocols/runs/${runId}`);
+    return response.data;
+  },
+
+  create: async (protocolId: number, data: Omit<TestRunCreate, 'protocol_id'>) => {
+    const response = await api.post(`/api/v1/test-protocols/${protocolId}/runs`, data);
+    return response.data;
+  },
+
+  start: async (runId: number, data?: TestRunStart) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/start`, data || {});
+    return response.data;
+  },
+
+  complete: async (runId: number, data: TestRunComplete) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/complete`, data);
+    return response.data;
+  },
+
+  abort: async (runId: number, notes?: string) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/abort`, { notes });
+    return response.data;
+  },
+};
+
+// Test Measurements
+export const testMeasurementsApi = {
+  list: async (runId: number) => {
+    const response = await api.get(`/api/v1/test-protocols/runs/${runId}/measurements`);
+    return response.data;
+  },
+
+  add: async (runId: number, data: TestMeasurementCreate) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/measurements`, data);
+    return response.data;
+  },
+
+  addBulk: async (runId: number, measurements: TestMeasurementCreate[]) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/measurements/bulk`, { measurements });
+    return response.data;
+  },
+};
+
+// Test Validations
+export const testValidationsApi = {
+  list: async (runId: number) => {
+    const response = await api.get(`/api/v1/test-protocols/runs/${runId}/validations`);
+    return response.data;
+  },
+
+  trigger: async (runId: number) => {
+    const response = await api.post(`/api/v1/test-protocols/runs/${runId}/validate`);
+    return response.data;
+  },
+};

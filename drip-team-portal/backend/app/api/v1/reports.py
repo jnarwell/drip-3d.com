@@ -13,6 +13,7 @@ if os_module.getenv("DEV_MODE") == "true":
 else:
     from app.core.security import get_current_user
 from app.services.reports import ReportGenerator
+from app.services.test_validation import TestStatsService
 from app.models.component import Component, ComponentStatus
 from app.models.test import Test, TestResult, TestStatus
 from app.models.user import User
@@ -113,18 +114,34 @@ async def get_dashboard_stats(
     
     # Critical path items
     critical_path = get_critical_path_items(db)
-    
+
     # Risk assessment
     risks = assess_risks(db)
-    
+
+    # New test protocol system stats
+    test_stats_service = TestStatsService(db)
+    test_protocol_stats = test_stats_service.get_dashboard_stats()
+
     return {
         "totalComponents": total_components,
         "componentsVerified": components_verified,
         "componentsFailed": components_failed,
+
+        # Legacy test system stats (for backward compatibility)
         "totalTests": total_tests,
         "testsComplete": tests_complete,
         "testsInProgress": tests_in_progress,
         "physicsValidated": physics_validated > 0,
+
+        # New test protocol system stats
+        "totalProtocols": test_protocol_stats["totalProtocols"],
+        "totalTestRuns": test_protocol_stats["totalRuns"],
+        "completedTestRuns": test_protocol_stats["completedRuns"],
+        "passedTestRuns": test_protocol_stats["passedRuns"],
+        "failedTestRuns": test_protocol_stats["failedRuns"],
+        "testRunsInProgress": test_protocol_stats["inProgress"],
+        "testPassRate": test_protocol_stats["passRate"],
+
         "componentsByCategory": [
             {"category": cat, "count": count}
             for cat, count in components_by_category

@@ -12,6 +12,7 @@
 3. [API Contract Map](#api-contract-map)
 4. [Cross-Cutting Concerns Audit](#cross-cutting-concerns-audit)
 5. [Monitoring & Observability](#monitoring--observability)
+6. [Roadmap](#roadmap)
 
 ---
 
@@ -237,6 +238,36 @@ Response:      {"status": "healthy", "version": "4.0-units-system"}
 │  - team.drip-3d.com (portal)                                           │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Roadmap
+
+### Completed (2026-01-02)
+
+- [x] Documents Collections feature
+- [x] Google Drive OAuth integration
+- [x] Document starring/favorites
+- [x] Bulk select operations
+- [x] Sort/filter options
+- [x] Mobile responsive sidebar
+- [x] Accessibility improvements (aria-labels, focus traps)
+- [x] Rate limiting on collection creation
+- [x] Input validation (Pydantic field validators)
+- [x] Bulk add resources to collection
+
+### Planned
+
+- [ ] Vendors/Suppliers subpage
+- [ ] Smart collections (auto-populate by rules)
+- [ ] Document preview (inline PDF/image viewer)
+- [ ] Drive folder navigation
+- [ ] Drive folder bulk import
+- [ ] Tests page (stub)
+- [ ] Reports page (stub)
+- [ ] Sentry error tracking integration
+- [ ] Frontend test coverage
+- [ ] E2E test suite
 
 ---
 

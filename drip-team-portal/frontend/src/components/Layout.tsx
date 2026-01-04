@@ -14,7 +14,7 @@ const Layout: React.FC = () => {
     { name: 'Models', href: '/models' },
     { name: 'Analysis', href: '/analysis' },
     { name: 'Time', href: '/time' },
-    { name: 'Tests', href: '/tests' },
+    { name: 'Testing', href: '/testing' },
     { name: 'Reports', href: '/reports' },
     { name: 'Resources', href: '/resources' },
   ];

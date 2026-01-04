@@ -36,6 +36,7 @@ from app.api.v1.users import router as users_router
 from app.api.v1.contacts import router as contacts_router
 from app.api.v1.drive import router as drive_router
 from app.api.v1.google_oauth import router as google_oauth_router
+from app.api.v1.test_protocols import router as test_protocols_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -109,6 +110,7 @@ async def startup_event():
             from app.models.physics_model import PhysicsModel, PhysicsModelVersion, ModelInstance, ModelInput
             from app.models.contact import Contact
             from app.models.google_token import GoogleToken
+            from app.models.test_protocol import TestProtocol, TestRun, TestMeasurement, TestValidation
 
             # Create all tables (safe - won't modify existing tables)
             logging.info("Creating database tables...")
@@ -131,6 +133,14 @@ async def startup_event():
                     conn.execute(text("ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS edit_history JSON"))
                     conn.commit()
                     logging.info("Migration: time_entries.edit_history column ensured")
+                except Exception as e:
+                    logging.debug(f"Migration skipped (may already exist): {e}")
+
+                # Add setup_checklist to test_protocols table if it doesn't exist
+                try:
+                    conn.execute(text("ALTER TABLE test_protocols ADD COLUMN IF NOT EXISTS setup_checklist JSON"))
+                    conn.commit()
+                    logging.info("Migration: test_protocols.setup_checklist column ensured")
                 except Exception as e:
                     logging.debug(f"Migration skipped (may already exist): {e}")
 
@@ -205,6 +215,7 @@ app.include_router(users_router, tags=["users"])
 app.include_router(contacts_router, tags=["contacts"])
 app.include_router(drive_router, tags=["drive"])
 app.include_router(google_oauth_router, tags=["google-oauth"])
+app.include_router(test_protocols_router, tags=["test-protocols"])
 
 @app.get("/")
 async def root():

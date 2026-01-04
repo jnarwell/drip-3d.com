@@ -1,3 +1,27 @@
+"""
+DEPRECATED: This module contains the old test system.
+
+The new test system uses:
+- TestProtocol (reusable test templates with input/output schemas)
+- TestRun (test executions linked to protocols and components)
+- TestMeasurement (flexible key-value measurements)
+- TestValidation (predicted vs measured comparisons)
+
+See: app/models/test_protocol.py
+
+This module will be removed after data migration is complete.
+
+Migration path:
+1. Old Test -> TestProtocol (one protocol per test type/category)
+2. Old TestResult -> TestRun + TestMeasurements
+   - test_result.steering_force -> TestMeasurement(parameter_name="steering_force", ...)
+   - test_result.bonding_strength -> TestMeasurement(parameter_name="bonding_strength", ...)
+   - test_result.temperature_max -> TestMeasurement(parameter_name="temperature_max", ...)
+   - test_result.drip_number -> TestMeasurement(parameter_name="drip_number", ...)
+
+DO NOT use these models for new code. Use test_protocol.py instead.
+"""
+
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, JSON, Text, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone

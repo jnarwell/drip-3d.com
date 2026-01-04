@@ -55,6 +55,7 @@ class Component(Base):
     owner_id = Column(String, nullable=True)  # User email who "owns" this component
 
     test_results = relationship("TestResult", back_populates="component")
+    test_runs = relationship("TestRun", back_populates="component")
     properties = relationship("ComponentProperty", back_populates="component", cascade="all, delete-orphan")
 
     # Time tracking and resources

@@ -7,8 +7,14 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import ComponentRegistry from './pages/ComponentRegistry';
 import ComponentDetailPage from './pages/ComponentDetailPage';
-import TestCampaign from './pages/TestCampaign';
 import Reports from './pages/Reports';
+// Testing system pages
+import ProtocolList from './pages/testing/ProtocolList';
+import ProtocolDetail from './pages/testing/ProtocolDetail';
+import ProtocolForm from './pages/testing/ProtocolForm';
+import RunCreator from './pages/testing/RunCreator';
+import RunExecution from './pages/testing/RunExecution';
+import RunDetail from './pages/testing/RunDetail';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Resources from './pages/Resources';
@@ -75,7 +81,16 @@ function AppRoutes() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="components" element={<ComponentRegistry />} />
           <Route path="components/:componentId" element={<ComponentDetailPage />} />
-          <Route path="tests" element={<TestCampaign />} />
+          {/* Legacy route redirect */}
+          <Route path="tests" element={<Navigate to="/testing" replace />} />
+          {/* New testing system routes */}
+          <Route path="testing" element={<ProtocolList />} />
+          <Route path="testing/protocols/new" element={<ProtocolForm />} />
+          <Route path="testing/protocols/:protocolId" element={<ProtocolDetail />} />
+          <Route path="testing/protocols/:protocolId/edit" element={<ProtocolForm />} />
+          <Route path="testing/protocols/:protocolId/run" element={<RunCreator />} />
+          <Route path="testing/runs/:runId" element={<RunDetail />} />
+          <Route path="testing/runs/:runId/execute" element={<RunExecution />} />
           <Route path="models" element={<ModelsList />} />
           <Route path="models/new" element={<ModelBuilder />} />
           <Route path="models/:modelId/edit" element={<ModelBuilder />} />
