@@ -258,7 +258,7 @@ export default function RunDetail() {
                 <div key={input.name} className="p-3 bg-gray-50 rounded-lg">
                   <p className="text-xs text-gray-500 uppercase">{input.name}</p>
                   <p className="font-mono text-gray-900 mt-1">
-                    {value !== undefined ? String(value) : '-'} {input.unit}
+                    {value !== undefined ? String(value) : '-'} {input.unit_symbol || ''}
                   </p>
                 </div>
               );

@@ -11,7 +11,7 @@ import type { TestProtocol, InputSchemaItem, OutputSchemaItem } from '../../type
 const inputSchemaItemSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   unit_id: z.number().optional().nullable(),
-  required: z.boolean().default(true),
+  required: z.boolean(),
   description: z.string().optional(),
   default_value: z.number().optional().nullable(),
 });
