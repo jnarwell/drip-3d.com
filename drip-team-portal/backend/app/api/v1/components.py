@@ -197,12 +197,13 @@ async def delete_component(
             detail=f"Component {component_id} not found"
         )
 
-    # Nullify foreign keys in related tables to avoid constraint errors
+    # Clean up all foreign key references before deletion (v2 - 2026-01-03)
     from app.models.time_entry import TimeEntry
     from app.models.test import Test, TestResult
     from app.models.test_protocol import TestRun
     from app.models.physics_model import ModelInstance
     from app.models.material import component_materials
+    from app.models.resources import resource_components
 
     # Set component_id to NULL for related records (preserve data)
     db.query(TimeEntry).filter(TimeEntry.component_id == component.id).update({"component_id": None})
@@ -213,6 +214,7 @@ async def delete_component(
 
     # Delete from association tables (many-to-many relationships)
     db.execute(component_materials.delete().where(component_materials.c.component_id == component.id))
+    db.execute(resource_components.delete().where(resource_components.c.component_id == component.id))
 
     # Create audit log before deletion
     audit = AuditLog(
