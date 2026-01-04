@@ -197,9 +197,9 @@ async def delete_component(
             detail=f"Component {component_id} not found"
         )
 
-    # Clean up all foreign key references before deletion (v2 - 2026-01-03)
+    # Clean up all foreign key references before deletion (v3 - 2026-01-04)
     from app.models.time_entry import TimeEntry
-    from app.models.test import Test, TestResult
+    from app.models.test import TestResult  # Note: Test model has no component_id
     from app.models.test_protocol import TestRun
     from app.models.physics_model import ModelInstance
     from app.models.material import component_materials
@@ -207,7 +207,6 @@ async def delete_component(
 
     # Set component_id to NULL for related records (preserve data)
     db.query(TimeEntry).filter(TimeEntry.component_id == component.id).update({"component_id": None})
-    db.query(Test).filter(Test.component_id == component.id).update({"component_id": None})
     db.query(TestResult).filter(TestResult.component_id == component.id).update({"component_id": None})
     db.query(TestRun).filter(TestRun.component_id == component.id).update({"component_id": None})
     db.query(ModelInstance).filter(ModelInstance.component_id == component.id).update({"component_id": None})
