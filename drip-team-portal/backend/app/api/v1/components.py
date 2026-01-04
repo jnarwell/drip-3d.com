@@ -196,7 +196,20 @@ async def delete_component(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Component {component_id} not found"
         )
-    
+
+    # Nullify foreign keys in related tables to avoid constraint errors
+    from app.models.time_entry import TimeEntry
+    from app.models.test import Test, TestResult
+    from app.models.test_protocol import TestRun
+    from app.models.physics_model import ModelInstance
+
+    # Set component_id to NULL for related records (preserve data)
+    db.query(TimeEntry).filter(TimeEntry.component_id == component.id).update({"component_id": None})
+    db.query(Test).filter(Test.component_id == component.id).update({"component_id": None})
+    db.query(TestResult).filter(TestResult.component_id == component.id).update({"component_id": None})
+    db.query(TestRun).filter(TestRun.component_id == component.id).update({"component_id": None})
+    db.query(ModelInstance).filter(ModelInstance.component_id == component.id).update({"component_id": None})
+
     # Create audit log before deletion
     audit = AuditLog(
         entity_type="component",
@@ -206,10 +219,10 @@ async def delete_component(
         details={"component_name": component.name}
     )
     db.add(audit)
-    
+
     db.delete(component)
     db.commit()
-    
+
     return {"status": "success", "message": f"Component {component_id} deleted"}
 
 @router.put("/{component_id}/material")
