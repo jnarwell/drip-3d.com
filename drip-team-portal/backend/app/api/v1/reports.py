@@ -17,6 +17,8 @@ from app.services.test_validation import TestStatsService
 from app.models.component import Component, ComponentStatus
 from app.models.test import Test, TestResult, TestStatus
 from app.models.user import User
+from app.models.resources import Resource
+from app.models.collection import Collection, resource_collections
 
 router = APIRouter(prefix="/api/v1/reports")
 
@@ -281,5 +283,50 @@ def assess_risks(db: Session):
             "description": "Low physics validation rate for test results",
             "mitigation": "Ensure DRIP numbers are calculated for all tests"
         })
-    
+
     return risks
+
+
+@router.get("/resource-stats")
+async def get_resource_stats(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get statistics about resources in the system."""
+    # Total count
+    total = db.query(func.count(Resource.id)).scalar() or 0
+
+    # Count by type
+    type_counts = db.query(
+        Resource.resource_type,
+        func.count(Resource.id)
+    ).group_by(Resource.resource_type).all()
+
+    # Count by collection (join through association table)
+    collection_counts = db.query(
+        Collection.id,
+        Collection.name,
+        func.count(resource_collections.c.resource_id)
+    ).join(
+        resource_collections,
+        Collection.id == resource_collections.c.collection_id
+    ).group_by(Collection.id, Collection.name).all()
+
+    # Starred count
+    starred = db.query(func.count(Resource.id)).filter(
+        Resource.is_starred == True
+    ).scalar() or 0
+
+    # Recent 7 days
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent = db.query(func.count(Resource.id)).filter(
+        Resource.added_at >= week_ago
+    ).scalar() or 0
+
+    return {
+        "total_count": total,
+        "by_type": [{"type": t, "count": c} for t, c in type_counts],
+        "by_collection": [{"collection_id": id, "name": n, "count": c} for id, n, c in collection_counts],
+        "starred_count": starred,
+        "recent_7d_count": recent
+    }

@@ -359,3 +359,22 @@ export interface TestRunDetail extends TestRun {
   measurements: TestMeasurement[];
   validations: TestValidation[];
 }
+
+// === Reports Types ===
+
+export interface ActivityEntry {
+  id: number;
+  type: string;      // "component", "test", etc.
+  action: string;    // "created", "updated", "deleted"
+  user: string;      // email
+  timestamp: string; // ISO datetime
+  details: Record<string, unknown>;
+}
+
+export interface ResourceStats {
+  total_count: number;
+  by_type: Array<{ type: string; count: number }>;
+  by_collection: Array<{ collection_id: number; name: string; count: number }>;
+  starred_count: number;
+  recent_7d_count: number;
+}
