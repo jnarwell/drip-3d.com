@@ -28,3 +28,4 @@ PyYAML>=6.0  # YAML file parsing for property sources
 # mp-api==0.37.2  # Removed - using direct REST API instead
 google-api-python-client>=2.100.0  # Google Drive API
 google-auth>=2.23.0  # Google OAuth2 credentials
+xlsxwriter==3.2.9  # Excel export for reports
