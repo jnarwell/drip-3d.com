@@ -189,16 +189,7 @@ async def delete_component(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Delete component (admin only)"""
-    # Check if user is admin (skip in dev mode)
-    if os.getenv("DEV_MODE") != "true":
-        user = db.query(User).filter(User.email == current_user["email"]).first()
-        if not user or not user.is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only administrators can delete components"
-            )
-    
+    """Delete component"""
     component = db.query(Component).filter(Component.component_id == component_id).first()
     if not component:
         raise HTTPException(
