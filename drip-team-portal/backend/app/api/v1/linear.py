@@ -203,8 +203,7 @@ async def refresh_cache() -> Dict[str, Any]:
 @router.get("/progress")
 async def get_progress_data(
     force_refresh: bool = False,
-    current_user: dict = Depends(get_current_user)
-):
+):  # Public endpoint - no auth required (used by company website)
     """
     Get Linear progress data for website display.
     Returns cached data if available and fresh, otherwise fetches from Linear API.
