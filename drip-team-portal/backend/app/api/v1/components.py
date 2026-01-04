@@ -202,6 +202,7 @@ async def delete_component(
     from app.models.test import Test, TestResult
     from app.models.test_protocol import TestRun
     from app.models.physics_model import ModelInstance
+    from app.models.material import component_materials
 
     # Set component_id to NULL for related records (preserve data)
     db.query(TimeEntry).filter(TimeEntry.component_id == component.id).update({"component_id": None})
@@ -209,6 +210,9 @@ async def delete_component(
     db.query(TestResult).filter(TestResult.component_id == component.id).update({"component_id": None})
     db.query(TestRun).filter(TestRun.component_id == component.id).update({"component_id": None})
     db.query(ModelInstance).filter(ModelInstance.component_id == component.id).update({"component_id": None})
+
+    # Delete from association tables (many-to-many relationships)
+    db.execute(component_materials.delete().where(component_materials.c.component_id == component.id))
 
     # Create audit log before deletion
     audit = AuditLog(
