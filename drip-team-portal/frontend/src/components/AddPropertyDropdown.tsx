@@ -11,13 +11,27 @@ interface AddPropertyDropdownProps {
 
 type ViewState = 'closed' | 'types' | 'properties' | 'creator' | 'editor';
 
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  propertyDef: PropertyDefinition | null;
+}
+
 const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }) => {
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
   const [viewState, setViewState] = useState<ViewState>('closed');
   const [selectedType, setSelectedType] = useState<PropertyType | null>(null);
   const [editingDef, setEditingDef] = useState<PropertyDefinition | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    propertyDef: null,
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const { data: propertyDefinitions } = useQuery<PropertyDefinition[]>({
     queryKey: ['property-definitions', selectedType],
@@ -48,6 +62,7 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-definitions'] });
+      setContextMenu({ visible: false, x: 0, y: 0, propertyDef: null });
     },
     onError: (error: any) => {
       alert(error.response?.data?.detail || 'Failed to delete property definition');
@@ -56,6 +71,11 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Close context menu if clicking outside
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu({ visible: false, x: 0, y: 0, propertyDef: null });
+      }
+      // Close dropdown if clicking outside
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setViewState('closed');
         setSelectedType(null);
@@ -96,16 +116,49 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
     setViewState('creator');
   };
 
-  const handleEditDef = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
+  const handleContextMenu = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
+    // Only show context menu for custom properties
+    if (!propertyDef.is_custom) return;
+
+    e.preventDefault();
     e.stopPropagation();
-    setEditingDef(propertyDef);
-    setViewState('editor');
+
+    // Get dropdown container position for relative positioning
+    const dropdownRect = dropdownRef.current?.getBoundingClientRect();
+    const x = e.clientX - (dropdownRect?.left || 0);
+    const y = e.clientY - (dropdownRect?.top || 0);
+
+    setContextMenu({
+      visible: true,
+      x,
+      y,
+      propertyDef,
+    });
   };
 
-  const handleDeleteDef = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
-    e.stopPropagation();
-    if (confirm(`Delete "${propertyDef.name}"? This cannot be undone.`)) {
-      deletePropertyDef.mutate(propertyDef.id);
+  const handleRename = () => {
+    if (contextMenu.propertyDef) {
+      setEditingDef(contextMenu.propertyDef);
+      setViewState('editor');
+      setContextMenu({ visible: false, x: 0, y: 0, propertyDef: null });
+    }
+  };
+
+  const handleEdit = () => {
+    if (contextMenu.propertyDef) {
+      setEditingDef(contextMenu.propertyDef);
+      setViewState('editor');
+      setContextMenu({ visible: false, x: 0, y: 0, propertyDef: null });
+    }
+  };
+
+  const handleDelete = () => {
+    if (contextMenu.propertyDef) {
+      if (confirm(`Delete "${contextMenu.propertyDef.name}"? This cannot be undone.`)) {
+        deletePropertyDef.mutate(contextMenu.propertyDef.id);
+      } else {
+        setContextMenu({ visible: false, x: 0, y: 0, propertyDef: null });
+      }
     }
   };
 
@@ -167,46 +220,25 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
             {viewState === 'properties' && (
               <div className="py-2">
                 {propertyDefinitions?.map((propertyDef) => (
-                  <div
+                  <button
                     key={propertyDef.id}
-                    className="group w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
+                    onClick={() => handlePropertySelect(propertyDef)}
+                    onContextMenu={(e) => handleContextMenu(e, propertyDef)}
+                    className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
                   >
-                    <button
-                      onClick={() => handlePropertySelect(propertyDef)}
-                      className="flex-1 text-left"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700">{propertyDef.name}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">{propertyDef.name}</span>
+                      <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-500">{propertyDef.unit}</span>
+                        {propertyDef.is_custom && (
+                          <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">custom</span>
+                        )}
                       </div>
-                      {propertyDef.description && (
-                        <p className="text-xs text-gray-500 mt-1">{propertyDef.description}</p>
-                      )}
-                    </button>
-                    {/* Edit/Delete buttons - only for custom properties */}
-                    {propertyDef.is_custom && (
-                      <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => handleEditDef(e, propertyDef)}
-                          className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
-                          title="Edit"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteDef(e, propertyDef)}
-                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                          title="Delete"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
+                    </div>
+                    {propertyDef.description && (
+                      <p className="text-xs text-gray-500 mt-1">{propertyDef.description}</p>
                     )}
-                  </div>
+                  </button>
                 ))}
                 <button
                   onClick={handleCreateNew}
@@ -243,6 +275,44 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
               />
             )}
           </div>
+
+          {/* Context Menu */}
+          {contextMenu.visible && contextMenu.propertyDef && (
+            <div
+              ref={contextMenuRef}
+              className="absolute bg-white rounded-lg shadow-xl border border-gray-200 py-1 z-[60] min-w-36"
+              style={{ left: contextMenu.x, top: contextMenu.y }}
+            >
+              <button
+                onClick={handleRename}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Rename
+              </button>
+              <button
+                onClick={handleEdit}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit
+              </button>
+              <div className="border-t border-gray-100 my-1" />
+              <button
+                onClick={handleDelete}
+                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
