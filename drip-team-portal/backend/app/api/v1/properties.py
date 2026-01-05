@@ -18,6 +18,7 @@ from app.models.user import User
 from app.services.value_engine import ValueEngine, ExpressionError
 from app.schemas.property import (
     PropertyDefinitionCreate,
+    PropertyDefinitionUpdate,
     PropertyDefinitionResponse,
     ComponentPropertyCreate,
     ComponentPropertyUpdate,
@@ -116,6 +117,78 @@ async def create_property_definition(
     db.commit()
     db.refresh(db_property_def)
     return db_property_def
+
+
+@router.patch("/property-definitions/{definition_id}", response_model=PropertyDefinitionResponse)
+async def update_property_definition(
+    definition_id: int,
+    property_update: PropertyDefinitionUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update a property definition (only custom properties can be updated)"""
+    property_def = db.query(PropertyDefinition).filter(
+        PropertyDefinition.id == definition_id
+    ).first()
+    if not property_def:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property definition not found"
+        )
+
+    # Only allow updating custom properties
+    if not property_def.is_custom:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot update built-in property definitions"
+        )
+
+    update_data = property_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(property_def, field, value)
+
+    db.commit()
+    db.refresh(property_def)
+    return property_def
+
+
+@router.delete("/property-definitions/{definition_id}")
+async def delete_property_definition(
+    definition_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a property definition (only custom properties can be deleted)"""
+    property_def = db.query(PropertyDefinition).filter(
+        PropertyDefinition.id == definition_id
+    ).first()
+    if not property_def:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property definition not found"
+        )
+
+    # Only allow deleting custom properties
+    if not property_def.is_custom:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot delete built-in property definitions"
+        )
+
+    # Check if any component properties use this definition
+    in_use_count = db.query(ComponentProperty).filter(
+        ComponentProperty.property_definition_id == definition_id
+    ).count()
+    if in_use_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete: {in_use_count} component(s) use this property"
+        )
+
+    db.delete(property_def)
+    db.commit()
+
+    return {"status": "success", "message": "Property definition deleted"}
 
 
 # ==================== Component Properties ====================

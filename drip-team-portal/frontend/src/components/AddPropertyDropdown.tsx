@@ -3,18 +3,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../services/api';
 import { PropertyType, PropertyDefinition } from '../types';
 import PropertyCreator from './PropertyCreator';
+import PropertyEditor from './PropertyEditor';
 
 interface AddPropertyDropdownProps {
   componentId: string;
 }
 
-type ViewState = 'closed' | 'types' | 'properties' | 'creator';
+type ViewState = 'closed' | 'types' | 'properties' | 'creator' | 'editor';
 
 const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }) => {
   const api = useAuthenticatedApi();
   const queryClient = useQueryClient();
   const [viewState, setViewState] = useState<ViewState>('closed');
   const [selectedType, setSelectedType] = useState<PropertyType | null>(null);
+  const [editingDef, setEditingDef] = useState<PropertyDefinition | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: propertyDefinitions } = useQuery<PropertyDefinition[]>({
@@ -40,11 +42,24 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
     },
   });
 
+  const deletePropertyDef = useMutation({
+    mutationFn: async (defId: number) => {
+      await api.delete(`/api/v1/property-definitions/${defId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['property-definitions'] });
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.detail || 'Failed to delete property definition');
+    },
+  });
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setViewState('closed');
         setSelectedType(null);
+        setEditingDef(null);
       }
     };
 
@@ -62,8 +77,9 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
     if (viewState === 'properties') {
       setViewState('types');
       setSelectedType(null);
-    } else if (viewState === 'creator') {
+    } else if (viewState === 'creator' || viewState === 'editor') {
       setViewState('properties');
+      setEditingDef(null);
     }
   };
 
@@ -78,6 +94,19 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
 
   const handleCreateNew = () => {
     setViewState('creator');
+  };
+
+  const handleEditDef = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
+    e.stopPropagation();
+    setEditingDef(propertyDef);
+    setViewState('editor');
+  };
+
+  const handleDeleteDef = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
+    e.stopPropagation();
+    if (confirm(`Delete "${propertyDef.name}"? This cannot be undone.`)) {
+      deletePropertyDef.mutate(propertyDef.id);
+    }
   };
 
   return (
@@ -111,6 +140,7 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
               {viewState === 'types' && 'Select Property Type'}
               {viewState === 'properties' && `${getPropertyTypeLabel(selectedType!)} Properties`}
               {viewState === 'creator' && 'Create Custom Property'}
+              {viewState === 'editor' && 'Edit Property'}
             </h3>
             {viewState === 'types' && <div className="w-5" />}
           </div>
@@ -137,19 +167,46 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
             {viewState === 'properties' && (
               <div className="py-2">
                 {propertyDefinitions?.map((propertyDef) => (
-                  <button
+                  <div
                     key={propertyDef.id}
-                    onClick={() => handlePropertySelect(propertyDef)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                    className="group w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700">{propertyDef.name}</span>
-                      <span className="text-xs text-gray-500">{propertyDef.unit}</span>
-                    </div>
-                    {propertyDef.description && (
-                      <p className="text-xs text-gray-500 mt-1">{propertyDef.description}</p>
+                    <button
+                      onClick={() => handlePropertySelect(propertyDef)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700">{propertyDef.name}</span>
+                        <span className="text-xs text-gray-500">{propertyDef.unit}</span>
+                      </div>
+                      {propertyDef.description && (
+                        <p className="text-xs text-gray-500 mt-1">{propertyDef.description}</p>
+                      )}
+                    </button>
+                    {/* Edit/Delete buttons - only for custom properties */}
+                    {propertyDef.is_custom && (
+                      <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => handleEditDef(e, propertyDef)}
+                          className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                          title="Edit"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteDef(e, propertyDef)}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Delete"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     )}
-                  </button>
+                  </div>
                 ))}
                 <button
                   onClick={handleCreateNew}
@@ -170,6 +227,17 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
                 onSuccess={() => {
                   setViewState('closed');
                   setSelectedType(null);
+                }}
+                onCancel={handleBack}
+              />
+            )}
+
+            {viewState === 'editor' && editingDef && (
+              <PropertyEditor
+                propertyDef={editingDef}
+                onSuccess={() => {
+                  setViewState('properties');
+                  setEditingDef(null);
                 }}
                 onCancel={handleBack}
               />

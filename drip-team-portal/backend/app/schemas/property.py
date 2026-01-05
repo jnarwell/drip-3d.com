@@ -16,6 +16,13 @@ class PropertyDefinitionCreate(PropertyDefinitionBase):
     is_custom: bool = True
 
 
+class PropertyDefinitionUpdate(BaseModel):
+    name: Optional[str] = None
+    unit: Optional[str] = None
+    description: Optional[str] = None
+    value_type: Optional[ValueType] = None
+
+
 class PropertyDefinitionResponse(PropertyDefinitionBase):
     id: int
     is_custom: bool
