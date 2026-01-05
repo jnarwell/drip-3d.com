@@ -99,7 +99,14 @@ const PropertyCreator: React.FC<PropertyCreatorProps> = ({
               <button
                 key={unit}
                 type="button"
-                onClick={() => setFormData({ ...formData, unit })}
+                onClick={() => {
+                  // Auto-switch to TEXT value type when "text" unit is selected
+                  if (unit === 'text') {
+                    setFormData({ ...formData, unit, value_type: ValueType.TEXT });
+                  } else {
+                    setFormData({ ...formData, unit });
+                  }
+                }}
                 className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded transition-colors"
               >
                 {unit || 'dimensionless'}
