@@ -270,26 +270,34 @@ class TestStatsService:
         self.db = db
 
     def get_dashboard_stats(self) -> dict:
-        """Get test statistics for dashboard"""
+        """Get test statistics for dashboard (only active protocols)"""
         total_protocols = self.db.query(TestProtocol).filter(
             TestProtocol.is_active == True
         ).count()
 
-        total_runs = self.db.query(TestRun).count()
+        # Only count runs from active protocols
+        active_runs_query = self.db.query(TestRun).join(TestProtocol).filter(
+            TestProtocol.is_active == True
+        )
 
-        completed_runs = self.db.query(TestRun).filter(
+        total_runs = active_runs_query.count()
+
+        completed_runs = active_runs_query.filter(
             TestRun.status == TestRunStatus.COMPLETED
         ).count()
 
-        passed_runs = self.db.query(TestRun).filter(
+        passed_runs = self.db.query(TestRun).join(TestProtocol).filter(
+            TestProtocol.is_active == True,
             TestRun.result == TestResultStatus.PASS
         ).count()
 
-        failed_runs = self.db.query(TestRun).filter(
+        failed_runs = self.db.query(TestRun).join(TestProtocol).filter(
+            TestProtocol.is_active == True,
             TestRun.result == TestResultStatus.FAIL
         ).count()
 
-        in_progress = self.db.query(TestRun).filter(
+        in_progress = self.db.query(TestRun).join(TestProtocol).filter(
+            TestProtocol.is_active == True,
             TestRun.status == TestRunStatus.IN_PROGRESS
         ).count()
 
@@ -304,8 +312,10 @@ class TestStatsService:
         }
 
     def get_recent_runs(self, limit: int = 10) -> List[dict]:
-        """Get recent test runs for activity feed"""
-        runs = self.db.query(TestRun).order_by(
+        """Get recent test runs for activity feed (only from active protocols)"""
+        runs = self.db.query(TestRun).join(TestProtocol).filter(
+            TestProtocol.is_active == True
+        ).order_by(
             TestRun.created_at.desc()
         ).limit(limit).all()
 
