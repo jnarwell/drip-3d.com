@@ -22,6 +22,7 @@ class ValueType(enum.Enum):
     SINGLE = "single"  # Single value
     RANGE = "range"    # Min-max range
     AVERAGE = "average"  # Average with tolerance
+    TEXT = "text"  # Text/string value (e.g., transformer code, part numbers)
 
 
 class PropertyDefinition(Base):
@@ -54,6 +55,7 @@ class ComponentProperty(Base):
     max_value = Column(Float)
     average_value = Column(Float)
     tolerance = Column(Float)
+    text_value = Column(String)  # For TEXT value type (e.g., transformer code)
 
     # Link to value system - allows literals, expressions, or references
     value_node_id = Column(Integer, ForeignKey("value_nodes.id"))

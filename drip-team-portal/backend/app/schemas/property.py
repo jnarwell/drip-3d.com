@@ -33,6 +33,7 @@ class ComponentPropertyBase(BaseModel):
     max_value: Optional[float] = None
     average_value: Optional[float] = None
     tolerance: Optional[float] = None
+    text_value: Optional[str] = None  # For TEXT value type
     notes: Optional[str] = None
     source: Optional[str] = None
     conditions: Optional[Dict[str, Any]] = None
@@ -50,6 +51,7 @@ class ComponentPropertyUpdate(BaseModel):
     max_value: Optional[float] = None
     average_value: Optional[float] = None
     tolerance: Optional[float] = None
+    text_value: Optional[str] = None  # For TEXT value type
     notes: Optional[str] = None
     source: Optional[str] = None
     conditions: Optional[Dict[str, Any]] = None

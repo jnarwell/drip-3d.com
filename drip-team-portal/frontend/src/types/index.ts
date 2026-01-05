@@ -111,7 +111,8 @@ export enum PropertyType {
 export enum ValueType {
   SINGLE = "single",
   RANGE = "range",
-  AVERAGE = "average"
+  AVERAGE = "average",
+  TEXT = "text"
 }
 
 export interface PropertyDefinition {
@@ -136,6 +137,7 @@ export interface ComponentProperty {
   max_value?: number;
   average_value?: number;
   tolerance?: number;
+  text_value?: string;
   notes?: string;
   source?: string;
   conditions?: Record<string, any>;

@@ -52,6 +52,7 @@ def _property_to_response(prop: ComponentProperty, db: Session) -> Dict[str, Any
         "max_value": prop.max_value,
         "average_value": prop.average_value,
         "tolerance": prop.tolerance,
+        "text_value": prop.text_value,
         "notes": prop.notes,
         "source": prop.source,
         "conditions": prop.conditions,
