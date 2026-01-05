@@ -117,11 +117,12 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
   };
 
   const handleContextMenu = (e: React.MouseEvent, propertyDef: PropertyDefinition) => {
-    // Only show context menu for custom properties
-    if (!propertyDef.is_custom) return;
-
+    // Always prevent browser's default context menu
     e.preventDefault();
     e.stopPropagation();
+
+    // Only show our custom context menu for custom properties
+    if (!propertyDef.is_custom) return;
 
     // Get dropdown container position for relative positioning
     const dropdownRect = dropdownRef.current?.getBoundingClientRect();
@@ -134,6 +135,11 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
       y,
       propertyDef,
     });
+  };
+
+  // Prevent default context menu on the entire dropdown area
+  const preventDefaultContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
   };
 
   const handleRename = () => {
@@ -175,7 +181,10 @@ const AddPropertyDropdown: React.FC<AddPropertyDropdownProps> = ({ componentId }
       </button>
 
       {viewState !== 'closed' && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div
+          className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+          onContextMenu={preventDefaultContextMenu}
+        >
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
             {viewState !== 'types' && (
