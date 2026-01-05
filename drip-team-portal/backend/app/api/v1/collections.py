@@ -85,15 +85,11 @@ async def list_collections(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    List all collections for the current user.
+    List all collections (team-shared).
 
     Returns collections sorted by name.
     """
-    user_email = current_user["email"]
-
-    collections = db.query(Collection).filter(
-        Collection.created_by == user_email
-    ).order_by(Collection.name).all()
+    collections = db.query(Collection).order_by(Collection.name).all()
 
     return {
         "collections": [c.to_dict(include_resources=include_resources) for c in collections],
@@ -148,12 +144,9 @@ async def get_collection(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get a single collection by ID."""
-    user_email = current_user["email"]
-
+    """Get a single collection by ID (team-shared)."""
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
@@ -169,22 +162,18 @@ async def update_collection(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Update a collection."""
-    user_email = current_user["email"]
-
+    """Update a collection (team-shared - any team member can update)."""
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
     if data.name is not None:
-        # Check for duplicate name
+        # Check for duplicate name (globally unique now)
         existing = db.query(Collection).filter(
             Collection.name == data.name,
-            Collection.created_by == user_email,
             Collection.id != collection_id
         ).first()
         if existing:
@@ -214,15 +203,12 @@ async def delete_collection(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Delete a collection.
+    Delete a collection (team-shared - any team member can delete).
 
     This removes the collection but does NOT delete the resources in it.
     """
-    user_email = current_user["email"]
-
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
@@ -247,15 +233,12 @@ async def list_collection_resources(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    List all resources in a collection.
+    List all resources in a collection (team-shared).
 
     Returns resources sorted by added_at descending.
     """
-    user_email = current_user["email"]
-
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
@@ -281,12 +264,9 @@ async def add_resource_to_collection(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Add a resource to a collection."""
-    user_email = current_user["email"]
-
+    """Add a resource to a collection (team-shared - any member can add any resource)."""
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
@@ -296,13 +276,6 @@ async def add_resource_to_collection(
 
     if not resource:
         raise HTTPException(status_code=404, detail="Resource not found")
-
-    # Verify user owns this resource (can only add own resources to collections)
-    if resource.added_by != user_email:
-        raise HTTPException(
-            status_code=403,
-            detail="You can only add your own resources to collections"
-        )
 
     # Check if already in collection
     if resource in collection.resources:
@@ -322,12 +295,9 @@ async def remove_resource_from_collection(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove a resource from a collection."""
-    user_email = current_user["email"]
-
+    """Remove a resource from a collection (team-shared)."""
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
@@ -360,31 +330,27 @@ async def bulk_add_resources_to_collection(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Add multiple resources to a collection at once.
+    Add multiple resources to a collection at once (team-shared).
 
-    Only adds resources owned by the current user.
+    Any team member can add any resources.
     Skips resources already in the collection.
     """
-    user_email = current_user["email"]
-
     collection = db.query(Collection).filter(
-        Collection.id == collection_id,
-        Collection.created_by == user_email
+        Collection.id == collection_id
     ).first()
 
     if not collection:
         raise HTTPException(status_code=404, detail="Collection not found")
 
-    # Get all requested resources owned by the user
+    # Get all requested resources
     resources = db.query(Resource).filter(
-        Resource.id.in_(data.resource_ids),
-        Resource.added_by == user_email
+        Resource.id.in_(data.resource_ids)
     ).all()
 
     if not resources:
         raise HTTPException(
             status_code=400,
-            detail="No valid resources found. You can only add your own resources."
+            detail="No valid resources found."
         )
 
     # Add resources not already in collection
