@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../../services/api';
+import { useAuthenticatedApi } from '../../services/api';
 import { PropertySourceSummary, PropertyViewData, PropertyViewHeader } from '../../types/resources';
 import { useUnits } from '../../contexts/UnitContext';
 import { convertUnit } from '../../utils/unitConversion';
@@ -37,6 +37,7 @@ const formatSnakeCase = (value: string): string => {
 };
 
 const PropertyTables: React.FC = () => {
+  const api = useAuthenticatedApi();
   const { getDimensionFromUnit, getUserUnit, unitSettings } = useUnits();
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

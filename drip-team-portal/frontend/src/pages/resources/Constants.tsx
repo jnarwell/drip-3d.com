@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getConstants, createConstant, updateConstant, deleteConstant } from '../../services/api';
+import { useAuthenticatedApi } from '../../services/api';
 import { formatUnitWithSubscripts } from '../../utils/formatters';
 import { formatUnitWithSubscriptsJSX } from '../../utils/formattersJSX';
 
@@ -17,6 +17,7 @@ interface SystemConstant {
 }
 
 const Constants: React.FC = () => {
+  const api = useAuthenticatedApi();
   const [constants, setConstants] = useState<SystemConstant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -176,8 +177,8 @@ const Constants: React.FC = () => {
   const fetchConstants = async () => {
     try {
       setLoading(true);
-      const data = await getConstants();
-      setConstants(data);
+      const response = await api.get('/api/v1/constants/');
+      setConstants(response.data);
       setError(null);
     } catch (err) {
       setError('Failed to load constants');
@@ -346,7 +347,7 @@ const Constants: React.FC = () => {
   const submitAdd = async () => {
     try {
       setSaving(true);
-      await createConstant({
+      await api.post('/api/v1/constants/', {
         symbol: formData.symbol,
         name: formData.name,
         value: formData.value,
@@ -367,10 +368,10 @@ const Constants: React.FC = () => {
 
   const submitEdit = async () => {
     if (!editingConstant) return;
-    
+
     try {
       setSaving(true);
-      await updateConstant(editingConstant.id, {
+      await api.patch(`/api/v1/constants/${editingConstant.id}`, {
         name: formData.name,
         value: formData.value,
         unit: formData.unit || undefined,
@@ -390,10 +391,10 @@ const Constants: React.FC = () => {
 
   const submitDelete = async () => {
     if (!deletingConstant) return;
-    
+
     try {
       setSaving(true);
-      await deleteConstant(deletingConstant.id);
+      await api.delete(`/api/v1/constants/${deletingConstant.id}`);
       setShowDeleteModal(false);
       setDeletingConstant(null);
       fetchConstants();
