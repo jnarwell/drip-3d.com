@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
+import FeedbackButton from './feedback/FeedbackButton';
 
 const Layout: React.FC = () => {
   const { user, logout } = useAuth0();
@@ -114,6 +115,8 @@ const Layout: React.FC = () => {
       <main className="mx-auto max-w-[1400px] px-2.5 sm:px-4 lg:px-5 py-8">
         <Outlet />
       </main>
+
+      <FeedbackButton />
     </div>
   );
 };

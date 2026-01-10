@@ -37,6 +37,7 @@ from app.api.v1.contacts import router as contacts_router
 from app.api.v1.drive import router as drive_router
 from app.api.v1.google_oauth import router as google_oauth_router
 from app.api.v1.test_protocols import router as test_protocols_router
+from app.api.v1.feedback import router as feedback_router
 
 app = FastAPI(
     title="DRIP Team Portal API",
@@ -111,6 +112,7 @@ async def startup_event():
             from app.models.contact import Contact
             from app.models.google_token import GoogleToken
             from app.models.test_protocol import TestProtocol, TestRun, TestMeasurement, TestValidation
+            from app.models.feedback import FeedbackSubmission
 
             # Create all tables (safe - won't modify existing tables)
             logging.info("Creating database tables...")
@@ -216,6 +218,7 @@ app.include_router(contacts_router, tags=["contacts"])
 app.include_router(drive_router, tags=["drive"])
 app.include_router(google_oauth_router, tags=["google-oauth"])
 app.include_router(test_protocols_router, tags=["test-protocols"])
+app.include_router(feedback_router, tags=["feedback"])
 
 @app.get("/")
 async def root():

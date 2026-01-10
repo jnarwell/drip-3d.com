@@ -4,6 +4,7 @@ import { useAuthenticatedApi } from '../services/api';
 import { useTimeSummary, TimeSummaryGroup } from '../hooks/useTimeTracking';
 import DateRangeSelector, { DateRange } from '../components/time/DateRangeSelector';
 import { DashboardStats, ActivityEntry, ResourceStats } from '../types';
+import FeedbackTriage from '../components/feedback/FeedbackTriage';
 import {
   LineChart,
   Line,
@@ -435,6 +436,12 @@ const Reports: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Feedback Triage Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Feedback Triage</h3>
+        <FeedbackTriage />
       </div>
 
       {/* Export Section */}
