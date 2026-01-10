@@ -28,6 +28,7 @@ import Analysis from './pages/analysis/Analysis';
 import AnalysisCreator from './pages/analysis/AnalysisCreator';
 import TimeTracker from './pages/TimeTracker';
 import OAuthCallback from './pages/OAuthCallback';
+import Docs from './pages/Docs';
 
 // Company pages
 import HomePage from './pages/company/HomePage';
@@ -107,6 +108,8 @@ function AppRoutes() {
             <Route path="documents" element={<Documents />} />
             <Route path="contacts" element={<Contacts />} />
           </Route>
+          <Route path="docs" element={<Docs />} />
+          <Route path="docs/*" element={<Docs />} />
         </Route>
       </Routes>
     </TeamPortalErrorBoundary>
