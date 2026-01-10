@@ -8,7 +8,7 @@ const FeedbackButton: React.FC = () => {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="fixed top-20 right-4 z-50 w-10 h-10 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center font-semibold text-lg"
+        className="fixed top-3 right-3 z-40 w-10 h-10 rounded-full bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center font-semibold text-lg"
         title="Send Feedback"
       >
         ?
