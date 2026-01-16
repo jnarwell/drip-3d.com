@@ -306,22 +306,31 @@ def evaluate_model_instance(
                 f"Model version {version.id} has no input schema defined"
             )
 
-        # Build map of expected input names
-        expected_inputs = {inp['name'] for inp in version.inputs}
+        # Build case-insensitive map of expected input names
+        # Maps normalized (lowercase) name -> canonical (schema) name
+        expected_inputs_map = {
+            inp['name'].lower(): inp['name']
+            for inp in version.inputs
+        }
 
         # Resolve all inputs to values
+        # Use canonical names from schema for consistency with equation parsing
         input_values: Dict[str, float] = {}
         for model_input in instance.inputs:
-            if model_input.input_name not in expected_inputs:
+            input_name_lower = model_input.input_name.lower()
+            if input_name_lower not in expected_inputs_map:
                 logger.warning(
                     f"ModelInput '{model_input.input_name}' not in version schema, skipping"
                 )
                 continue
 
+            # Use canonical name from schema
+            canonical_name = expected_inputs_map[input_name_lower]
+
             try:
                 value = resolve_model_input(model_input, db, evaluation_stack)
-                input_values[model_input.input_name] = value
-                logger.debug(f"  Resolved input '{model_input.input_name}' = {value}")
+                input_values[canonical_name] = value
+                logger.debug(f"  Resolved input '{canonical_name}' = {value}")
             except CircularDependencyError:
                 raise  # Re-raise circular dependency errors as-is
             except Exception as e:
@@ -329,9 +338,10 @@ def evaluate_model_instance(
                     f"Failed to resolve input '{model_input.input_name}': {str(e)}"
                 )
 
-        # Check all required inputs are provided
+        # Check all required inputs are provided (case-insensitive)
+        input_values_lower = {k.lower() for k in input_values.keys()}
         for inp in version.inputs:
-            if inp.get('required', True) and inp['name'] not in input_values:
+            if inp.get('required', True) and inp['name'].lower() not in input_values_lower:
                 raise ModelEvaluationError(
                     f"Required input '{inp['name']}' is not bound in instance {instance.id}"
                 )
@@ -690,19 +700,37 @@ def evaluate_inline_model(
     if not version:
         raise ModelEvaluationError(f"Model '{model_name}' has no current version")
 
-    # 3. Validate all required inputs are provided
+    # 3. Validate all required inputs are provided (case-insensitive)
+    # Also normalize bindings to use canonical names from schema
+    normalized_bindings = {}
     if version.inputs:
+        # Build case-insensitive map: lowercase -> canonical name
+        input_name_map = {
+            inp.get('name', '').lower(): inp.get('name')
+            for inp in version.inputs
+        }
+
+        # Normalize provided bindings to use canonical names
+        for key, value in bindings.items():
+            canonical = input_name_map.get(key.lower())
+            if canonical:
+                normalized_bindings[canonical] = value
+            else:
+                normalized_bindings[key] = value
+
         required_inputs = {
             inp.get('name') for inp in version.inputs
             if inp.get('required', True)
         }
-        provided_inputs = set(bindings.keys())
+        provided_lower = {k.lower() for k in normalized_bindings.keys()}
 
-        missing = required_inputs - provided_inputs
+        missing = {r for r in required_inputs if r.lower() not in provided_lower}
         if missing:
             raise ModelEvaluationError(
                 f"Model '{model_name}' missing required inputs: {', '.join(sorted(missing))}"
             )
+    else:
+        normalized_bindings = bindings
 
     # 4. Build equations dict (support both 'equations' dict and 'outputs' with expressions)
     equations = version.equations or {}
@@ -749,16 +777,16 @@ def evaluate_inline_model(
         # Parse equation now
         equation_text = equations[target_output]
         try:
-            parsed = parse_equation(equation_text, allowed_inputs=list(bindings.keys()))
+            parsed = parse_equation(equation_text, allowed_inputs=list(normalized_bindings.keys()))
             equation_ast = parsed['ast']
         except Exception as e:
             raise ModelEvaluationError(
                 f"Failed to parse equation for output '{target_output}': {str(e)}"
             )
 
-    # 7. Evaluate equation with provided bindings
+    # 7. Evaluate equation with normalized bindings
     try:
-        result = evaluate_equation(equation_ast, bindings)
+        result = evaluate_equation(equation_ast, normalized_bindings)
         logger.debug(
             f"evaluate_inline_model('{model_name}', output='{target_output}'): "
             f"inputs={bindings} -> {result}"
