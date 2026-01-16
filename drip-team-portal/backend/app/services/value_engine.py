@@ -1703,6 +1703,7 @@ class ValueEngine:
         self._evaluation_stack.clear()
 
         value, unit_id, success, error_or_warning, si_unit_symbol = self.compute_value(node, expected_unit)
+        logger.info(f"recalculate: compute_value returned value={value}, si_unit_symbol='{si_unit_symbol}', success={success}")
 
         if success:
             node.computed_value = value
@@ -1710,6 +1711,7 @@ class ValueEngine:
             # Store the SI unit symbol for frontend display conversion
             if si_unit_symbol:
                 node.computed_unit_symbol = si_unit_symbol
+                logger.info(f"recalculate: Set node.computed_unit_symbol = '{si_unit_symbol}'")
             node.computation_status = ComputationStatus.VALID
             # Store dimension warning if present (still valid but with warning)
             node.computation_error = error_or_warning  # This will be the dimension warning or None
