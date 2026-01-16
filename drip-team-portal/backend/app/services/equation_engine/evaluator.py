@@ -43,8 +43,15 @@ def evaluate_equation(
         result = evaluate_equation(ast, input_values)
         # Returns: 0.00001215
     """
+    # Build case-insensitive lookup for input values
+    # This handles mismatches between AST names (from equation) and schema names
+    normalized_inputs = {
+        k.replace(' ', '_').lower(): v
+        for k, v in input_values.items()
+    }
+
     try:
-        return _evaluate_node(ast, input_values)
+        return _evaluate_node(ast, input_values, normalized_inputs)
     except UnknownInputError:
         raise
     except EvaluationError:
@@ -61,7 +68,8 @@ def evaluate_equation(
 
 def _evaluate_node(
     node: Dict[str, Any],
-    input_values: Dict[str, float]
+    input_values: Dict[str, float],
+    normalized_inputs: Dict[str, float]
 ) -> float:
     """Recursively evaluate an AST node."""
     node_type = node.get("type")
@@ -73,12 +81,17 @@ def _evaluate_node(
     if node_type == "const":
         return float(node["value"])
 
-    # Input variable
+    # Input variable - use case-insensitive lookup
     if node_type == "input":
         name = node["name"]
-        if name not in input_values:
-            raise UnknownInputError(name, list(input_values.keys()))
-        return float(input_values[name])
+        # First try exact match
+        if name in input_values:
+            return float(input_values[name])
+        # Then try normalized (case-insensitive, space->underscore) lookup
+        normalized_name = name.replace(' ', '_').lower()
+        if normalized_name in normalized_inputs:
+            return float(normalized_inputs[normalized_name])
+        raise UnknownInputError(name, list(input_values.keys()))
 
     # Addition
     if node_type == "add":
@@ -87,7 +100,7 @@ def _evaluate_node(
             return 0.0
         result = 0.0
         for operand in operands:
-            result += _evaluate_node(operand, input_values)
+            result += _evaluate_node(operand, input_values, normalized_inputs)
         return result
 
     # Multiplication
@@ -97,21 +110,21 @@ def _evaluate_node(
             return 1.0
         result = 1.0
         for operand in operands:
-            result *= _evaluate_node(operand, input_values)
+            result *= _evaluate_node(operand, input_values, normalized_inputs)
         return result
 
     # Division
     if node_type == "div":
-        numerator = _evaluate_node(node["numerator"], input_values)
-        denominator = _evaluate_node(node["denominator"], input_values)
+        numerator = _evaluate_node(node["numerator"], input_values, normalized_inputs)
+        denominator = _evaluate_node(node["denominator"], input_values, normalized_inputs)
         if denominator == 0:
             raise EvaluationError("Division by zero")
         return numerator / denominator
 
     # Power/Exponentiation
     if node_type == "pow":
-        base = _evaluate_node(node["base"], input_values)
-        exponent = _evaluate_node(node["exponent"], input_values)
+        base = _evaluate_node(node["base"], input_values, normalized_inputs)
+        exponent = _evaluate_node(node["exponent"], input_values, normalized_inputs)
 
         # Check for invalid operations
         if base < 0 and not exponent.is_integer():
@@ -125,13 +138,13 @@ def _evaluate_node(
 
     # Negation
     if node_type == "neg":
-        operand = _evaluate_node(node["operand"], input_values)
+        operand = _evaluate_node(node["operand"], input_values, normalized_inputs)
         return -operand
 
     # Functions
     if node_type == "func":
         func_name = node["name"]
-        arg = _evaluate_node(node["arg"], input_values)
+        arg = _evaluate_node(node["arg"], input_values, normalized_inputs)
         return _evaluate_function(func_name, arg)
 
     raise EvaluationError(f"Unknown AST node type: {node_type}")
