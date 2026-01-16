@@ -81,7 +81,8 @@ def _property_to_response(prop: ComponentProperty, db: Session) -> Dict[str, Any
                 "expression_string": value_node.expression_string,
                 "computed_value": value_node.computed_value,
                 "computed_unit_symbol": computed_unit_symbol,
-                "computation_status": value_node.computation_status.value
+                "computation_status": value_node.computation_status.value,
+                "computation_error": value_node.computation_error  # Includes dimension warnings
             }
 
     return response
@@ -278,8 +279,8 @@ async def add_component_property(
                 created_by=current_user["email"],
                 resolve_references=True
             )
-            # Try to compute
-            engine.recalculate(value_node)
+            # Try to compute - pass property definition unit for validation
+            engine.recalculate(value_node, expected_unit=property_def.unit)
             value_node_id = value_node.id
             logger.info(f"Created expression ValueNode {value_node_id} for {value_description}")
         except ExpressionError as e:
@@ -360,6 +361,9 @@ async def update_component_property(
         unit_id = update_data.pop("unit_id", None)
 
         try:
+            # Get expected unit from property definition for validation
+            expected_unit = property_value.property_definition.unit
+
             if property_value.value_node_id:
                 # Update existing value node
                 existing_node = db.query(ValueNode).filter(
@@ -368,7 +372,7 @@ async def update_component_property(
                 if existing_node and existing_node.node_type.value == "expression":
                     # Update existing expression node
                     engine.update_expression(existing_node, expression)
-                    engine.recalculate(existing_node)
+                    engine.recalculate(existing_node, expected_unit=expected_unit)
                     # Auto-recalculate all stale dependents
                     engine.recalculate_stale(existing_node)
                 else:
@@ -381,7 +385,7 @@ async def update_component_property(
                     )
                     # Transfer dependents from old node to new node
                     engine.transfer_dependents(existing_node, value_node)
-                    engine.recalculate(value_node)
+                    engine.recalculate(value_node, expected_unit=expected_unit)
                     # Recalculate anything that was depending on the old node
                     engine.recalculate_stale(value_node)
                     property_value.value_node_id = value_node.id
@@ -393,7 +397,7 @@ async def update_component_property(
                     created_by=current_user["email"],
                     resolve_references=True
                 )
-                engine.recalculate(value_node)
+                engine.recalculate(value_node, expected_unit=expected_unit)
                 property_value.value_node_id = value_node.id
 
             logger.info(f"Updated expression for property {property_id}")

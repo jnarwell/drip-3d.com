@@ -152,6 +152,7 @@ export interface ComponentProperty {
     computed_value?: number;
     computed_unit_symbol?: string;
     computation_status: 'pending' | 'valid' | 'stale' | 'error' | 'circular';
+    computation_error?: string;  // Includes dimension mismatch warnings
   };
 }
 

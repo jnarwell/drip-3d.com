@@ -137,6 +137,10 @@ from app.models.component import Component
 from app.models.material import Material, MaterialProperty
 from app.models.property import ComponentProperty, PropertyDefinition
 from app.services.unit_engine import UnitEngine
+from app.services.dimensional_analysis import (
+    Dimension, DimensionError, DIMENSIONLESS, UNIT_DIMENSIONS,
+    get_unit_dimension, dimension_to_si_unit, dimension_to_string
+)
 
 logger = logging.getLogger(__name__)
 
@@ -993,9 +997,17 @@ class ValueEngine:
 
     # ==================== EXPRESSION EVALUATION ====================
 
-    def compute_value(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
+    def compute_value(
+        self,
+        node: ValueNode,
+        expected_unit: Optional[str] = None
+    ) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
         """
         Compute the value of a node.
+
+        Args:
+            node: The ValueNode to compute
+            expected_unit: Optional unit symbol from PropertyDefinition for validation
 
         Returns: (value, unit_id, success, error_message, si_unit_symbol)
         """
@@ -1014,11 +1026,11 @@ class ValueEngine:
             elif node.node_type == NodeType.REFERENCE:
                 if not node.reference_node:
                     return (None, None, False, "Referenced node not found", None)
-                ref_value, ref_unit, success, error, si_unit = self.compute_value(node.reference_node)
+                ref_value, ref_unit, success, error, si_unit = self.compute_value(node.reference_node, expected_unit)
                 return (ref_value, ref_unit, success, error, si_unit)
 
             elif node.node_type == NodeType.EXPRESSION:
-                return self._evaluate_expression(node)
+                return self._evaluate_expression(node, expected_unit)
 
             else:
                 return (None, None, False, f"Unknown node type: {node.node_type}", None)
@@ -1026,12 +1038,20 @@ class ValueEngine:
         finally:
             self._evaluation_stack.discard(node.id)
 
-    def _evaluate_expression(self, node: ValueNode) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
+    def _evaluate_expression(
+        self,
+        node: ValueNode,
+        expected_unit: Optional[str] = None
+    ) -> Tuple[float, Optional[int], bool, Optional[str], Optional[str]]:
         """
         Evaluate an expression node.
 
         Resolves all dependencies, substitutes values, and computes result.
         Also tracks unit propagation through the expression.
+
+        Args:
+            node: The expression ValueNode to evaluate
+            expected_unit: Optional unit symbol from PropertyDefinition for validation
 
         Returns: (value, unit_id, success, error_message, si_unit_symbol)
         """
@@ -1292,17 +1312,49 @@ class ValueEngine:
             # Evaluate
             result = eval(modified_expr, {"__builtins__": {}}, local_dict)
 
-            # Determine the SI unit symbol for the result
-            # For simple expressions (add/subtract), result has same dimension as inputs
+            # Compute the result dimension through full dimensional analysis
+            # This handles *, /, ^, **, sqrt, (), +, - operators correctly
+            computed_dimension, dim_error = self._compute_expression_dimension(parsed)
+
             result_si_unit = None
-            if len(dimensions_used) == 1:
-                dimension = list(dimensions_used)[0]
-                result_si_unit = self.DIMENSION_SI_UNITS.get(dimension)
+            dimension_warning = None
+            if computed_dimension is not None:
+                # Get the SI unit symbol for the computed dimension
+                result_si_unit = dimension_to_si_unit(computed_dimension)
+                if result_si_unit is None and not computed_dimension.is_dimensionless():
+                    # Fallback: construct from dimension string
+                    result_si_unit = dimension_to_string(computed_dimension)
+                logger.debug(f"Expression '{parsed.get('original', '')}' has dimension {dimension_to_string(computed_dimension)} -> SI unit '{result_si_unit}'")
+
+                # Validate against expected unit from PropertyDefinition
+                if expected_unit:
+                    expected_dimension = get_unit_dimension(expected_unit)
+                    if expected_dimension is not None and computed_dimension != expected_dimension:
+                        # Dimension mismatch!
+                        dimension_warning = (
+                            f"Unit mismatch: expression produces {dimension_to_string(computed_dimension)} "
+                            f"(SI: {result_si_unit or 'dimensionless'}), but property expects "
+                            f"{dimension_to_string(expected_dimension)} ({expected_unit})"
+                        )
+                        logger.warning(f"Dimension validation warning: {dimension_warning}")
+                        # Store the warning but don't fail - let the user see the computed value
+                        # The warning will be visible in the computation_error field
+            elif dim_error:
+                # Dimension error - log warning but don't fail the computation
+                logger.warning(f"Dimension analysis warning for '{parsed.get('original', '')}': {dim_error}")
+                dimension_warning = dim_error
+            else:
+                # Fallback to old behavior for simple expressions
+                if len(dimensions_used) == 1:
+                    dimension = list(dimensions_used)[0]
+                    result_si_unit = self.DIMENSION_SI_UNITS.get(dimension)
 
             # Store SI unit symbol in parsed_expression for later use
             result_unit_id = self._compute_result_unit(parsed, units)
 
-            return (float(result), result_unit_id, True, None, result_si_unit)
+            # Return with warning if there's a dimension issue
+            # We still return success=True so the value is stored, but include warning in error slot
+            return (float(result), result_unit_id, True, dimension_warning, result_si_unit)
 
         except Exception as e:
             logger.error(f"Failed to evaluate expression: {e}")
@@ -1328,17 +1380,260 @@ class ValueEngine:
         # This will be enhanced in later iterations
         return None
 
+    def _compute_expression_dimension(self, parsed: Dict) -> Tuple[Optional[Dimension], Optional[str]]:
+        """
+        Compute the resulting dimension of an expression through dimensional analysis.
+
+        Tracks dimensions through all operators: *, /, ^, **, sqrt, +, -
+
+        Args:
+            parsed: The parsed expression dict containing literal_values, ref_units, etc.
+
+        Returns:
+            (dimension, error_message) - Dimension object or None with error
+        """
+        original_expr = parsed.get("original", "")
+        modified_expr = parsed.get("modified", "")
+
+        # Build a map of placeholder -> Dimension
+        placeholder_dimensions: Dict[str, Dimension] = {}
+
+        # Get dimensions for literal values with units
+        for placeholder, lit_info in parsed.get("literal_values", {}).items():
+            unit_symbol = lit_info.get('unit')
+            if unit_symbol:
+                dim = get_unit_dimension(unit_symbol)
+                if dim:
+                    placeholder_dimensions[placeholder] = dim
+                else:
+                    # Unknown unit - treat as dimensionless
+                    placeholder_dimensions[placeholder] = DIMENSIONLESS
+            else:
+                placeholder_dimensions[placeholder] = DIMENSIONLESS
+
+        # Get dimensions for reference placeholders
+        for placeholder, unit_symbol in parsed.get("ref_units", {}).items():
+            if unit_symbol:
+                dim = get_unit_dimension(unit_symbol)
+                if dim:
+                    placeholder_dimensions[placeholder] = dim
+                else:
+                    placeholder_dimensions[placeholder] = DIMENSIONLESS
+            else:
+                placeholder_dimensions[placeholder] = DIMENSIONLESS
+
+        # Bare literals are dimensionless scalars (like "* 2" or "/ 3")
+        for placeholder in parsed.get("bare_literals", {}).keys():
+            placeholder_dimensions[placeholder] = DIMENSIONLESS
+
+        # LOOKUP and MODEL calls - for now treat as dimensionless (could be enhanced)
+        for placeholder in parsed.get("lookup_calls", {}).keys():
+            placeholder_dimensions[placeholder] = DIMENSIONLESS
+        for placeholder in parsed.get("model_calls", {}).keys():
+            placeholder_dimensions[placeholder] = DIMENSIONLESS
+
+        # Now parse the modified expression to compute dimension
+        # We use a simple recursive descent approach on the expression string
+        try:
+            result_dim = self._infer_dimension_from_expr(modified_expr, placeholder_dimensions)
+            return (result_dim, None)
+        except DimensionError as e:
+            return (None, str(e))
+        except Exception as e:
+            logger.warning(f"Failed to infer dimension for '{original_expr}': {e}")
+            return (None, f"Dimension inference failed: {e}")
+
+    def _infer_dimension_from_expr(self, expr: str, placeholder_dims: Dict[str, Dimension]) -> Dimension:
+        """
+        Infer dimension from a modified expression string.
+
+        Uses sympy to parse and then walks the expression tree to compute dimensions.
+
+        Args:
+            expr: The modified expression with placeholders
+            placeholder_dims: Map of placeholder names to their Dimensions
+
+        Returns:
+            Computed Dimension
+
+        Raises:
+            DimensionError: If dimensions are incompatible
+        """
+        import sympy as sp
+        from sympy import Symbol, Pow, Mul, Add, sqrt as sp_sqrt, sin as sp_sin, cos as sp_cos
+        from sympy import tan as sp_tan, log as sp_log, exp as sp_exp, Abs
+
+        # Build sympy local dict
+        local_dict = {
+            'sqrt': sp.sqrt,
+            'sin': sp.sin,
+            'cos': sp.cos,
+            'tan': sp.tan,
+            'log': sp.log,
+            'ln': sp.log,
+            'exp': sp.exp,
+            'abs': sp.Abs,
+            'pi': sp.pi,
+            'e': sp.E,
+        }
+
+        # Add placeholders as symbols
+        for p in placeholder_dims:
+            local_dict[p] = Symbol(p)
+
+        try:
+            parsed_expr = sp.sympify(expr, locals=local_dict)
+        except Exception as e:
+            raise DimensionError(f"Failed to parse expression: {e}")
+
+        def infer_dim(node) -> Dimension:
+            """Recursively infer dimension from sympy expression tree."""
+            # Symbol - look up in placeholder_dims
+            if isinstance(node, Symbol):
+                name = str(node)
+                return placeholder_dims.get(name, DIMENSIONLESS)
+
+            # Number - dimensionless
+            if node.is_number:
+                return DIMENSIONLESS
+
+            # Addition/Subtraction - all operands must have same dimension
+            if isinstance(node, Add):
+                args = node.args
+                if not args:
+                    return DIMENSIONLESS
+
+                first_dim = infer_dim(args[0])
+                for i, arg in enumerate(args[1:], start=2):
+                    arg_dim = infer_dim(arg)
+                    # Allow dimensionless constants to adapt
+                    if arg_dim != first_dim:
+                        if arg_dim.is_dimensionless() and arg.is_number:
+                            continue  # Numeric constant adapts
+                        if first_dim.is_dimensionless():
+                            first_dim = arg_dim  # First was dimensionless, update
+                            continue
+                        raise DimensionError(
+                            f"Dimension mismatch in addition: operand 1 is {dimension_to_string(first_dim)}, "
+                            f"operand {i} is {dimension_to_string(arg_dim)}"
+                        )
+                return first_dim
+
+            # Multiplication - dimensions add
+            if isinstance(node, Mul):
+                result = DIMENSIONLESS
+                for arg in node.args:
+                    arg_dim = infer_dim(arg)
+                    result = result * arg_dim
+                return result
+
+            # Power - dimension multiplied by exponent
+            if isinstance(node, Pow):
+                base = node.args[0]
+                exponent = node.args[1]
+
+                base_dim = infer_dim(base)
+
+                # Check if exponent is a number
+                if exponent.is_number:
+                    exp_val = float(exponent)
+                    # Check for sqrt (exponent 0.5)
+                    if exp_val == 0.5:
+                        # Sqrt - dimensions halved
+                        if (base_dim.length % 2 != 0 or base_dim.mass % 2 != 0 or
+                            base_dim.time % 2 != 0 or base_dim.temperature % 2 != 0 or
+                            base_dim.current % 2 != 0 or base_dim.amount % 2 != 0 or
+                            base_dim.luminosity % 2 != 0):
+                            raise DimensionError(
+                                f"Cannot take sqrt of {dimension_to_string(base_dim)} - exponents must be even"
+                            )
+                        return Dimension(
+                            length=base_dim.length // 2,
+                            mass=base_dim.mass // 2,
+                            time=base_dim.time // 2,
+                            temperature=base_dim.temperature // 2,
+                            current=base_dim.current // 2,
+                            amount=base_dim.amount // 2,
+                            luminosity=base_dim.luminosity // 2,
+                        )
+                    elif exp_val == int(exp_val):
+                        # Integer exponent
+                        return base_dim ** int(exp_val)
+                    else:
+                        # Non-integer, non-sqrt exponent
+                        if not base_dim.is_dimensionless():
+                            raise DimensionError(
+                                f"Cannot raise dimensional quantity {dimension_to_string(base_dim)} "
+                                f"to non-integer power {exp_val}"
+                            )
+                        return DIMENSIONLESS
+                else:
+                    # Variable exponent - base must be dimensionless
+                    if not base_dim.is_dimensionless():
+                        raise DimensionError(
+                            "Cannot raise dimensional quantity to variable power"
+                        )
+                    return DIMENSIONLESS
+
+            # Function calls
+            func_name = type(node).__name__
+            args = getattr(node, 'args', ())
+
+            # Trig functions - require dimensionless input, return dimensionless
+            if func_name in ('sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh'):
+                if args:
+                    arg_dim = infer_dim(args[0])
+                    if not arg_dim.is_dimensionless():
+                        raise DimensionError(
+                            f"Function {func_name} requires dimensionless argument, got {dimension_to_string(arg_dim)}"
+                        )
+                return DIMENSIONLESS
+
+            # Log/exp - require dimensionless
+            if func_name in ('log', 'exp'):
+                if args:
+                    arg_dim = infer_dim(args[0])
+                    if not arg_dim.is_dimensionless():
+                        raise DimensionError(
+                            f"Function {func_name} requires dimensionless argument, got {dimension_to_string(arg_dim)}"
+                        )
+                return DIMENSIONLESS
+
+            # Abs preserves dimension
+            if func_name == 'Abs':
+                if args:
+                    return infer_dim(args[0])
+                return DIMENSIONLESS
+
+            # For any other node type, try to recurse on args
+            if args:
+                # If it has args, try to infer from first arg
+                return infer_dim(args[0])
+
+            # Default to dimensionless
+            return DIMENSIONLESS
+
+        return infer_dim(parsed_expr)
+
     # ==================== DEPENDENCY MANAGEMENT ====================
 
-    def recalculate(self, node: ValueNode) -> Tuple[bool, Optional[str]]:
+    def recalculate(
+        self,
+        node: ValueNode,
+        expected_unit: Optional[str] = None
+    ) -> Tuple[bool, Optional[str]]:
         """
         Recalculate a node's value and update cache.
+
+        Args:
+            node: The ValueNode to recalculate
+            expected_unit: Optional unit symbol from PropertyDefinition for validation
 
         Returns: (success, error_message)
         """
         self._evaluation_stack.clear()
 
-        value, unit_id, success, error, si_unit_symbol = self.compute_value(node)
+        value, unit_id, success, error_or_warning, si_unit_symbol = self.compute_value(node, expected_unit)
 
         if success:
             node.computed_value = value
@@ -1347,14 +1642,15 @@ class ValueEngine:
             if si_unit_symbol:
                 node.computed_unit_symbol = si_unit_symbol
             node.computation_status = ComputationStatus.VALID
-            node.computation_error = None
+            # Store dimension warning if present (still valid but with warning)
+            node.computation_error = error_or_warning  # This will be the dimension warning or None
             node.last_computed = datetime.utcnow()
         else:
             node.computation_status = ComputationStatus.ERROR
-            node.computation_error = error
+            node.computation_error = error_or_warning
 
         self.db.flush()
-        return (success, error)
+        return (success, error_or_warning)
 
     def mark_dependents_stale(self, node: ValueNode):
         """

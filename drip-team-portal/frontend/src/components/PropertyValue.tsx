@@ -201,6 +201,10 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
       const status = property.value_node.computation_status;
       const expr = property.value_node.expression_string;
       const computedUnit = property.value_node.computed_unit_symbol || def.unit;
+      const computationError = property.value_node.computation_error;
+
+      // Check if there's a dimension mismatch warning
+      const hasDimensionWarning = computationError && computationError.includes('Unit mismatch');
 
       // Get dimension from computed unit and convert to user's preferred unit
       const computedDimension = getDimensionFromUnit(computedUnit);
@@ -216,7 +220,7 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
 
       return (
         <div className="flex items-center gap-2">
-          <span className={status === 'error' ? 'text-red-600' : 'text-gray-900'}>
+          <span className={status === 'error' ? 'text-red-600' : hasDimensionWarning ? 'text-amber-600' : 'text-gray-900'}>
             {status === 'valid' && computed !== null && computed !== undefined
               ? displayValue
               : status === 'error'
@@ -228,6 +232,14 @@ const PropertyValue: React.FC<PropertyValueProps> = ({ property, componentId, on
           </span>
           {status === 'stale' && (
             <span className="text-xs px-1 py-0.5 bg-yellow-100 text-yellow-700 rounded">stale</span>
+          )}
+          {hasDimensionWarning && (
+            <span
+              className="text-xs px-1 py-0.5 bg-amber-100 text-amber-700 rounded cursor-help"
+              title={computationError}
+            >
+              unit
+            </span>
           )}
         </div>
       );
