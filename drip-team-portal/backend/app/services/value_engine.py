@@ -1351,13 +1351,16 @@ class ValueEngine:
 
             result_si_unit = None
             dimension_warning = None
+            logger.info(f"_evaluate_expression: computed result={result}, computed_dimension={dimension_to_string(computed_dimension) if computed_dimension else 'None'}, dim_error={dim_error}")
             if computed_dimension is not None:
                 # Get the SI unit symbol for the computed dimension
                 result_si_unit = dimension_to_si_unit(computed_dimension)
+                logger.info(f"_evaluate_expression: dimension_to_si_unit returned '{result_si_unit}'")
                 if result_si_unit is None and not computed_dimension.is_dimensionless():
                     # Fallback: construct from dimension string
                     result_si_unit = dimension_to_string(computed_dimension)
-                logger.debug(f"Expression '{parsed.get('original', '')}' has dimension {dimension_to_string(computed_dimension)} -> SI unit '{result_si_unit}'")
+                    logger.info(f"_evaluate_expression: Using dimension_to_string fallback: '{result_si_unit}'")
+                logger.info(f"Expression '{parsed.get('original', '')}' has dimension {dimension_to_string(computed_dimension)} -> SI unit '{result_si_unit}'")
 
                 # Validate against expected unit from PropertyDefinition
                 if expected_unit:
@@ -1387,6 +1390,7 @@ class ValueEngine:
 
             # Return with warning if there's a dimension issue
             # We still return success=True so the value is stored, but include warning in error slot
+            logger.info(f"_evaluate_expression: FINAL returning result={float(result)}, result_unit_id={result_unit_id}, result_si_unit='{result_si_unit}'")
             return (float(result), result_unit_id, True, dimension_warning, result_si_unit)
 
         except Exception as e:
@@ -1551,7 +1555,9 @@ class ValueEngine:
             # Symbol - look up in placeholder_dims
             if isinstance(node, Symbol):
                 name = str(node)
-                return placeholder_dims.get(name, DIMENSIONLESS)
+                dim = placeholder_dims.get(name, DIMENSIONLESS)
+                logger.info(f"_infer_dimension_from_expr: Symbol '{name}' -> {dimension_to_string(dim)}")
+                return dim
 
             # Number - dimensionless
             if node.is_number:
@@ -1593,6 +1599,7 @@ class ValueEngine:
                 exponent = node.args[1]
 
                 base_dim = infer_dim(base)
+                logger.info(f"_infer_dimension_from_expr: Pow node, base={base}, exponent={exponent}, base_dim={dimension_to_string(base_dim)}")
 
                 # Check if exponent is a number
                 if exponent.is_number:
@@ -1618,7 +1625,9 @@ class ValueEngine:
                         )
                     elif exp_val == int(exp_val):
                         # Integer exponent
-                        return base_dim ** int(exp_val)
+                        result_dim = base_dim ** int(exp_val)
+                        logger.info(f"_infer_dimension_from_expr: Pow result (integer exp {int(exp_val)}): {dimension_to_string(result_dim)}")
+                        return result_dim
                     else:
                         # Non-integer, non-sqrt exponent
                         if not base_dim.is_dimensionless():
