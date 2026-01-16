@@ -24,25 +24,45 @@ from .exceptions import EquationParseError, UnknownInputError
 import re
 
 
-def _preprocess_equation(equation_text: str) -> str:
+def _preprocess_equation(
+    equation_text: str,
+    allowed_inputs: Optional[List[str]] = None
+) -> tuple[str, dict[str, str]]:
     """
     Preprocess equation text for engineer-friendly syntax.
 
     Conversions:
     - ^ to ** (exponentiation): Engineers commonly use ^ for powers
+    - Spaces in variable names to underscores (when allowed_inputs provided)
 
     Args:
         equation_text: Raw equation string
+        allowed_inputs: Optional list of valid input names (used to identify
+                       multi-word variable names that need space-to-underscore)
 
     Returns:
-        Preprocessed equation string ready for SymPy
+        Tuple of (preprocessed equation string, mapping of normalized to original names)
     """
-    # Convert ^ to ** for exponentiation
-    # Use regex to avoid converting inside strings (though equations shouldn't have strings)
-    # This handles cases like: x^2, x ^ 2, (a+b)^2
-    result = re.sub(r'\^', '**', equation_text)
+    result = equation_text
+    name_mapping = {}  # normalized_name -> original_name
 
-    return result
+    # Replace spaces in known input names with underscores
+    # Sort by length descending to handle longer names first (avoid partial matches)
+    if allowed_inputs:
+        for input_name in sorted(allowed_inputs, key=len, reverse=True):
+            if ' ' in input_name:
+                normalized = input_name.replace(' ', '_')
+                # Use word boundary-aware replacement to avoid partial matches
+                # Match the input name when surrounded by non-word chars or string boundaries
+                pattern = r'(?<![a-zA-Z0-9_])' + re.escape(input_name) + r'(?![a-zA-Z0-9_])'
+                result = re.sub(pattern, normalized, result, flags=re.IGNORECASE)
+                name_mapping[normalized.lower()] = input_name
+
+    # Convert ^ to ** for exponentiation
+    # This handles cases like: x^2, x ^ 2, (a+b)^2
+    result = re.sub(r'\^', '**', result)
+
+    return result, name_mapping
 
 
 # Supported functions mapping
@@ -101,8 +121,8 @@ def parse_equation(
 
     equation_text = equation_text.strip()
 
-    # Preprocess for engineer-friendly syntax (e.g., ^ to **)
-    processed_text = _preprocess_equation(equation_text)
+    # Preprocess for engineer-friendly syntax (^ to **, spaces to underscores)
+    processed_text, name_mapping = _preprocess_equation(equation_text, allowed_inputs)
 
     # Build local dict for sympify
     local_dict = {}
@@ -119,19 +139,41 @@ def parse_equation(
     found_inputs = _extract_inputs(sympy_expr)
 
     # Validate inputs if allowed_inputs provided
+    # Need to compare normalized names (spaces replaced with underscores)
     if allowed_inputs is not None:
-        allowed_set = set(allowed_inputs)
+        # Build normalized allowed set
+        normalized_allowed = {
+            name.replace(' ', '_').lower(): name
+            for name in allowed_inputs
+        }
         for inp in found_inputs:
-            if inp not in allowed_set:
+            inp_lower = inp.lower()
+            if inp_lower not in normalized_allowed:
                 raise UnknownInputError(inp, allowed_inputs)
 
     # Convert SymPy expression to AST
     ast = _sympy_to_ast(sympy_expr)
 
+    # Map inputs back to original names (with spaces if that's how they were defined)
+    original_inputs = set()
+    if allowed_inputs:
+        normalized_allowed = {
+            name.replace(' ', '_').lower(): name
+            for name in allowed_inputs
+        }
+        for inp in found_inputs:
+            inp_lower = inp.lower()
+            if inp_lower in normalized_allowed:
+                original_inputs.add(normalized_allowed[inp_lower])
+            else:
+                original_inputs.add(inp)
+    else:
+        original_inputs = found_inputs
+
     return {
         "original": equation_text,
         "ast": ast,
-        "inputs": sorted(found_inputs),
+        "inputs": sorted(original_inputs),
         "sympy_expr": sympy_expr,  # Keep for LaTeX generation
     }
 

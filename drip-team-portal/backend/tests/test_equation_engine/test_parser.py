@@ -163,3 +163,26 @@ class TestAllowedInputs:
         with pytest.raises(UnknownInputError) as exc_info:
             parse_equation("a + x", allowed_inputs=['a', 'b'])
         assert 'x' in str(exc_info.value)
+
+    def test_parse_with_spaces_in_variable_names(self):
+        """Parse equation with spaces in variable names (engineer-friendly)."""
+        # This is the actual failing case from the skin depth model
+        allowed = ['thickness', 'resistivity', 'permeability',
+                   'relative permeability', 'pi']
+        equation = "thickness ^ 2 * relative permeability"
+        result = parse_equation(equation, allowed_inputs=allowed)
+        # Should recognize 'relative permeability' as a single variable
+        assert 'relative permeability' in result['inputs']
+        assert 'thickness' in result['inputs']
+
+    def test_parse_skin_depth_formula(self):
+        """Parse the actual skin depth formula that was failing."""
+        allowed = ['thickness', 'resistivity', 'Permeability',
+                   'Relative permeability', 'Pi']
+        equation = ("( 9 * resistivity ) / "
+                    "( thickness ^ 2 * Permeability * Relative permeability * Pi )")
+        result = parse_equation(equation, allowed_inputs=allowed)
+        # Should parse without error and find all inputs
+        assert 'Relative permeability' in result['inputs']
+        assert 'thickness' in result['inputs']
+        assert 'Permeability' in result['inputs']
