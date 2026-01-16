@@ -1607,8 +1607,10 @@ class ValueEngine:
                 logger.info(f"_infer_dimension_from_expr: Pow node, base={base}, exponent={exponent}, base_dim={dimension_to_string(base_dim)}")
 
                 # Check if exponent is a number
+                logger.info(f"_infer_dimension_from_expr: Pow - exponent.is_number={exponent.is_number}, type(exponent)={type(exponent).__name__}")
                 if exponent.is_number:
                     exp_val = float(exponent)
+                    logger.info(f"_infer_dimension_from_expr: Pow - exp_val={exp_val}")
                     # Check for sqrt (exponent 0.5)
                     if exp_val == 0.5:
                         # Sqrt - dimensions halved
