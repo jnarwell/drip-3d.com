@@ -898,15 +898,18 @@ class ValueEngine:
                         node = self.db.query(ValueNode).filter(
                             ValueNode.id == comp_prop.value_node_id
                         ).first()
+                        logger.info(f"_resolve_reference: Found existing ValueNode for {entity_code}.{prop_name}: numeric_value={node.numeric_value if node else None}, computed_unit_symbol={node.computed_unit_symbol if node else None}")
                         return node
                     else:
                         # Property exists but has no value_node - create one from the literal value
                         literal_value = comp_prop.single_value or comp_prop.average_value or comp_prop.min_value
+                        logger.info(f"_resolve_reference: Creating new ValueNode for {entity_code}.{prop_name}: literal_value={literal_value}")
                         if literal_value is not None:
                             # Convert from property unit to SI base unit
                             prop_unit = prop_def.unit if prop_def else None
                             si_value = literal_value
                             si_unit_symbol = None
+                            logger.info(f"_resolve_reference: prop_unit={prop_unit}, in UNIT_TO_SI? {prop_unit in self.UNIT_TO_SI if prop_unit else False}")
 
                             if prop_unit and prop_unit in self.UNIT_TO_SI:
                                 conversion_factor = self.UNIT_TO_SI[prop_unit]
