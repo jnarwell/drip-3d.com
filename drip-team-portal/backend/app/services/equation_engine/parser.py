@@ -21,6 +21,28 @@ from sympy.functions.elementary.trigonometric import sin as sympy_sin, cos as sy
 from sympy.functions.elementary.complexes import Abs as sympy_abs
 
 from .exceptions import EquationParseError, UnknownInputError
+import re
+
+
+def _preprocess_equation(equation_text: str) -> str:
+    """
+    Preprocess equation text for engineer-friendly syntax.
+
+    Conversions:
+    - ^ to ** (exponentiation): Engineers commonly use ^ for powers
+
+    Args:
+        equation_text: Raw equation string
+
+    Returns:
+        Preprocessed equation string ready for SymPy
+    """
+    # Convert ^ to ** for exponentiation
+    # Use regex to avoid converting inside strings (though equations shouldn't have strings)
+    # This handles cases like: x^2, x ^ 2, (a+b)^2
+    result = re.sub(r'\^', '**', equation_text)
+
+    return result
 
 
 # Supported functions mapping
@@ -79,6 +101,9 @@ def parse_equation(
 
     equation_text = equation_text.strip()
 
+    # Preprocess for engineer-friendly syntax (e.g., ^ to **)
+    processed_text = _preprocess_equation(equation_text)
+
     # Build local dict for sympify
     local_dict = {}
     local_dict.update(SUPPORTED_FUNCTIONS)
@@ -86,7 +111,7 @@ def parse_equation(
 
     try:
         # Parse with SymPy
-        sympy_expr = sympify(equation_text, locals=local_dict)
+        sympy_expr = sympify(processed_text, locals=local_dict)
     except Exception as e:
         raise EquationParseError(f"Failed to parse equation: {e}")
 

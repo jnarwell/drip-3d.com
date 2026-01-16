@@ -60,6 +60,22 @@ class TestBasicParsing:
         # Should have pow somewhere in the AST
         assert 'pow' in str(result['ast']) or 'const' in str(result['ast'])
 
+    def test_parse_caret_as_power(self):
+        """Parse ^ as exponentiation (engineer-friendly syntax)."""
+        result = parse_equation("x^2")
+        assert set(result['inputs']) == {'x'}
+        # Should produce same result as x**2
+        result_double_star = parse_equation("x**2")
+        assert result['ast'] == result_double_star['ast']
+
+    def test_parse_caret_complex(self):
+        """Parse complex expression with ^ for exponentiation."""
+        # Test the skin depth formula pattern
+        result = parse_equation("thickness ^ 2 * Permeability")
+        assert set(result['inputs']) == {'thickness', 'Permeability'}
+        # Should have pow in the AST
+        assert 'pow' in str(result['ast'])
+
 
 class TestFunctionParsing:
     """Test parsing of mathematical functions."""
