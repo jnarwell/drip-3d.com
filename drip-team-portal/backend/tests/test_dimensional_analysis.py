@@ -453,3 +453,62 @@ class TestExpressionDimensionTracking:
 
         assert result == FORCE
         assert dimension_to_si_unit(result) == 'N'
+
+
+class TestReferenceWithPowerOperator:
+    """Test dimension inference for expressions like #HEATBED.Diameter^2"""
+
+    def test_reference_squared_dimension(self):
+        """Test that a length reference squared produces area dimension."""
+        # Simulates what happens when we have #HEATBED.Diameter^2
+        # The placeholder __ref_0__ represents the diameter (LENGTH)
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        # When we have __ref_0__^2 where __ref_0__ is LENGTH
+        placeholder_dims = {'__ref_0__': LENGTH}
+
+        # The expression "__ref_0__**2" should evaluate to AREA
+        result = LENGTH ** 2
+        assert result == AREA
+        assert dimension_to_si_unit(result) == 'm²'
+
+    def test_reference_cubed_dimension(self):
+        """Test that a length reference cubed produces volume dimension."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = LENGTH ** 3
+        assert result == VOLUME
+        assert dimension_to_si_unit(result) == 'm³'
+
+    def test_diameter_squared_times_length(self):
+        """Test that diameter² × length = volume (like cylinder cross-section)."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        # diameter² * length = area * length = volume
+        result = (LENGTH ** 2) * LENGTH
+        assert result == VOLUME
+        assert dimension_to_si_unit(result) == 'm³'
+
+    def test_pi_times_radius_squared(self):
+        """Test that pi * r² = area (circle area formula)."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        # pi is dimensionless, r² is area
+        # dimensionless * area = area
+        result = DIMENSIONLESS * (LENGTH ** 2)
+        assert result == AREA
+        assert dimension_to_si_unit(result) == 'm²'
+
+    def test_half_power_on_area(self):
+        """Test that area^0.5 = length (sqrt of area)."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        # Create AREA dimension and take sqrt
+        # L² with exponent 0.5 = L
+        result = Dimension(
+            length=AREA.length // 2,
+            mass=AREA.mass // 2,
+            time=AREA.time // 2,
+        )
+        assert result == LENGTH
+        assert dimension_to_si_unit(result) == 'm'

@@ -760,6 +760,7 @@ class ValueEngine:
         """
         parts = ref.split(".")
         if len(parts) != 2:
+            logger.debug(f"_get_reference_unit: Invalid ref format '{ref}' (expected CODE.property)")
             return None
 
         entity_code, prop_name = parts
@@ -779,9 +780,19 @@ class ValueEngine:
             component = self.db.query(Component).filter(generated_code_expr == entity_code).first()
 
         if component:
+            # Try exact match first
             prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name_normalized).first()
+            if not prop_def:
+                # Try case-insensitive match
+                from sqlalchemy import func
+                prop_def = self.db.query(PropertyDefinition).filter(
+                    func.lower(PropertyDefinition.name) == prop_name_normalized.lower()
+                ).first()
             if prop_def:
+                logger.debug(f"_get_reference_unit: Found unit '{prop_def.unit}' for {ref}")
                 return prop_def.unit
+            else:
+                logger.debug(f"_get_reference_unit: Component {entity_code} found but property '{prop_name_normalized}' not found")
 
         # Try Material
         material = self.db.query(Material).filter(Material.code == entity_code).first()
@@ -796,10 +807,21 @@ class ValueEngine:
             material = self.db.query(Material).filter(generated_code_expr == entity_code).first()
 
         if material:
+            # Try exact match first
             prop_def = self.db.query(PropertyDefinition).filter(PropertyDefinition.name == prop_name_normalized).first()
+            if not prop_def:
+                # Try case-insensitive match
+                from sqlalchemy import func
+                prop_def = self.db.query(PropertyDefinition).filter(
+                    func.lower(PropertyDefinition.name) == prop_name_normalized.lower()
+                ).first()
             if prop_def:
+                logger.debug(f"_get_reference_unit: Found unit '{prop_def.unit}' for {ref}")
                 return prop_def.unit
+            else:
+                logger.debug(f"_get_reference_unit: Material {entity_code} found but property '{prop_name_normalized}' not found")
 
+        logger.debug(f"_get_reference_unit: Could not find entity or property for {ref}")
         return None
 
     def _resolve_reference(self, ref: str) -> Optional[ValueNode]:
@@ -1412,6 +1434,7 @@ class ValueEngine:
                 placeholder_dimensions[placeholder] = DIMENSIONLESS
 
         # Get dimensions for reference placeholders
+        # First, use ref_units (from PropertyDefinition.unit)
         for placeholder, unit_symbol in parsed.get("ref_units", {}).items():
             if unit_symbol:
                 dim = get_unit_dimension(unit_symbol)
@@ -1421,6 +1444,25 @@ class ValueEngine:
                     placeholder_dimensions[placeholder] = DIMENSIONLESS
             else:
                 placeholder_dimensions[placeholder] = DIMENSIONLESS
+
+        # Also check placeholders that might not be in ref_units
+        # This can happen if _get_reference_unit couldn't find the PropertyDefinition
+        # but the ValueNode still has a computed_unit_symbol
+        for placeholder, ref in parsed.get("placeholders", {}).items():
+            if placeholder not in placeholder_dimensions:
+                # Try to resolve the reference and get its computed_unit_symbol
+                source_node = self._resolve_reference(ref)
+                if source_node and source_node.computed_unit_symbol:
+                    dim = get_unit_dimension(source_node.computed_unit_symbol)
+                    if dim:
+                        placeholder_dimensions[placeholder] = dim
+                        logger.debug(f"Resolved dimension for {placeholder} ({ref}) from ValueNode: {dimension_to_string(dim)}")
+                    else:
+                        placeholder_dimensions[placeholder] = DIMENSIONLESS
+                else:
+                    # No unit info available - default to dimensionless
+                    placeholder_dimensions[placeholder] = DIMENSIONLESS
+                    logger.debug(f"No dimension info for {placeholder} ({ref}), defaulting to dimensionless")
 
         # Bare literals are dimensionless scalars (like "* 2" or "/ 3")
         for placeholder in parsed.get("bare_literals", {}).keys():
