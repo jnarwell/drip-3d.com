@@ -1550,7 +1550,9 @@ class ValueEngine:
 
         try:
             parsed_expr = sp.sympify(expr, locals=local_dict)
+            logger.info(f"_infer_dimension_from_expr: sympify succeeded, parsed_expr={parsed_expr}, type={type(parsed_expr).__name__}")
         except Exception as e:
+            logger.error(f"_infer_dimension_from_expr: sympify FAILED: {e}")
             raise DimensionError(f"Failed to parse expression: {e}")
 
         def infer_dim(node) -> Dimension:
