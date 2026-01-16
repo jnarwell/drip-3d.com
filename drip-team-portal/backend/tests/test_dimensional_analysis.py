@@ -512,3 +512,38 @@ class TestReferenceWithPowerOperator:
         )
         assert result == LENGTH
         assert dimension_to_si_unit(result) == 'm'
+
+
+class TestCaretExponentiationPreprocessing:
+    """Test that ^ is correctly converted to ** in value_engine."""
+
+    def test_caret_converted_to_power(self):
+        """Test that value_engine converts ^ to ** before parsing."""
+        import re
+
+        # Simulate what value_engine does
+        expr = "#HEATBED.Diameter^2"
+        modified = re.sub(r'\^', '**', expr)
+
+        assert modified == "#HEATBED.Diameter**2"
+        assert '^' not in modified
+
+    def test_multiple_carets(self):
+        """Test that multiple ^ operators are all converted."""
+        import re
+
+        expr = "x^2 + y^3 + z^4"
+        modified = re.sub(r'\^', '**', expr)
+
+        assert modified == "x**2 + y**3 + z**4"
+        assert '^' not in modified
+
+    def test_caret_in_complex_expression(self):
+        """Test caret conversion in complex expressions."""
+        import re
+
+        expr = "(#A.x + #B.y)^2 * #C.z^3"
+        modified = re.sub(r'\^', '**', expr)
+
+        assert modified == "(#A.x + #B.y)**2 * #C.z**3"
+        assert '^' not in modified

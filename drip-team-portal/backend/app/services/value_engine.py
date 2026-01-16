@@ -582,6 +582,12 @@ class ValueEngine:
         refs = self._extract_references(expression)
 
         modified_expr = expression
+
+        # Preprocess: Convert ^ to ** for exponentiation
+        # Engineers commonly use ^ for powers instead of Python's **
+        # Must be done early before any other processing
+        modified_expr = re.sub(r'\^', '**', modified_expr)
+
         for i, ref in enumerate(refs):
             placeholder = f"__ref_{i}__"
             placeholders[placeholder] = ref
