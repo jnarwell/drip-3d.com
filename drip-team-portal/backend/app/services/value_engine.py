@@ -1422,6 +1422,7 @@ class ValueEngine:
         """
         original_expr = parsed.get("original", "")
         modified_expr = parsed.get("modified", "")
+        logger.info(f"_compute_expression_dimension: original='{original_expr}', modified='{modified_expr}'")
 
         # Build a map of placeholder -> Dimension
         placeholder_dimensions: Dict[str, Dimension] = {}
@@ -1441,9 +1442,12 @@ class ValueEngine:
 
         # Get dimensions for reference placeholders
         # First, use ref_units (from PropertyDefinition.unit)
-        for placeholder, unit_symbol in parsed.get("ref_units", {}).items():
+        ref_units = parsed.get("ref_units", {})
+        logger.info(f"_compute_expression_dimension: ref_units={ref_units}")
+        for placeholder, unit_symbol in ref_units.items():
             if unit_symbol:
                 dim = get_unit_dimension(unit_symbol)
+                logger.info(f"_compute_expression_dimension: {placeholder} has unit '{unit_symbol}' -> dim={dimension_to_string(dim) if dim else 'None'}")
                 if dim:
                     placeholder_dimensions[placeholder] = dim
                 else:
@@ -1482,10 +1486,13 @@ class ValueEngine:
 
         # Now parse the modified expression to compute dimension
         # We use a simple recursive descent approach on the expression string
+        logger.info(f"_compute_expression_dimension: placeholder_dimensions={placeholder_dimensions}")
         try:
             result_dim = self._infer_dimension_from_expr(modified_expr, placeholder_dimensions)
+            logger.info(f"_compute_expression_dimension: result_dim={dimension_to_string(result_dim) if result_dim else 'None'}")
             return (result_dim, None)
         except DimensionError as e:
+            logger.warning(f"_compute_expression_dimension: DimensionError: {e}")
             return (None, str(e))
         except Exception as e:
             logger.warning(f"Failed to infer dimension for '{original_expr}': {e}")
