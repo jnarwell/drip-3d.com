@@ -593,8 +593,11 @@ class ValueEngine:
             placeholders[placeholder] = ref
             # Look up and store the unit for this reference
             unit_symbol = self._get_reference_unit(ref)
+            logger.info(f"_parse_expression: ref={ref}, placeholder={placeholder}, unit_symbol={unit_symbol}")
             if unit_symbol:
                 ref_units[placeholder] = unit_symbol
+            else:
+                logger.warning(f"_parse_expression: No unit found for reference {ref}")
             # Replace #ref with placeholder (handle the # prefix)
             modified_expr = modified_expr.replace(f"#{ref}", placeholder)
 
