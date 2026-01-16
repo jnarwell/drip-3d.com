@@ -1097,6 +1097,7 @@ class ValueEngine:
         for dep in node.dependencies:
             source = dep.source_node
             val, unit_id, success, error, _ = self.compute_value(source)
+            logger.info(f"_evaluate_expression: Dependency '{dep.variable_name}' -> val={val}, success={success}")
 
             if not success:
                 return (None, None, False, f"Dependency '{dep.variable_name}' failed: {error}", None)
@@ -1110,6 +1111,7 @@ class ValueEngine:
             if placeholder:
                 values[placeholder] = val
                 units[placeholder] = unit_id
+                logger.info(f"_evaluate_expression: placeholder {placeholder} = {val}")
 
         # Substitute values into the expression
         try:
