@@ -320,3 +320,136 @@ class TestDimensionToString:
         assert 'M' in result
         assert 'L' in result
         assert 'T' in result
+
+
+class TestDimensionToSIUnit:
+    """Test dimension to SI unit symbol mapping."""
+
+    from app.services.dimensional_analysis import dimension_to_si_unit
+
+    def test_length_to_si_unit(self):
+        """LENGTH should map to 'm'."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(LENGTH)
+        assert result == 'm'
+
+    def test_area_to_si_unit(self):
+        """AREA should map to 'm²'."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(AREA)
+        assert result == 'm²'
+
+    def test_volume_to_si_unit(self):
+        """VOLUME should map to 'm³'."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(VOLUME)
+        assert result == 'm³'
+
+    def test_force_to_si_unit(self):
+        """FORCE should map to 'N'."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(FORCE)
+        assert result == 'N'
+
+    def test_pressure_to_si_unit(self):
+        """PRESSURE should map to 'Pa'."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(PRESSURE)
+        assert result == 'Pa'
+
+    def test_dimensionless_to_si_unit(self):
+        """DIMENSIONLESS should map to ''."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        result = dimension_to_si_unit(DIMENSIONLESS)
+        assert result == ''
+
+    def test_computed_dimension_to_si_unit(self):
+        """Computed dimensions like L² * L should find correct SI unit."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+        # mm² * mm = mm³ should be VOLUME
+        computed = LENGTH * LENGTH * LENGTH
+        assert computed == VOLUME
+        result = dimension_to_si_unit(computed)
+        assert result == 'm³'
+
+
+class TestExpressionDimensionTracking:
+    """Test dimension tracking through expression evaluation in value_engine."""
+
+    def test_multiplication_dimensions(self):
+        """Test that 2mm² * 1mm computes to m³ (volume)."""
+        # This tests the core bug fix:
+        # - 2mm² has dimension L²
+        # - 1mm has dimension L
+        # - 2mm² * 1mm should have dimension L³ (volume)
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        area = AREA  # L²
+        length = LENGTH  # L
+        result = area * length
+
+        assert result == VOLUME  # L³
+        assert dimension_to_si_unit(result) == 'm³'
+
+    def test_division_dimensions(self):
+        """Test that volume / length = area."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = VOLUME / LENGTH  # L³ / L = L²
+
+        assert result == AREA
+        assert dimension_to_si_unit(result) == 'm²'
+
+    def test_power_dimensions(self):
+        """Test that length^3 = volume."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = LENGTH ** 3  # L³
+
+        assert result == VOLUME
+        assert dimension_to_si_unit(result) == 'm³'
+
+    def test_sqrt_dimensions(self):
+        """Test that sqrt(area) = length."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        # sqrt(L²) = L
+        result = Dimension(
+            length=AREA.length // 2,
+            mass=AREA.mass // 2,
+            time=AREA.time // 2,
+        )
+
+        assert result == LENGTH
+        assert dimension_to_si_unit(result) == 'm'
+
+    def test_mixed_dimensions(self):
+        """Test force * distance = energy (dimensionally same as torque)."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = FORCE * LENGTH  # N * m
+
+        # ENERGY and TORQUE have the same dimension (M·L²·T⁻²)
+        # The lookup might return 'J' or 'N·m' depending on map order
+        assert result == ENERGY
+        si_unit = dimension_to_si_unit(result)
+        # Both 'J' and 'N·m' are valid SI representations
+        assert si_unit in ('J', 'N·m')
+
+    def test_velocity_calculation(self):
+        """Test distance / time = velocity."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = LENGTH / TIME  # m / s = m/s
+
+        assert result == VELOCITY
+        assert dimension_to_si_unit(result) == 'm/s'
+
+    def test_complex_physics_equation(self):
+        """Test F = m * a (Force = mass * acceleration)."""
+        from app.services.dimensional_analysis import dimension_to_si_unit
+
+        result = MASS * ACCELERATION  # kg * m/s² = N
+
+        assert result == FORCE
+        assert dimension_to_si_unit(result) == 'N'

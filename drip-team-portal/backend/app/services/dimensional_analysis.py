@@ -1034,3 +1034,119 @@ def dimension_to_string(dim: Dimension) -> str:
     if not parts:
         return "1"  # Dimensionless
     return '·'.join(parts)
+
+
+# =============================================================================
+# DIMENSION TO SI UNIT MAPPING
+# =============================================================================
+
+# Map Dimension objects to their SI unit symbols
+# Used to determine the result unit after dimensional analysis
+DIMENSION_TO_SI_UNIT: Dict[Dimension, str] = {
+    DIMENSIONLESS: '',
+    LENGTH: 'm',
+    AREA: 'm²',
+    VOLUME: 'm³',
+    MASS: 'kg',
+    TIME: 's',
+    TEMPERATURE: 'K',
+    CURRENT: 'A',
+    AMOUNT: 'mol',
+    LUMINOSITY: 'cd',
+    VELOCITY: 'm/s',
+    ACCELERATION: 'm/s²',
+    FORCE: 'N',
+    PRESSURE: 'Pa',
+    ENERGY: 'J',
+    POWER: 'W',
+    TORQUE: 'N·m',
+    FREQUENCY: 'Hz',
+    DENSITY: 'kg/m³',
+    VOLUME_FLOW: 'm³/s',
+    MASS_FLOW: 'kg/s',
+    DYNAMIC_VISCOSITY: 'Pa·s',
+    KINEMATIC_VISCOSITY: 'm²/s',
+    VOLTAGE: 'V',
+    RESISTANCE: 'Ω',
+    CAPACITANCE: 'F',
+    INDUCTANCE: 'H',
+    THERMAL_CONDUCTIVITY: 'W/(m·K)',
+    SPECIFIC_HEAT: 'J/(kg·K)',
+    HEAT_CAPACITY: 'J/K',
+    HEAT_TRANSFER_COEFF: 'W/(m²·K)',
+    THERMAL_EXPANSION: '1/K',
+    SPECIFIC_ENERGY: 'J/kg',
+    SPECIFIC_ENTROPY: 'J/(kg·K)',
+    SPECIFIC_VOLUME: 'm³/kg',
+}
+
+
+def dimension_to_si_unit(dim: Dimension) -> Optional[str]:
+    """
+    Get the SI unit symbol for a Dimension.
+
+    Returns the SI unit symbol (e.g., 'm³' for VOLUME) or None if
+    the dimension doesn't match a known physical quantity.
+
+    Args:
+        dim: Dimension object
+
+    Returns:
+        SI unit symbol string or None
+    """
+    # Direct lookup first
+    if dim in DIMENSION_TO_SI_UNIT:
+        return DIMENSION_TO_SI_UNIT[dim]
+
+    # For dimensions not in the map, try to construct a symbol
+    # This handles computed dimensions like L^4 or M^2
+    if dim.is_dimensionless():
+        return ''
+
+    # Build a unit string from the dimension components
+    parts = []
+    if dim.length != 0:
+        if dim.length == 1:
+            parts.append('m')
+        else:
+            superscript = {
+                '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
+                '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+            }
+            exp_str = ''.join(superscript.get(c, c) for c in str(dim.length))
+            parts.append(f'm{exp_str}')
+    if dim.mass != 0:
+        if dim.mass == 1:
+            parts.append('kg')
+        else:
+            superscript = {
+                '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
+                '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+            }
+            exp_str = ''.join(superscript.get(c, c) for c in str(dim.mass))
+            parts.append(f'kg{exp_str}')
+    if dim.time != 0:
+        superscript = {
+            '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
+            '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+        }
+        exp_str = ''.join(superscript.get(c, c) for c in str(dim.time))
+        if dim.time == 1:
+            parts.append('s')
+        else:
+            parts.append(f's{exp_str}')
+    if dim.temperature != 0:
+        superscript = {
+            '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³',
+            '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'
+        }
+        exp_str = ''.join(superscript.get(c, c) for c in str(dim.temperature))
+        if dim.temperature == 1:
+            parts.append('K')
+        else:
+            parts.append(f'K{exp_str}')
+
+    if parts:
+        return '·'.join(parts)
+
+    return None
