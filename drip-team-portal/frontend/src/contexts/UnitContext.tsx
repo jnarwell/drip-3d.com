@@ -151,6 +151,25 @@ const UNIT_TO_DIMENSION: Record<string, string> = {
 };
 
 // Determine if a unit is imperial or metric
+/**
+ * Normalize caret notation to Unicode superscripts for consistent unit matching.
+ * Converts mm^2 → mm², m/s^2 → m/s², kg^-1 → kg⁻¹, etc.
+ */
+function normalizeUnitString(unit: string): string {
+  if (!unit) return unit;
+
+  const superscriptMap: Record<string, string> = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '-': '⁻', '+': '⁺'
+  };
+
+  // Convert ^2 → ², ^-1 → ⁻¹, etc.
+  return unit.replace(/\^([-+]?[0-9]+)/g, (_, exp) => {
+    return exp.split('').map((c: string) => superscriptMap[c] || c).join('');
+  });
+}
+
 const IMPERIAL_UNITS = new Set([
   'in', 'ft', 'yd', 'mi', 'mil', 'thou',
   'in²', 'ft²', 'yd²', 'mi²', 'acre',
@@ -310,7 +329,9 @@ export const UnitProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [unitSettings, bulkUpdateMutation]);
 
   const getDimensionFromUnit = useCallback((unit: string): string | null => {
-    return UNIT_TO_DIMENSION[unit] || null;
+    // Normalize unit string for consistent lookup (mm^2 → mm²)
+    const normalizedUnit = normalizeUnitString(unit);
+    return UNIT_TO_DIMENSION[normalizedUnit] || null;
   }, []);
 
   const getUserUnit = useCallback((dimension: string): string => {

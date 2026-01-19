@@ -248,17 +248,43 @@ function isTemperatureUnit(unit: string): boolean {
   return unit in TEMP_ALIASES;
 }
 
+/**
+ * Normalize caret notation to Unicode superscripts for consistent unit matching.
+ * Converts mm^2 → mm², m/s^2 → m/s², kg^-1 → kg⁻¹, etc.
+ */
+function normalizeUnitString(unit: string): string {
+  if (!unit) return unit;
+
+  const superscriptMap: Record<string, string> = {
+    '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+    '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+    '-': '⁻', '+': '⁺'
+  };
+
+  // Convert ^2 → ², ^-1 → ⁻¹, etc.
+  return unit.replace(/\^([-+]?[0-9]+)/g, (_, exp) => {
+    return exp.split('').map((c: string) => superscriptMap[c] || c).join('');
+  });
+}
+
 export function convertUnit(value: number, fromUnit: string, toUnit: string): number {
   if (fromUnit === toUnit) return value;
 
+  // Normalize unit strings for consistent lookup (mm^2 → mm²)
+  const normalizedFrom = normalizeUnitString(fromUnit);
+  const normalizedTo = normalizeUnitString(toUnit);
+
+  // Check again after normalization
+  if (normalizedFrom === normalizedTo) return value;
+
   // Handle temperature specially - check both raw and normalized forms
-  if (isTemperatureUnit(fromUnit) && isTemperatureUnit(toUnit)) {
-    return convertTemperature(value, fromUnit, toUnit);
+  if (isTemperatureUnit(normalizedFrom) && isTemperatureUnit(normalizedTo)) {
+    return convertTemperature(value, normalizedFrom, normalizedTo);
   }
 
-  // Convert to base unit first
-  const toBase = TO_BASE_CONVERSIONS[fromUnit] || 1;
-  const fromBase = TO_BASE_CONVERSIONS[toUnit] || 1;
+  // Convert to base unit first (use normalized units for lookup)
+  const toBase = TO_BASE_CONVERSIONS[normalizedFrom] || 1;
+  const fromBase = TO_BASE_CONVERSIONS[normalizedTo] || 1;
 
   return value * toBase / fromBase;
 }

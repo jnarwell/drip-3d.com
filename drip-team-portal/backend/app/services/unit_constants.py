@@ -202,18 +202,55 @@ TEMPERATURE_OFFSETS = {
 }
 
 
+import re
+
+def _normalize_unit_string(unit_str: str) -> str:
+    """
+    Convert ASCII caret notation to Unicode superscripts.
+
+    This ensures consistent unit matching regardless of input format:
+    - "mm^2" → "mm²"
+    - "m/s^2" → "m/s²"
+    - "kg^-1" → "kg⁻¹"
+
+    Args:
+        unit_str: Unit string potentially containing caret notation
+
+    Returns:
+        Normalized unit string with Unicode superscripts
+    """
+    if not unit_str:
+        return unit_str
+
+    # Map ASCII to Unicode superscripts
+    superscript_map = {
+        '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+        '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+        '-': '⁻', '+': '⁺'
+    }
+
+    def replace_exponent(match):
+        exp = match.group(1)
+        return ''.join(superscript_map.get(c, c) for c in exp)
+
+    # Convert ^2 → ², ^-1 → ⁻¹, etc.
+    return re.sub(r'\^([-+]?[0-9]+)', replace_exponent, unit_str)
+
+
 def convert_to_si(value: float, unit: str) -> float:
     """Convert a value to SI base unit. Returns None if value is None."""
     if value is None:
         return None
-    if unit in TEMPERATURE_OFFSETS and unit not in ('K', 'kelvin', '°R', 'rankine'):
+    # Normalize unit string (e.g., mm^2 -> mm²) for consistent lookup
+    normalized_unit = _normalize_unit_string(unit)
+    if normalized_unit in TEMPERATURE_OFFSETS and normalized_unit not in ('K', 'kelvin', '°R', 'rankine'):
         # Temperature with offset
-        factor = UNIT_TO_SI.get(unit, 1)
-        offset = TEMPERATURE_OFFSETS.get(unit, 0)
+        factor = UNIT_TO_SI.get(normalized_unit, 1)
+        offset = TEMPERATURE_OFFSETS.get(normalized_unit, 0)
         return value * factor + offset
     else:
         # Simple multiplication
-        factor = UNIT_TO_SI.get(unit, 1)
+        factor = UNIT_TO_SI.get(normalized_unit, 1)
         return value * factor
 
 
@@ -221,16 +258,18 @@ def convert_from_si(value: float, unit: str) -> float:
     """Convert a value from SI base unit to target unit. Returns None if value is None."""
     if value is None:
         return None
-    if unit in TEMPERATURE_OFFSETS and unit not in ('K', 'kelvin', '°R', 'rankine'):
+    # Normalize unit string (e.g., mm^2 -> mm²) for consistent lookup
+    normalized_unit = _normalize_unit_string(unit)
+    if normalized_unit in TEMPERATURE_OFFSETS and normalized_unit not in ('K', 'kelvin', '°R', 'rankine'):
         # Temperature with offset
-        factor = UNIT_TO_SI.get(unit, 1)
-        offset = TEMPERATURE_OFFSETS.get(unit, 0)
+        factor = UNIT_TO_SI.get(normalized_unit, 1)
+        offset = TEMPERATURE_OFFSETS.get(normalized_unit, 0)
         if factor == 0:
             return value
         return (value - offset) / factor
     else:
         # Simple division
-        factor = UNIT_TO_SI.get(unit, 1)
+        factor = UNIT_TO_SI.get(normalized_unit, 1)
         if factor == 0:
             return value
         return value / factor
@@ -238,7 +277,9 @@ def convert_from_si(value: float, unit: str) -> float:
 
 def get_si_unit(unit: str) -> str:
     """Get the SI base unit for a given unit."""
-    dimension = UNIT_TO_DIMENSION.get(unit)
+    # Normalize unit string for consistent lookup
+    normalized_unit = _normalize_unit_string(unit)
+    dimension = UNIT_TO_DIMENSION.get(normalized_unit)
     if dimension:
         return DIMENSION_SI_UNITS.get(dimension, unit)
     return unit
