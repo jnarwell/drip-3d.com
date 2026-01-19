@@ -557,10 +557,15 @@ class ValueEngine:
         DIMENSION_SI_UNITS as _DIMENSION_SI_UNITS,
         UNIT_TO_DIMENSION as _UNIT_TO_DIMENSION,
         UNIT_TO_SI as _UNIT_TO_SI,
+        _normalize_unit_string,
     )
     DIMENSION_SI_UNITS = _DIMENSION_SI_UNITS
     UNIT_TO_DIMENSION = _UNIT_TO_DIMENSION
     UNIT_TO_SI = _UNIT_TO_SI
+
+    def _normalize_unit(self, unit: str) -> str:
+        """Normalize unit string for consistent lookup (mm^2 -> mm²)."""
+        return _normalize_unit_string(unit) if unit else unit
 
     def _parse_expression(self, expression: str) -> Dict[str, Any]:
         """
@@ -663,8 +668,9 @@ class ValueEngine:
             original_with_space = f"{value_str} {unit}"
 
             numeric_value = float(value_str)
-            # Convert to SI base unit
-            conversion_factor = self.UNIT_TO_SI.get(unit, 1)
+            # Convert to SI base unit (normalize unit for consistent lookup)
+            normalized_unit = self._normalize_unit(unit)
+            conversion_factor = self.UNIT_TO_SI.get(normalized_unit, 1)
             si_value = numeric_value * conversion_factor
 
             placeholder = f"__lit_{j}__"
@@ -910,15 +916,17 @@ class ValueEngine:
                         if literal_value is not None:
                             # Convert from property unit to SI base unit
                             prop_unit = prop_def.unit if prop_def else None
+                            # Normalize unit for consistent lookup (mm^2 -> mm²)
+                            normalized_prop_unit = self._normalize_unit(prop_unit)
                             si_value = literal_value
                             si_unit_symbol = None
-                            logger.info(f"_resolve_reference: prop_unit={prop_unit}, in UNIT_TO_SI? {prop_unit in self.UNIT_TO_SI if prop_unit else False}")
+                            logger.info(f"_resolve_reference: prop_unit={prop_unit}, normalized={normalized_prop_unit}, in UNIT_TO_SI? {normalized_prop_unit in self.UNIT_TO_SI if normalized_prop_unit else False}")
 
-                            if prop_unit and prop_unit in self.UNIT_TO_SI:
-                                conversion_factor = self.UNIT_TO_SI[prop_unit]
+                            if normalized_prop_unit and normalized_prop_unit in self.UNIT_TO_SI:
+                                conversion_factor = self.UNIT_TO_SI[normalized_prop_unit]
                                 si_value = literal_value * conversion_factor
                                 # Get the SI base unit for this dimension
-                                dimension = self.UNIT_TO_DIMENSION.get(prop_unit)
+                                dimension = self.UNIT_TO_DIMENSION.get(normalized_prop_unit)
                                 if dimension:
                                     si_unit_symbol = self.DIMENSION_SI_UNITS.get(dimension)
 
@@ -986,14 +994,16 @@ class ValueEngine:
                         if literal_value is not None:
                             # Convert from property unit to SI base unit
                             prop_unit = prop_def.unit if prop_def else None
+                            # Normalize unit for consistent lookup (mm^2 -> mm²)
+                            normalized_prop_unit = self._normalize_unit(prop_unit)
                             si_value = literal_value
                             si_unit_symbol = None
 
-                            if prop_unit and prop_unit in self.UNIT_TO_SI:
-                                conversion_factor = self.UNIT_TO_SI[prop_unit]
+                            if normalized_prop_unit and normalized_prop_unit in self.UNIT_TO_SI:
+                                conversion_factor = self.UNIT_TO_SI[normalized_prop_unit]
                                 si_value = literal_value * conversion_factor
                                 # Get the SI base unit for this dimension
-                                dimension = self.UNIT_TO_DIMENSION.get(prop_unit)
+                                dimension = self.UNIT_TO_DIMENSION.get(normalized_prop_unit)
                                 if dimension:
                                     si_unit_symbol = self.DIMENSION_SI_UNITS.get(dimension)
                                 logger.info(f"Converting material property: {literal_value} {prop_unit} -> {si_value} {si_unit_symbol}")
@@ -1148,7 +1158,9 @@ class ValueEngine:
                 # Track the dimension for bare literal handling
                 unit_symbol = ref_units.get(p)
                 if unit_symbol:
-                    dimension = self.UNIT_TO_DIMENSION.get(unit_symbol)
+                    # Normalize unit for consistent lookup (mm^2 -> mm²)
+                    normalized_unit = self._normalize_unit(unit_symbol)
+                    dimension = self.UNIT_TO_DIMENSION.get(normalized_unit)
                     if dimension:
                         dimensions_used.add(dimension)
 
@@ -1158,7 +1170,9 @@ class ValueEngine:
                 # Track the dimension from literal
                 lit_unit = lit_info.get('unit')
                 if lit_unit:
-                    dimension = self.UNIT_TO_DIMENSION.get(lit_unit)
+                    # Normalize unit for consistent lookup (mm^2 -> mm²)
+                    normalized_lit_unit = self._normalize_unit(lit_unit)
+                    dimension = self.UNIT_TO_DIMENSION.get(normalized_lit_unit)
                     if dimension:
                         dimensions_used.add(dimension)
 
@@ -1197,20 +1211,22 @@ class ValueEngine:
                         except ValueError:
                             return (None, None, False, f"LOOKUP key value '{key_val_expr}' has invalid numeric part", None)
 
+                        # Normalize unit for consistent lookup (mm^2 -> mm²)
+                        normalized_unit_str = self._normalize_unit(unit_str)
                         # Convert to SI using the unit conversion table
-                        if unit_str in self.UNIT_TO_SI:
+                        if normalized_unit_str in self.UNIT_TO_SI:
                             # Handle temperature specially (needs offset conversion, not just scaling)
-                            if unit_str in ['K', 'kelvin']:
+                            if normalized_unit_str in ['K', 'kelvin']:
                                 key_val = raw_value  # Already in Kelvin
-                            elif unit_str in ['°C', '℃', 'degC', 'celsius']:
+                            elif normalized_unit_str in ['°C', '℃', 'degC', 'celsius']:
                                 key_val = raw_value + 273.15  # Convert °C to K
-                            elif unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
+                            elif normalized_unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
                                 key_val = (raw_value - 32) * 5/9 + 273.15  # Convert °F to K
-                            elif unit_str in ['°R', 'rankine']:
+                            elif normalized_unit_str in ['°R', 'rankine']:
                                 key_val = raw_value * 5/9  # Convert °R to K
                             else:
                                 # Standard multiplicative conversion
-                                key_val = raw_value * self.UNIT_TO_SI[unit_str]
+                                key_val = raw_value * self.UNIT_TO_SI[normalized_unit_str]
                             logger.debug(f"LOOKUP input converted: {raw_value}{unit_str} -> {key_val} (SI)")
                         else:
                             # Unknown unit - just use the raw value
@@ -1266,17 +1282,19 @@ class ValueEngine:
                             unit_str = unit_match.group(2)
                             raw_value = float(numeric_str)
 
+                            # Normalize unit for consistent lookup (mm^2 -> mm²)
+                            normalized_unit_str = self._normalize_unit(unit_str)
                             # Convert to SI
-                            if unit_str in self.UNIT_TO_SI:
+                            if normalized_unit_str in self.UNIT_TO_SI:
                                 # Handle temperature specially
-                                if unit_str in ['°C', '℃', 'degC', 'celsius']:
+                                if normalized_unit_str in ['°C', '℃', 'degC', 'celsius']:
                                     resolved_bindings[input_name] = raw_value + 273.15
-                                elif unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
+                                elif normalized_unit_str in ['°F', '℉', 'degF', 'fahrenheit']:
                                     resolved_bindings[input_name] = (raw_value - 32) * 5/9 + 273.15
-                                elif unit_str in ['°R', 'rankine']:
+                                elif normalized_unit_str in ['°R', 'rankine']:
                                     resolved_bindings[input_name] = raw_value * 5/9
                                 else:
-                                    resolved_bindings[input_name] = raw_value * self.UNIT_TO_SI[unit_str]
+                                    resolved_bindings[input_name] = raw_value * self.UNIT_TO_SI[normalized_unit_str]
                             else:
                                 resolved_bindings[input_name] = raw_value
                         else:
@@ -1330,7 +1348,9 @@ class ValueEngine:
                 dimension = list(dimensions_used)[0]
                 user_unit = self._get_user_unit_preference(dimension)
                 if user_unit:
-                    conversion_factor = self.UNIT_TO_SI.get(user_unit, 1)
+                    # Normalize unit for consistent lookup (mm^2 -> mm²)
+                    normalized_user_unit = self._normalize_unit(user_unit)
+                    conversion_factor = self.UNIT_TO_SI.get(normalized_user_unit, 1)
                     logger.info(f"Converting bare literals using user preference: {user_unit} (factor: {conversion_factor})")
                     for p, bare_info in bare_literals.items():
                         si_val = bare_info['value'] * conversion_factor

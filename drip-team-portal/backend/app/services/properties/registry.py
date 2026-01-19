@@ -371,7 +371,7 @@ def _frange(start: float, end: float, step: float):
 
 
 # Import centralized unit constants
-from app.services.unit_constants import UNIT_TO_SI
+from app.services.unit_constants import UNIT_TO_SI, _normalize_unit_string
 
 
 def _get_conversion_factor(from_unit: str, to_unit: str) -> float:
@@ -384,8 +384,12 @@ def _get_conversion_factor(from_unit: str, to_unit: str) -> float:
     if from_unit == to_unit:
         return 1.0
 
-    from_factor = UNIT_TO_SI.get(from_unit, 1.0)
-    to_factor = UNIT_TO_SI.get(to_unit, 1.0)
+    # Normalize units for consistent lookup (mm^2 -> mm²)
+    normalized_from = _normalize_unit_string(from_unit) if from_unit else from_unit
+    normalized_to = _normalize_unit_string(to_unit) if to_unit else to_unit
+
+    from_factor = UNIT_TO_SI.get(normalized_from, 1.0)
+    to_factor = UNIT_TO_SI.get(normalized_to, 1.0)
 
     if to_factor == 0:
         return 1.0
