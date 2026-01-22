@@ -565,7 +565,7 @@ class ValueEngine:
 
     def _normalize_unit(self, unit: str) -> str:
         """Normalize unit string for consistent lookup (mm^2 -> mm²)."""
-        return _normalize_unit_string(unit) if unit else unit
+        return ValueEngine._normalize_unit_string(unit) if unit else unit
 
     def _parse_expression(self, expression: str) -> Dict[str, Any]:
         """
