@@ -178,8 +178,9 @@ LITERAL_WITH_UNIT_PATTERN = re.compile(
 # Used to identify literals that need user-preferred unit conversion
 # Matches integers and decimals, negative numbers, scientific notation
 # Excludes numbers already captured by LITERAL_WITH_UNIT_PATTERN (has unit suffix)
+# Excludes exponents after ** (power operator) - those should stay as literal numbers
 BARE_LITERAL_PATTERN = re.compile(
-    r'(?<![a-zA-Z0-9_\.])(-?\d+\.?\d*(?:[eE][+-]?\d+)?)(?![a-zA-Z0-9_\.])',
+    r'(?<!\*\*)(?<![a-zA-Z0-9_\.])(-?\d+\.?\d*(?:[eE][+-]?\d+)?)(?![a-zA-Z0-9_\.])',
     re.UNICODE
 )
 
