@@ -1313,7 +1313,9 @@ class ValueEngine:
                                 'pi': math.pi,
                                 'e': math.e,
                             }
-                            resolved_bindings[input_name] = float(eval(resolved_expr, {"__builtins__": {}}, safe_dict))
+                            # Convert ^ to ** for exponentiation (^ is XOR in Python)
+                            eval_expr = resolved_expr.replace('^', '**')
+                            resolved_bindings[input_name] = float(eval(eval_expr, {"__builtins__": {}}, safe_dict))
                     except Exception as e:
                         return (None, None, False, f"MODEL() binding '{input_name}: {binding_expr}' could not be resolved: {e}", None)
 
