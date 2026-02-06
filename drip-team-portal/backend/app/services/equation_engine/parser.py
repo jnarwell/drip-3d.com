@@ -6,6 +6,7 @@ Validates that all inputs are in the allowed set.
 """
 
 from typing import Dict, Any, List, Optional, Set
+import logging
 import sympy
 from sympy import sympify, Symbol, sqrt, sin, cos, tan, log, exp, pi, E, Abs
 from sympy.core.add import Add
@@ -22,6 +23,8 @@ from sympy.functions.elementary.complexes import Abs as sympy_abs
 
 from .exceptions import EquationParseError, UnknownInputError
 import re
+
+logger = logging.getLogger(__name__)
 
 
 def _preprocess_equation(
@@ -116,13 +119,21 @@ def parse_equation(
         EquationParseError: Invalid syntax
         UnknownInputError: References undefined input (if allowed_inputs provided)
     """
+    logger.debug(f"parse_equation: Parsing '{equation_text}' with allowed_inputs={allowed_inputs}")
+
     if not equation_text or not equation_text.strip():
-        raise EquationParseError("Empty equation")
+        logger.warning("parse_equation: Received empty equation")
+        raise EquationParseError(
+            "Empty equation",
+            expression=equation_text
+        )
 
     equation_text = equation_text.strip()
 
     # Preprocess for engineer-friendly syntax (^ to **, spaces to underscores)
     processed_text, name_mapping = _preprocess_equation(equation_text, allowed_inputs)
+    if processed_text != equation_text:
+        logger.debug(f"parse_equation: Preprocessed '{equation_text}' -> '{processed_text}'")
 
     # Build local dict for sympify
     local_dict = {}
@@ -132,11 +143,28 @@ def parse_equation(
     try:
         # Parse with SymPy
         sympy_expr = sympify(processed_text, locals=local_dict)
+        logger.debug(f"parse_equation: SymPy parsed successfully: {sympy_expr}")
+    except SyntaxError as e:
+        logger.error(f"parse_equation: Syntax error in '{equation_text}': {e}")
+        # Try to extract position from SyntaxError
+        position = getattr(e, 'offset', None)
+        raise EquationParseError(
+            f"Syntax error: {e}",
+            expression=equation_text,
+            position=position,
+            details={"processed_text": processed_text}
+        )
     except Exception as e:
-        raise EquationParseError(f"Failed to parse equation: {e}")
+        logger.error(f"parse_equation: Failed to parse '{equation_text}': {type(e).__name__}: {e}")
+        raise EquationParseError(
+            f"Failed to parse equation: {e}",
+            expression=equation_text,
+            details={"processed_text": processed_text, "error_type": type(e).__name__}
+        )
 
     # Extract all input symbols from the expression
     found_inputs = _extract_inputs(sympy_expr)
+    logger.debug(f"parse_equation: Found inputs: {found_inputs}")
 
     # Validate inputs if allowed_inputs provided
     # Need to compare normalized names (spaces replaced with underscores)
@@ -149,10 +177,28 @@ def parse_equation(
         for inp in found_inputs:
             inp_lower = inp.lower()
             if inp_lower not in normalized_allowed:
-                raise UnknownInputError(inp, allowed_inputs)
+                logger.warning(
+                    f"parse_equation: Unknown input '{inp}' in expression '{equation_text}'. "
+                    f"Allowed inputs: {allowed_inputs}"
+                )
+                raise UnknownInputError(
+                    inp,
+                    allowed_inputs,
+                    expression=equation_text
+                )
 
     # Convert SymPy expression to AST
-    ast = _sympy_to_ast(sympy_expr)
+    try:
+        ast = _sympy_to_ast(sympy_expr)
+    except EquationParseError:
+        raise
+    except Exception as e:
+        logger.error(f"parse_equation: Failed to convert to AST for '{equation_text}': {e}")
+        raise EquationParseError(
+            f"Failed to convert expression to AST: {e}",
+            expression=equation_text,
+            details={"sympy_expr": str(sympy_expr), "error_type": type(e).__name__}
+        )
 
     # Map inputs back to original names (with spaces if that's how they were defined)
     original_inputs = set()
@@ -169,6 +215,8 @@ def parse_equation(
                 original_inputs.add(inp)
     else:
         original_inputs = found_inputs
+
+    logger.debug(f"parse_equation: Successfully parsed '{equation_text}' with inputs {sorted(original_inputs)}")
 
     return {
         "original": equation_text,
@@ -310,7 +358,12 @@ def _sympy_to_ast(expr) -> Dict[str, Any]:
         return {"type": "func", "name": "abs", "arg": _sympy_to_ast(expr.args[0])}
 
     # Fallback for unhandled types
-    raise EquationParseError(f"Unsupported expression type: {func_name}")
+    logger.warning(f"_sympy_to_ast: Unsupported expression type '{func_name}' for expr: {expr}")
+    raise EquationParseError(
+        f"Unsupported expression type: {func_name}",
+        expression=str(expr),
+        details={"sympy_type": func_name, "args": [str(a) for a in getattr(expr, 'args', [])]}
+    )
 
 
 def get_ast_inputs(ast: Dict[str, Any]) -> Set[str]:

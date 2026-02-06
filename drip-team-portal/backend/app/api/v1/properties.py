@@ -284,9 +284,21 @@ async def add_component_property(
             value_node_id = value_node.id
             logger.info(f"Created expression ValueNode {value_node_id} for {value_description}")
         except ExpressionError as e:
+            logger.warning(
+                f"add_component_property: Expression error for {component_id}.{property_def.name}: "
+                f"'{property_data.expression}' - {e}"
+            )
+            error_detail = {
+                "message": str(e),
+                "expression": property_data.expression,
+                "component_id": component_id,
+                "property": property_def.name,
+            }
+            if hasattr(e, 'to_dict'):
+                error_detail.update(e.to_dict())
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid expression: {str(e)}"
+                detail=error_detail
             )
 
     elif property_data.single_value is not None:
@@ -403,9 +415,21 @@ async def update_component_property(
             logger.info(f"Updated expression for property {property_id}")
 
         except ExpressionError as e:
+            logger.warning(
+                f"update_component_property: Expression error for {component_id} property {property_id}: "
+                f"'{expression}' - {e}"
+            )
+            error_detail = {
+                "message": str(e),
+                "expression": expression,
+                "component_id": component_id,
+                "property_id": property_id,
+            }
+            if hasattr(e, 'to_dict'):
+                error_detail.update(e.to_dict())
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid expression: {str(e)}"
+                detail=error_detail
             )
 
     # Handle single_value update (literal)

@@ -363,13 +363,67 @@ def _parse_model_binding(binding_str: str) -> tuple:
 
 
 class ExpressionError(Exception):
-    """Error during expression parsing or evaluation."""
-    pass
+    """
+    Error during expression parsing or evaluation.
+
+    Attributes:
+        expression: The expression that caused the error
+        details: Additional context about the failure
+    """
+
+    def __init__(
+        self,
+        message: str,
+        expression: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        self.expression = expression
+        self.details = details or {}
+
+        full_msg = message
+        if expression:
+            display_expr = expression if len(expression) <= 100 else expression[:97] + "..."
+            full_msg = f"{message} | Expression: '{display_expr}'"
+
+        super().__init__(full_msg)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "error_type": "ExpressionError",
+            "message": str(self.args[0]) if self.args else "Expression error",
+            "expression": self.expression,
+            "details": self.details,
+        }
 
 
 class CircularDependencyError(Exception):
-    """Circular dependency detected in value graph."""
-    pass
+    """
+    Circular dependency detected in value graph.
+
+    Attributes:
+        node_id: The node where circular dependency was detected
+        dependency_chain: List of node IDs in the cycle (if known)
+    """
+
+    def __init__(
+        self,
+        message: str,
+        node_id: Optional[int] = None,
+        dependency_chain: Optional[List[int]] = None
+    ):
+        self.node_id = node_id
+        self.dependency_chain = dependency_chain or []
+        super().__init__(message)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "error_type": "CircularDependencyError",
+            "message": str(self.args[0]) if self.args else "Circular dependency",
+            "node_id": self.node_id,
+            "dependency_chain": self.dependency_chain,
+        }
 
 
 class ValueEngine:
@@ -760,8 +814,19 @@ class ValueEngine:
             }
 
         except Exception as e:
-            logger.error(f"Failed to parse expression '{expression}': {e}")
-            raise ExpressionError(f"Invalid expression: {e}")
+            logger.error(
+                f"Failed to parse expression '{expression}': {type(e).__name__}: {e}",
+                exc_info=True
+            )
+            raise ExpressionError(
+                f"Invalid expression: {e}",
+                expression=expression,
+                details={
+                    "error_type": type(e).__name__,
+                    "modified_expr": modified_expr if 'modified_expr' in dir() else None,
+                    "placeholders": placeholders if 'placeholders' in dir() else None,
+                }
+            )
 
     def _extract_references(self, expression: str) -> List[str]:
         """Extract all variable references from an expression."""
@@ -1056,28 +1121,65 @@ class ValueEngine:
 
         Returns: (value, unit_id, success, error_message, si_unit_symbol)
         """
+        node_desc = f"Node(id={node.id}, type={node.node_type.value})"
+        logger.debug(
+            f"compute_value: Starting computation for {node_desc}"
+            + (f", expected_unit='{expected_unit}'" if expected_unit else "")
+        )
+
         # Circular dependency check
         if node.id in self._evaluation_stack:
+            chain = list(self._evaluation_stack)
+            logger.error(
+                f"compute_value: Circular dependency detected for {node_desc}. "
+                f"Evaluation chain: {chain}"
+            )
             node.computation_status = ComputationStatus.CIRCULAR
-            node.computation_error = "Circular dependency detected"
+            node.computation_error = f"Circular dependency detected (chain: {chain})"
             return (None, None, False, "Circular dependency detected", None)
 
         self._evaluation_stack.add(node.id)
+        stack_depth = len(self._evaluation_stack)
 
         try:
             if node.node_type == NodeType.LITERAL:
+                logger.debug(
+                    f"compute_value: [depth={stack_depth}] {node_desc} is LITERAL, "
+                    f"value={node.numeric_value}"
+                )
                 return (node.numeric_value, node.unit_id, True, None, None)
 
             elif node.node_type == NodeType.REFERENCE:
                 if not node.reference_node:
-                    return (None, None, False, "Referenced node not found", None)
+                    logger.warning(
+                        f"compute_value: [depth={stack_depth}] {node_desc} references "
+                        f"node_id={node.reference_node_id} which was not found"
+                    )
+                    return (None, None, False, f"Referenced node {node.reference_node_id} not found", None)
+                logger.debug(
+                    f"compute_value: [depth={stack_depth}] {node_desc} -> "
+                    f"following reference to node {node.reference_node_id}"
+                )
                 ref_value, ref_unit, success, error, si_unit = self.compute_value(node.reference_node, expected_unit)
+                if success:
+                    logger.debug(
+                        f"compute_value: [depth={stack_depth}] {node_desc} resolved "
+                        f"via reference to value={ref_value}"
+                    )
                 return (ref_value, ref_unit, success, error, si_unit)
 
             elif node.node_type == NodeType.EXPRESSION:
+                expr_preview = (node.expression_string or "")[:50]
+                if len(node.expression_string or "") > 50:
+                    expr_preview += "..."
+                logger.debug(
+                    f"compute_value: [depth={stack_depth}] {node_desc} is EXPRESSION, "
+                    f"evaluating '{expr_preview}'"
+                )
                 return self._evaluate_expression(node, expected_unit)
 
             else:
+                logger.error(f"compute_value: {node_desc} has unknown node type")
                 return (None, None, False, f"Unknown node type: {node.node_type}", None)
 
         finally:
@@ -1521,17 +1623,32 @@ class ValueEngine:
 
         # Now parse the modified expression to compute dimension
         # We use a simple recursive descent approach on the expression string
-        logger.info(f"_compute_expression_dimension: placeholder_dimensions={placeholder_dimensions}")
+        # Log the placeholder dimensions in a readable format
+        dims_summary = {
+            p: dimension_to_string(d) if d else "dimensionless"
+            for p, d in placeholder_dimensions.items()
+        }
+        logger.info(f"_compute_expression_dimension: placeholder_dimensions={dims_summary}")
+
         try:
             result_dim = self._infer_dimension_from_expr(modified_expr, placeholder_dimensions)
-            logger.info(f"_compute_expression_dimension: result_dim={dimension_to_string(result_dim) if result_dim else 'None'}")
+            result_str = dimension_to_string(result_dim) if result_dim else 'dimensionless'
+            logger.info(f"_compute_expression_dimension: Successfully inferred dimension '{result_str}' for '{original_expr}'")
             return (result_dim, None)
         except DimensionError as e:
-            logger.warning(f"_compute_expression_dimension: DimensionError: {e}")
+            logger.warning(
+                f"_compute_expression_dimension: Dimension error for '{original_expr}': {e} | "
+                f"Available dimensions: {dims_summary}"
+            )
             return (None, str(e))
         except Exception as e:
-            logger.warning(f"Failed to infer dimension for '{original_expr}': {e}")
-            return (None, f"Dimension inference failed: {e}")
+            logger.error(
+                f"_compute_expression_dimension: Unexpected error inferring dimension for '{original_expr}': "
+                f"{type(e).__name__}: {e} | Modified expr: '{modified_expr}' | "
+                f"Placeholder dimensions: {dims_summary}",
+                exc_info=True
+            )
+            return (None, f"Dimension inference failed: {type(e).__name__}: {e}")
 
     def _infer_dimension_from_expr(self, expr: str, placeholder_dims: Dict[str, Dimension]) -> Dimension:
         """

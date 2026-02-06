@@ -211,9 +211,16 @@ async def create_expression_value(
         return _node_to_response(node, db)
 
     except ExpressionError as e:
+        logger.warning(f"create_expression_value: Expression error for '{data.expression}': {e}")
+        error_detail = {
+            "message": str(e),
+            "expression": data.expression,
+        }
+        if hasattr(e, 'to_dict'):
+            error_detail.update(e.to_dict())
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid expression: {str(e)}"
+            detail=error_detail
         )
 
 
@@ -491,9 +498,14 @@ async def validate_expression(
         )
 
     except ExpressionError as e:
+        logger.debug(f"validate_expression: Expression validation failed for '{data.expression}': {e}")
+        # Include detailed error info if available
+        error_msg = str(e)
+        if hasattr(e, 'expression') and e.expression:
+            error_msg = f"{e.args[0] if e.args else 'Parse error'}"
         return ExpressionValidateResponse(
             valid=False,
-            error=str(e)
+            error=error_msg
         )
 
 
@@ -574,9 +586,17 @@ async def update_expression_value(
 
     except ExpressionError as e:
         db.rollback()
+        logger.warning(f"update_expression_value: Expression error for node {node_id}: {e}")
+        error_detail = {
+            "message": str(e),
+            "expression": data.expression,
+            "node_id": node_id,
+        }
+        if hasattr(e, 'to_dict'):
+            error_detail.update(e.to_dict())
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid expression: {str(e)}"
+            detail=error_detail
         )
 
 

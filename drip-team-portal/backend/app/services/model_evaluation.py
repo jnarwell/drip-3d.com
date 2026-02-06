@@ -27,13 +27,70 @@ _evaluation_stack: set = set()
 
 
 class ModelEvaluationError(Exception):
-    """Error during model evaluation."""
-    pass
+    """
+    Error during model evaluation.
+
+    Attributes:
+        model_name: Name of the model being evaluated (if known)
+        input_name: Name of the input that caused the error (if applicable)
+        output_name: Name of the output being computed (if applicable)
+        details: Additional context about the failure
+    """
+
+    def __init__(
+        self,
+        message: str,
+        model_name: Optional[str] = None,
+        input_name: Optional[str] = None,
+        output_name: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None
+    ):
+        self.model_name = model_name
+        self.input_name = input_name
+        self.output_name = output_name
+        self.details = details or {}
+
+        # Build informative message with context
+        context_parts = []
+        if model_name:
+            context_parts.append(f"model='{model_name}'")
+        if input_name:
+            context_parts.append(f"input='{input_name}'")
+        if output_name:
+            context_parts.append(f"output='{output_name}'")
+
+        full_msg = message
+        if context_parts:
+            full_msg = f"{message} | {', '.join(context_parts)}"
+
+        super().__init__(full_msg)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "error_type": "ModelEvaluationError",
+            "message": str(self.args[0]) if self.args else "Model evaluation error",
+            "model_name": self.model_name,
+            "input_name": self.input_name,
+            "output_name": self.output_name,
+            "details": self.details,
+        }
 
 
 class CircularDependencyError(ModelEvaluationError):
     """Raised when a circular dependency is detected between analyses."""
-    pass
+
+    def __init__(self, message: str, analysis_chain: Optional[List[str]] = None):
+        self.analysis_chain = analysis_chain or []
+        super().__init__(message)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "error_type": "CircularDependencyError",
+            "message": str(self.args[0]) if self.args else "Circular dependency",
+            "analysis_chain": self.analysis_chain,
+        }
 
 
 def resolve_model_input(
