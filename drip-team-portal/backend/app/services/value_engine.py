@@ -512,12 +512,20 @@ class ValueEngine:
         created_by: Optional[str] = None
     ) -> ValueNode:
         """Create a literal value node."""
+        # Look up unit symbol if unit_id is provided
+        computed_unit_symbol = None
+        if unit_id is not None:
+            unit = self.db.query(Unit).filter(Unit.id == unit_id).first()
+            if unit:
+                computed_unit_symbol = unit.symbol
+
         node = ValueNode(
             node_type=NodeType.LITERAL,
             numeric_value=value,
             unit_id=unit_id,
             computed_value=value,
             computed_unit_id=unit_id,
+            computed_unit_symbol=computed_unit_symbol,
             computation_status=ComputationStatus.VALID,
             description=description,
             created_by=created_by,
@@ -1595,6 +1603,7 @@ class ValueEngine:
         # Also check placeholders that might not be in ref_units
         # This can happen if _get_reference_unit couldn't find the PropertyDefinition
         # but the ValueNode still has a computed_unit_symbol
+        missing_units = []  # Track refs with missing unit info for warning
         for placeholder, ref in parsed.get("placeholders", {}).items():
             if placeholder not in placeholder_dimensions:
                 # Try to resolve the reference and get its computed_unit_symbol
@@ -1606,10 +1615,13 @@ class ValueEngine:
                         logger.debug(f"Resolved dimension for {placeholder} ({ref}) from ValueNode: {dimension_to_string(dim)}")
                     else:
                         placeholder_dimensions[placeholder] = DIMENSIONLESS
+                        missing_units.append(ref)
                 else:
                     # No unit info available - default to dimensionless
                     placeholder_dimensions[placeholder] = DIMENSIONLESS
-                    logger.debug(f"No dimension info for {placeholder} ({ref}), defaulting to dimensionless")
+                    missing_units.append(ref)
+                    logger.warning(f"No unit info for reference '{ref}', treating as dimensionless. "
+                                   "Dimension inference may be incorrect.")
 
         # Bare literals are dimensionless scalars (like "* 2" or "/ 3")
         for placeholder in parsed.get("bare_literals", {}).keys():
