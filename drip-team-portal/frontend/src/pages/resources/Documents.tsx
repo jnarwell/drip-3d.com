@@ -81,8 +81,29 @@ interface DriveFile {
   thumbnailLink?: string;
 }
 
+// Helper to check if a filename is a diagram file (drawio, etc.)
+const isDiagramFile = (fileName?: string, mimeType?: string): boolean => {
+  if (fileName) {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.drawio') || lower.endsWith('.drawio.xml') || lower.endsWith('.drawio.png') || lower.endsWith('.drawio.svg')) {
+      return true;
+    }
+  }
+  if (mimeType) {
+    // draw.io uses these MIME types
+    if (mimeType.includes('jgraph') || mimeType.includes('drawio')) {
+      return true;
+    }
+  }
+  return false;
+};
+
 // Drive file type info with SVG icons
-const getDriveFileInfo = (mimeType: string): { label: string; color: string; bgColor: string } => {
+const getDriveFileInfo = (mimeType: string, fileName?: string): { label: string; color: string; bgColor: string } => {
+  // Check for diagram files first (by filename since MIME may be generic)
+  if (isDiagramFile(fileName, mimeType)) {
+    return { label: 'Diagram', color: 'text-amber-600', bgColor: 'bg-amber-50' };
+  }
   if (mimeType.includes('folder')) {
     return { label: 'Folder', color: 'text-gray-600', bgColor: 'bg-gray-100' };
   }
@@ -108,7 +129,16 @@ const getDriveFileInfo = (mimeType: string): { label: string; color: string; bgC
 };
 
 // SVG icon component for drive files
-const DriveFileIcon: React.FC<{ mimeType: string; className?: string }> = ({ mimeType, className = 'w-5 h-5' }) => {
+const DriveFileIcon: React.FC<{ mimeType: string; fileName?: string; className?: string }> = ({ mimeType, fileName, className = 'w-5 h-5' }) => {
+  // Check for diagram files first
+  if (isDiagramFile(fileName, mimeType)) {
+    return (
+      <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm9 0a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1V4zM3 13a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm9 0a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-3z" clipRule="evenodd" />
+        <path d="M7.5 5.5h5M5.5 7.5v5M14.5 7.5v5M7.5 14.5h5" stroke="currentColor" strokeWidth="1" fill="none" />
+      </svg>
+    );
+  }
   if (mimeType.includes('folder')) {
     return (
       <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -174,6 +204,7 @@ const DOC_TYPE_INFO: Record<string, { label: string; icon: string; color: string
   paper: { label: 'Paper', icon: 'TXT', color: 'bg-yellow-100 text-yellow-800' },
   video: { label: 'Video', icon: 'VID', color: 'bg-purple-100 text-purple-800' },
   image: { label: 'Image', icon: 'IMG', color: 'bg-pink-100 text-pink-800' },
+  diagram: { label: 'Diagram', icon: 'DIA', color: 'bg-amber-100 text-amber-800' },
   link: { label: 'Link', icon: 'URL', color: 'bg-cyan-100 text-cyan-800' },
   other: { label: 'Other', icon: 'FILE', color: 'bg-gray-100 text-gray-800' },
 };
@@ -295,7 +326,7 @@ const Documents: React.FC = () => {
     queryKey: ['documents-all'],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image');
+      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image,diagram');
       const response = await api.get(`/api/v1/resources?${params.toString()}`);
       return response.data;
     },
@@ -307,7 +338,7 @@ const Documents: React.FC = () => {
     queryKey: ['documents', debouncedSearch, selectedType, selectedTag, sortBy, sortOrder, showStarred],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image');
+      params.append('type', 'doc,paper,spreadsheet,slides,pdf,video,image,diagram');
       if (debouncedSearch) {
         params.append('search', debouncedSearch);
       }
@@ -694,9 +725,10 @@ const Documents: React.FC = () => {
   };
 
   const handleDriveFileSelect = (file: DriveFile) => {
-    // Infer resource type from MIME type
+    // Infer resource type from MIME type and filename
     let resourceType = 'link';
-    if (file.mimeType.includes('document')) resourceType = 'doc';
+    if (isDiagramFile(file.name, file.mimeType)) resourceType = 'diagram';
+    else if (file.mimeType.includes('document')) resourceType = 'doc';
     else if (file.mimeType.includes('spreadsheet')) resourceType = 'spreadsheet';
     else if (file.mimeType.includes('presentation')) resourceType = 'slides';
     else if (file.mimeType.includes('pdf')) resourceType = 'pdf';
@@ -1363,7 +1395,7 @@ const Documents: React.FC = () => {
                 /* List View */
                 <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
                   {driveFiles?.map(file => {
-                    const fileInfo = getDriveFileInfo(file.mimeType);
+                    const fileInfo = getDriveFileInfo(file.mimeType, file.name);
                     const isSelected = selectedDriveFile?.id === file.id;
                     const isFolderItem = isFolder(file);
                     return (
@@ -1379,7 +1411,7 @@ const Documents: React.FC = () => {
                         title={isFolderItem ? 'Double-click to open folder' : 'Double-click to add'}
                       >
                         <div className={`w-9 h-9 rounded-lg ${fileInfo.bgColor} ${fileInfo.color} flex items-center justify-center flex-shrink-0`}>
-                          <DriveFileIcon mimeType={file.mimeType} className="w-5 h-5" />
+                          <DriveFileIcon mimeType={file.mimeType} fileName={file.name} className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className={`text-sm font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>
@@ -1412,7 +1444,7 @@ const Documents: React.FC = () => {
                 /* Grid View */
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {driveFiles?.map(file => {
-                    const fileInfo = getDriveFileInfo(file.mimeType);
+                    const fileInfo = getDriveFileInfo(file.mimeType, file.name);
                     const isSelected = selectedDriveFile?.id === file.id;
                     const isFolderItem = isFolder(file);
                     return (
@@ -1428,7 +1460,7 @@ const Documents: React.FC = () => {
                         }`}
                       >
                         <div className={`w-12 h-12 rounded-lg ${fileInfo.bgColor} ${fileInfo.color} flex items-center justify-center mx-auto mb-2`}>
-                          <DriveFileIcon mimeType={file.mimeType} className="w-6 h-6" />
+                          <DriveFileIcon mimeType={file.mimeType} fileName={file.name} className="w-6 h-6" />
                         </div>
                         <p className={`text-xs font-medium truncate ${isSelected ? 'text-indigo-900' : 'text-gray-900'}`}>
                           {file.name}
