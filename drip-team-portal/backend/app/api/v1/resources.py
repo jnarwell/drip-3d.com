@@ -244,7 +244,7 @@ async def create_resource(
     user_id = current_user["email"]
 
     # Validate resource_type
-    valid_types = {"doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
+    valid_types = {"diagram", "doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
     if data.resource_type not in valid_types:
         logger.warning(f"POST /resources - Invalid resource_type: '{data.resource_type}' (valid: {valid_types})")
         raise HTTPException(
@@ -328,7 +328,7 @@ async def update_resource(
         resource.title = data.title
 
     if data.resource_type is not None:
-        valid_types = {"doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
+        valid_types = {"diagram", "doc", "folder", "image", "link", "paper", "pdf", "slides", "spreadsheet", "video"}
         if data.resource_type not in valid_types:
             raise HTTPException(
                 status_code=400,
@@ -469,6 +469,7 @@ async def list_resource_types(
     """
     return {
         "types": [
+            {"id": "diagram", "name": "Diagram", "icon": "GitBranch"},
             {"id": "doc", "name": "Document", "icon": "FileText"},
             {"id": "folder", "name": "Folder", "icon": "Folder"},
             {"id": "image", "name": "Image", "icon": "Image"},
