@@ -1,3 +1,6 @@
+[variables]
+NIXPACKS_PYTHON_VERSION = "3.9"
+
 [phases.setup]
 nixPkgs = ["python39"]
 
@@ -5,7 +8,8 @@ nixPkgs = ["python39"]
 cmds = ["cd backend && pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["cd backend && alembic upgrade head"]
+# Migration will run at startup via railway.json startCommand
+# This avoids build-time database connection issues
 
 [start]
-cmd = "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+# Overridden by railway.json startCommand
