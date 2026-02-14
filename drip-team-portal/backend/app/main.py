@@ -92,6 +92,24 @@ async def general_exception_handler(request: Request, exc: Exception):
 async def startup_event():
     """Initialize database tables on startup"""
     try:
+        # Run Alembic migrations on startup
+        import subprocess
+        import os
+        logging.info("=== Running Alembic migrations ===")
+        migration_result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd=os.path.dirname(os.path.dirname(__file__)),  # backend directory
+            capture_output=True,
+            text=True
+        )
+        logging.info(f"Migration stdout: {migration_result.stdout}")
+        if migration_result.stderr:
+            logging.warning(f"Migration stderr: {migration_result.stderr}")
+        if migration_result.returncode != 0:
+            logging.error(f"Migration failed with code {migration_result.returncode}")
+        else:
+            logging.info("=== Migrations complete ===")
+        
         if settings.DATABASE_URL:
             from sqlalchemy import text
 
