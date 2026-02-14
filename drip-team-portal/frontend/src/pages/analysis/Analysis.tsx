@@ -28,7 +28,6 @@ interface Analysis {
   model_category: string;
   model_version_id: number;
   computation_status: 'valid' | 'stale' | 'error' | 'pending';
-  error_message?: string | null;
   created_at: string;
   updated_at?: string;
   output_value_nodes: AnalysisOutput[];
@@ -396,18 +395,9 @@ export default function Analysis() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[analysis.computation_status] || STATUS_COLORS.pending}`}>
-                          {STATUS_LABELS[analysis.computation_status] || 'PENDING'}
-                        </span>
-                        {analysis.computation_status === 'error' && analysis.error_message && (
-                          <div className="mt-1 text-xs text-red-600 max-w-xs" title={analysis.error_message}>
-                            {analysis.error_message.length > 60 
-                              ? `${analysis.error_message.substring(0, 60)}...` 
-                              : analysis.error_message}
-                          </div>
-                        )}
-                      </div>
+                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${STATUS_COLORS[analysis.computation_status] || STATUS_COLORS.pending}`}>
+                        {STATUS_LABELS[analysis.computation_status] || 'PENDING'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {analysis.updated_at ? formatTimeAgo(analysis.updated_at) : formatTimeAgo(analysis.created_at)}
@@ -526,24 +516,6 @@ export default function Analysis() {
                                     <div className="text-sm">{formatOutput(output)}</div>
                                   </div>
                                 ))}
-                              </div>
-                            </div>
-                          )}
-                          {analysis.computation_status === 'error' && analysis.error_message && (
-                            <div className="mt-4">
-                              <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">Error Details</h4>
-                              <div className="bg-red-50 border border-red-200 rounded p-3">
-                                <div className="flex">
-                                  <svg className="h-5 w-5 text-red-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  <div className="ml-3">
-                                    <h3 className="text-sm font-medium text-red-800">Analysis Failed</h3>
-                                    <div className="mt-2 text-sm text-red-700">
-                                      <p className="font-mono text-xs whitespace-pre-wrap">{analysis.error_message}</p>
-                                    </div>
-                                  </div>
-                                </div>
                               </div>
                             </div>
                           )}

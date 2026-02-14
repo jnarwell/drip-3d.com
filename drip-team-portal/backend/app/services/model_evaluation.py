@@ -498,7 +498,6 @@ def evaluate_model_instance(
         # Update instance status
         instance.last_computed = datetime.utcnow()
         instance.computation_status = ComputationStatus.VALID
-        instance.error_message = None  # Clear any previous error message
 
         db.flush()  # Get IDs for value_nodes
 
@@ -512,18 +511,6 @@ def evaluate_model_instance(
 
         instance.computation_status = ComputationStatus.ERROR
         instance.last_computed = datetime.utcnow()
-        
-        # Store detailed error message for user diagnostics
-        if isinstance(e, ModelEvaluationError):
-            # Use the full context from ModelEvaluationError
-            error_msg = str(e)
-        elif isinstance(e, CircularDependencyError):
-            error_msg = f"Circular dependency: {str(e)}"
-        else:
-            # Generic error - capture type and message
-            error_msg = f"{type(e).__name__}: {str(e)}"
-        
-        instance.error_message = error_msg
 
         # Mark existing output nodes as ERROR (don't delete them - preserve FK refs)
         existing_outputs = db.query(ValueNode).filter(

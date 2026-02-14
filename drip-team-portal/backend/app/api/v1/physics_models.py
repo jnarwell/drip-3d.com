@@ -857,7 +857,6 @@ async def get_model_instance(
         "model_name": instance.model_version.physics_model.name if instance.model_version and instance.model_version.physics_model else None,
         "model_category": instance.model_version.physics_model.category if instance.model_version and instance.model_version.physics_model else None,
         "computation_status": instance.computation_status.value if instance.computation_status else None,
-        "error_message": instance.error_message,
         "last_computed": instance.last_computed.isoformat() if instance.last_computed else None,
         "created_at": instance.created_at.isoformat() if instance.created_at else None,
         "inputs": [
@@ -1090,7 +1089,6 @@ async def list_analyses(
             "model_name": instance.model_version.physics_model.name if instance.model_version and instance.model_version.physics_model else None,
             "model_category": instance.model_version.physics_model.category if instance.model_version and instance.model_version.physics_model else None,
             "computation_status": instance.computation_status.value if instance.computation_status else None,
-            "error_message": instance.error_message,
             "last_computed": instance.last_computed.isoformat() if instance.last_computed else None,
             "created_at": instance.created_at.isoformat() if instance.created_at else None,
             "created_by": instance.created_by,
@@ -1165,7 +1163,6 @@ async def get_analysis(
         "model_name": instance.model_version.physics_model.name if instance.model_version and instance.model_version.physics_model else None,
         "model_category": instance.model_version.physics_model.category if instance.model_version and instance.model_version.physics_model else None,
         "computation_status": instance.computation_status.value if instance.computation_status else None,
-        "error_message": instance.error_message,
         "last_computed": instance.last_computed.isoformat() if instance.last_computed else None,
         "created_at": instance.created_at.isoformat() if instance.created_at else None,
         "created_by": instance.created_by,
