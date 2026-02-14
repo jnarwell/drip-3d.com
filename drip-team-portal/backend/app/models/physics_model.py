@@ -189,6 +189,7 @@ class ModelInstance(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     last_computed = Column(DateTime)  # When outputs were last calculated
     computation_status = Column(SQLEnum(ComputationStatus))  # Reuse from values.py
+    error_message = Column(Text, nullable=True)  # Detailed error message when computation_status is ERROR
 
     # Relationships
     model_version = relationship("PhysicsModelVersion", back_populates="instances")
