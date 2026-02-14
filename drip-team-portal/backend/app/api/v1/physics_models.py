@@ -567,7 +567,10 @@ async def validate_physics_model(data: ModelValidateRequest):
             output_unit = output.unit
             expected_dim = UNIT_DIMENSIONS.get(output_unit) if output_unit else None
 
-            if expected_dim and input_dims:
+            # BUGFIX Issue-04: Always validate if output has dimensional expectations
+            # Previously: if expected_dim and input_dims: (skipped when input_dims was {})
+            # Now: Always validate when expected_dim exists, let validation catch undefined inputs
+            if expected_dim:
                 is_valid, error_msg = validate_equation_dimensions(
                     parsed['ast'],
                     input_dims,
@@ -582,9 +585,11 @@ async def validate_physics_model(data: ModelValidateRequest):
                 if not is_valid:
                     errors.append(f"Dimension error in '{output_name}': {error_msg}")
             else:
+                # Output has no unit specified - skip dimensional validation
+                # This is acceptable for truly dimensionless outputs
                 dimensional_results[output_name] = {
                     "valid": True,
-                    "message": "Dimensions not checked (missing unit info)"
+                    "message": "Dimensions not checked (no output unit specified)"
                 }
         except DimensionError as e:
             errors.append(f"Dimension validation error in '{output_name}': {str(e)}")
