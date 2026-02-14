@@ -12,4 +12,4 @@ cmds = ["cd backend && pip install -r requirements.txt"]
 # This avoids build-time database connection issues
 
 [start]
-# Overridden by railway.json startCommand
+cmd = "cd backend && echo 'Running migrations...' && alembic current && alembic upgrade head && echo 'Migration complete, starting server...' && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
