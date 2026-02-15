@@ -34,6 +34,7 @@ from app.services.dimensional_analysis import (
     UNIT_DIMENSIONS,
     validate_equation_dimensions,
     DimensionError,
+    _normalize_unit_string,
 )
 from app.services.model_evaluation import (
     evaluate_and_attach,
@@ -560,11 +561,13 @@ async def validate_physics_model(data: ModelValidateRequest):
         try:
             input_dims = {}
             for inp in data.inputs:
-                unit = inp.unit
+                # Normalize ASCII caret notation (m^2) to Unicode superscripts (m²)
+                unit = _normalize_unit_string(inp.unit) if inp.unit else None
                 if unit and unit in UNIT_DIMENSIONS:
                     input_dims[inp.name] = UNIT_DIMENSIONS[unit]
 
-            output_unit = output.unit
+            # Normalize output unit as well
+            output_unit = _normalize_unit_string(output.unit) if output.unit else None
             expected_dim = UNIT_DIMENSIONS.get(output_unit) if output_unit else None
 
             # BUGFIX Issue-04: Always validate if output has dimensional expectations
