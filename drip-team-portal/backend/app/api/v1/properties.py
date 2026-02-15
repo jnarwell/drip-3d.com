@@ -12,7 +12,7 @@ else:
     from app.core.security import get_current_user
 from app.models.property import PropertyDefinition, ComponentProperty, PropertyType
 from app.models.component import Component
-from app.models.values import ValueNode
+from app.models.values import ValueNode, ValueDependency
 from app.models.units import Unit
 from app.models.user import User
 from app.services.value_engine import ValueEngine, ExpressionError
@@ -513,8 +513,16 @@ async def delete_component_property(
             detail="Property not found"
         )
 
-    # Note: We don't delete the ValueNode here as it might be referenced elsewhere
-    # The ValueNode can be orphaned and cleaned up separately if needed
+    # Check if this property's ValueNode is referenced by other ValueNodes
+    if property_value.value_node_id:
+        dependent_count = db.query(ValueDependency).filter(
+            ValueDependency.source_id == property_value.value_node_id
+        ).count()
+        if dependent_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete: {dependent_count} other value(s) depend on this property"
+            )
 
     db.delete(property_value)
     db.commit()
