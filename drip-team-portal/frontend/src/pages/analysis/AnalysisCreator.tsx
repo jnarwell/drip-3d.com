@@ -27,6 +27,7 @@ export default function AnalysisCreator() {
   const [description, setDescription] = useState('');
   const [selectedModel, setSelectedModel] = useState<PhysicsModel | null>(null);
   const [bindings, setBindings] = useState<Record<string, string>>({});
+  const [bindingsValid, setBindingsValid] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(!isEditMode);
 
@@ -71,6 +72,9 @@ export default function AnalysisCreator() {
         });
       }
       setBindings(inputBindings);
+      // Existing bindings were previously accepted; treat as valid initially
+      // StepBindInputs will re-validate when the user reaches step 3
+      setBindingsValid(true);
       setInitialized(true);
     }
   }, [existingAnalysis, initialized]);
@@ -123,6 +127,7 @@ export default function AnalysisCreator() {
   const handleModelSelect = (model: PhysicsModel) => {
     setSelectedModel(model);
     setBindings({});
+    setBindingsValid(false);
   };
 
   const handleCreate = () => {
@@ -169,7 +174,8 @@ export default function AnalysisCreator() {
       case 3:
         if (!selectedModel) return false;
         const requiredInputs = (selectedModel.inputs || []).filter(i => !i.optional);
-        return requiredInputs.every(i => bindings[i.name]);
+        const allFilled = requiredInputs.every(i => bindings[i.name]);
+        return allFilled && bindingsValid;
       case 4:
         return true;
       default:
@@ -393,6 +399,7 @@ export default function AnalysisCreator() {
               model={selectedModel}
               bindings={bindings}
               onChange={setBindings}
+              onValidationChange={setBindingsValid}
             />
           )}
 
