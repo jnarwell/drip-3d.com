@@ -10,8 +10,8 @@ const componentSchema = z.object({
   phase: z.nativeEnum(RDPhase),
   part_number: z.string().optional(),
   supplier: z.string().optional(),
-  unit_cost: z.union([z.number().positive(), z.literal('')]).optional(),
-  quantity: z.union([z.number().int().positive(), z.literal('')]).optional(),
+  unit_cost: z.union([z.number().positive('Cost must be a positive number'), z.literal('')]).optional(),
+  quantity: z.union([z.number().int('Quantity must be a whole number greater than 0').positive('Quantity must be a whole number greater than 0'), z.literal('')]).optional(),
   notes: z.string().optional(),
   tech_specs: z.record(z.string(), z.any()).optional(),
 });
@@ -131,6 +131,9 @@ const ComponentForm: React.FC<ComponentFormProps> = ({
             {...register('unit_cost', { valueAsNumber: true })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           />
+          {errors.unit_cost && (
+            <p className="mt-1 text-sm text-red-600">{errors.unit_cost.message}</p>
+          )}
         </div>
 
         <div>
@@ -143,6 +146,9 @@ const ComponentForm: React.FC<ComponentFormProps> = ({
             {...register('quantity', { valueAsNumber: true })}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           />
+          {errors.quantity && (
+            <p className="mt-1 text-sm text-red-600">{errors.quantity.message}</p>
+          )}
         </div>
       </div>
 
