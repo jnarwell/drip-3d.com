@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { useAuthenticatedApi } from '../services/api';
 import { ComponentProperty, PropertyType, PropertyDefinition } from '../types';
 import AddPropertyDropdown from './AddPropertyDropdown';
@@ -15,6 +16,8 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
   const queryClient = useQueryClient();
   const [groupedProperties, setGroupedProperties] = useState<Record<PropertyType, ComponentProperty[]>>({} as Record<PropertyType, ComponentProperty[]>);
   const [collapsedCategories, setCollapsedCategories] = useState<Record<PropertyType, boolean>>({} as Record<PropertyType, boolean>);
+  const [pendingDeleteProperty, setPendingDeleteProperty] = useState<ComponentProperty | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data: properties, isLoading } = useQuery<ComponentProperty[]>({
     queryKey: ['component-properties', componentId],
@@ -30,8 +33,37 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['component-properties', componentId] });
+      setPendingDeleteProperty(null);
+      setDeleteError(null);
+    },
+    onError: (error: AxiosError<{ detail: string }>) => {
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+      if (status === 409) {
+        setDeleteError(
+          detail || 'This property is referenced by other values and cannot be deleted. Remove those references first.'
+        );
+      } else {
+        setDeleteError('Failed to delete property. Please try again.');
+      }
     },
   });
+
+  const handleDeleteRequest = (property: ComponentProperty) => {
+    setDeleteError(null);
+    setPendingDeleteProperty(property);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (pendingDeleteProperty) {
+      deleteProperty.mutate(pendingDeleteProperty.id);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setPendingDeleteProperty(null);
+    setDeleteError(null);
+  };
 
   // Load collapsed state from localStorage on component mount
   useEffect(() => {
@@ -147,7 +179,7 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
                       key={property.id}
                       property={property}
                       componentId={componentId}
-                      onDelete={() => deleteProperty.mutate(property.id)}
+                      onDelete={() => handleDeleteRequest(property)}
                     />
                   ))}
                 </div>
@@ -162,6 +194,64 @@ const PropertyList: React.FC<PropertyListProps> = ({ componentId }) => {
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-500 mb-4">No properties defined yet</p>
           <p className="text-sm text-gray-400">Click "Add Property" to get started</p>
+        </div>
+      )}
+
+      {/* Delete Property Confirmation Dialog */}
+      {pendingDeleteProperty && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+          onClick={handleDeleteCancel}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Delete Property</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {pendingDeleteProperty.property_definition.name}
+              </p>
+            </div>
+
+            <div className="px-6 py-4 space-y-3">
+              <p className="text-sm text-gray-700">
+                Are you sure you want to delete{' '}
+                <span className="font-medium">{pendingDeleteProperty.property_definition.name}</span>?
+                This action cannot be undone.
+              </p>
+
+              {deleteError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-red-700">{deleteError}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                disabled={deleteProperty.isPending}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deleteProperty.isPending || !!deleteError}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {deleteProperty.isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
