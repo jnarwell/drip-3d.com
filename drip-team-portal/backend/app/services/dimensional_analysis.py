@@ -317,6 +317,21 @@ UNIT_DIMENSIONS: Dict[str, Dimension] = {
     'mHz': FREQUENCY,
     'rpm': FREQUENCY,
     'rps': FREQUENCY,
+    '1/s': FREQUENCY,
+    's⁻¹': FREQUENCY,
+
+    # -------------------------------------------------------------------------
+    # Electrical - Resistivity -> M·L³·T⁻³·I⁻²
+    # -------------------------------------------------------------------------
+    'Ω·m': Dimension(mass=1, length=3, time=-3, current=-2),
+    'Ohm*m': Dimension(mass=1, length=3, time=-3, current=-2),
+    'kg*m^3/(A^2*s^3)': Dimension(mass=1, length=3, time=-3, current=-2),
+
+    # -------------------------------------------------------------------------
+    # Magnetic Permeability -> M·L·T⁻²·I⁻²
+    # -------------------------------------------------------------------------
+    'H/m': Dimension(mass=1, length=1, time=-2, current=-2),
+    'kg*m/(A^2*s^2)': Dimension(mass=1, length=1, time=-2, current=-2),
 
     # -------------------------------------------------------------------------
     # Energy -> M·L²·T⁻²

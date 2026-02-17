@@ -592,7 +592,7 @@ async def validate_physics_model(data: ModelValidateRequest):
                 # This is acceptable for truly dimensionless outputs
                 dimensional_results[output_name] = {
                     "valid": True,
-                    "message": "Dimensions not checked (no output unit specified)"
+                    "message": "Unit not recognized for dimensional validation - cannot verify."
                 }
         except DimensionError as e:
             errors.append(f"Dimension validation error in '{output_name}': {str(e)}")
