@@ -64,11 +64,19 @@ export default function StepBindInputs({ model, bindings, onChange, onValidation
   // Debounce timers per field
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
+  // Stable ref to hold the latest validateBinding without adding it to useEffect deps.
+  // This breaks the infinite render loop caused by useAuthenticatedApi() creating a new
+  // axios instance on every render, which makes validateBinding change every render, which
+  // triggers the useEffect, which sets pending state, which re-renders, which repeats.
+  const validateBindingRef = useRef<(name: string, value: string) => Promise<void>>(async () => {});
+
   const handleInputChange = (name: string, value: string) => {
     onChange({ ...bindings, [name]: value });
   };
 
-  // Validate a single binding and update status
+  // Validate a single binding and update status.
+  // Note: validateBinding is recreated when api changes (every render due to useAuthenticatedApi).
+  // We sync it to validateBindingRef so the debounce useEffect can call it without depending on it.
   const validateBinding = useCallback(async (inputName: string, value: string) => {
     const kind = classifyBinding(value);
 
@@ -190,7 +198,16 @@ export default function StepBindInputs({ model, bindings, onChange, onValidation
     setValidationErrors(prev => ({ ...prev, [inputName]: '' }));
   }, [api]);
 
-  // Debounced validation trigger per field
+  // Keep the ref in sync with the latest validateBinding on every render.
+  // This allows the debounce effect below to call the latest version without listing
+  // validateBinding as a dependency (which would cause the infinite loop).
+  validateBindingRef.current = validateBinding;
+
+  // Debounced validation trigger per field.
+  // IMPORTANT: validateBinding is intentionally NOT in this dependency array.
+  // It is accessed via validateBindingRef.current to avoid the infinite render loop.
+  // The ref is always up-to-date because validateBindingRef.current = validateBinding
+  // runs on every render before effects fire.
   useEffect(() => {
     inputs.forEach(input => {
       const value = bindings[input.name] || '';
@@ -208,9 +225,9 @@ export default function StepBindInputs({ model, bindings, onChange, onValidation
         setValidationErrors(prev => ({ ...prev, [input.name]: '' }));
       }
 
-      // Debounce the actual validation
+      // Debounce the actual validation - use ref to avoid stale closure
       debounceTimers.current[input.name] = setTimeout(() => {
-        validateBinding(input.name, value);
+        validateBindingRef.current(input.name, value);
       }, 500);
     });
 
@@ -218,7 +235,8 @@ export default function StepBindInputs({ model, bindings, onChange, onValidation
     return () => {
       Object.values(debounceTimers.current).forEach(clearTimeout);
     };
-  }, [bindings, inputs, validateBinding]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bindings, inputs]);
 
   // Notify parent when validation state changes
   useEffect(() => {
