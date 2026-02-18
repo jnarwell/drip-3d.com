@@ -49,7 +49,7 @@ export default function AnalysisCreator() {
       const response = await api.get('/api/v1/physics-models');
       return response.data;
     },
-    enabled: isEditMode && !!existingAnalysis,
+    enabled: isEditMode,
   });
 
   // Pre-populate form when existing analysis loads
@@ -125,9 +125,14 @@ export default function AnalysisCreator() {
   });
 
   const handleModelSelect = (model: PhysicsModel) => {
+    const isSameModelInEditMode = isEditMode && selectedModel && (
+      selectedModel.id === model.id || selectedModel.version_id === model.version_id
+    );
     setSelectedModel(model);
-    setBindings({});
-    setBindingsValid(false);
+    if (!isSameModelInEditMode) {
+      setBindings({});
+      setBindingsValid(false);
+    }
   };
 
   const handleCreate = () => {
