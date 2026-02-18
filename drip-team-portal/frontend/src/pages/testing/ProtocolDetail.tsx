@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthenticatedApi } from '../../services/api';
 import type { TestProtocolDetail, ProtocolStats, TestRunStatus, TestResultStatus } from '../../types';
 
@@ -21,8 +21,6 @@ const ProtocolDetail: React.FC = () => {
   const { protocolId } = useParams<{ protocolId: string }>();
   const navigate = useNavigate();
   const api = useAuthenticatedApi();
-  const queryClient = useQueryClient();
-
   // Fetch protocol details
   const { data: protocol, isLoading, error } = useQuery<TestProtocolDetail>({
     queryKey: ['test-protocol', protocolId],
@@ -41,23 +39,6 @@ const ProtocolDetail: React.FC = () => {
       return response.data;
     },
     enabled: !!protocolId,
-  });
-
-  // Create run mutation
-  const createRun = useMutation({
-    mutationFn: async () => {
-      const response = await api.post(`/api/v1/test-protocols/${protocolId}/runs`, {
-        protocol_id: Number(protocolId),
-      });
-      return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['test-protocol', protocolId] });
-      navigate(`/testing/runs/${data.id}`);
-    },
-    onError: (error: any) => {
-      alert(error.response?.data?.detail || 'Failed to create run');
-    },
   });
 
   if (isLoading) {
@@ -125,11 +106,10 @@ const ProtocolDetail: React.FC = () => {
               Edit
             </Link>
             <button
-              onClick={() => createRun.mutate()}
-              disabled={createRun.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+              onClick={() => navigate(`/testing/protocols/${protocolId}/run`)}
+              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
             >
-              {createRun.isPending ? 'Creating...' : 'Run Test'}
+              Run Test
             </button>
           </div>
         </div>
