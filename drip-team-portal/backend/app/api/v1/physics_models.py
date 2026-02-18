@@ -142,6 +142,16 @@ def parse_binding_value(binding_expr: str) -> dict:
     except ValueError:
         pass
 
+    # Try to evaluate as a pure numeric math expression (e.g., 2.65*10^-8)
+    try:
+        from sympy import sympify, N as sym_N
+        expr_py = expr.replace('^', '**')
+        sym_result = sympify(expr_py)
+        if sym_result.is_number:
+            return {"type": "literal", "value": float(sym_N(sym_result))}
+    except Exception:
+        pass
+
     # Check for direct ValueNode reference: #REF:77 or #NODE:77
     # This enables analysis-to-analysis chaining
     node_match = re.match(r'^#(?:REF|NODE):(\d+)$', expr, re.IGNORECASE)

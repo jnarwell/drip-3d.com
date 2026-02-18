@@ -297,6 +297,15 @@ def resolve_model_input(
                 f"for input '{model_input.input_name}'"
             )
         else:
+            # Try to evaluate as a numeric expression (fallback for legacy bindings like 2.65*10^-8)
+            try:
+                from sympy import sympify, N as sym_N
+                expr_py = expression.replace('^', '**')
+                sym_result = sympify(expr_py)
+                if sym_result.is_number:
+                    return float(sym_N(sym_result))
+            except Exception:
+                pass
             # Other lookup types not yet supported
             raise NotImplementedError(
                 f"Non-#REF lookup not implemented for input '{model_input.input_name}': {expression}"
