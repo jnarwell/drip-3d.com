@@ -181,6 +181,8 @@ THERMAL_EXPANSION = Dimension(temperature=-1)                                 # 
 SPECIFIC_ENERGY = Dimension(length=2, time=-2)                               # L²·T⁻² (J/kg)
 SPECIFIC_ENTROPY = Dimension(length=2, time=-2, temperature=-1)              # L²·T⁻²·Θ⁻¹ (J/(kg·K))
 SPECIFIC_VOLUME = Dimension(length=3, mass=-1)                               # L³·M⁻¹ (m³/kg)
+RESISTIVITY = Dimension(mass=1, length=3, time=-3, current=-2)               # M·L³·T⁻³·I⁻² (Ohm*m)
+PERMEABILITY = Dimension(mass=1, length=1, time=-2, current=-2)              # M·L·T⁻²·I⁻² (H/m)
 
 # =============================================================================
 # UNIT TO DIMENSION MAPPING
@@ -317,6 +319,26 @@ UNIT_DIMENSIONS: Dict[str, Dimension] = {
     'mHz': FREQUENCY,
     'rpm': FREQUENCY,
     'rps': FREQUENCY,
+    '1/s': FREQUENCY,
+    's⁻¹': FREQUENCY,
+
+    # -------------------------------------------------------------------------
+    # Electrical - Resistivity -> M·L³·T⁻³·I⁻²
+    # -------------------------------------------------------------------------
+    'Ω·m': RESISTIVITY,
+    'Ohm·m': RESISTIVITY,
+    'Ohm*m': RESISTIVITY,
+    'kg*m^3/(A^2*s^3)': RESISTIVITY,    # raw caret form
+    'kg*m³/(A²*s³)': RESISTIVITY,       # normalized unicode form (matches _normalize_unit_string output)
+
+    # -------------------------------------------------------------------------
+    # Magnetic Permeability -> M·L·T⁻²·I⁻²
+    # -------------------------------------------------------------------------
+    'H/m': PERMEABILITY,
+    'μH/m': PERMEABILITY,
+    'mH/m': PERMEABILITY,
+    'kg*m/(A^2*s^2)': PERMEABILITY,    # raw caret form
+    'kg*m/(A²*s²)': PERMEABILITY,      # normalized unicode form (matches _normalize_unit_string output)
 
     # -------------------------------------------------------------------------
     # Energy -> M·L²·T⁻²
@@ -1078,6 +1100,8 @@ DIMENSION_TO_SI_UNIT: Dict[Dimension, str] = {
     SPECIFIC_ENERGY: 'J/kg',
     SPECIFIC_ENTROPY: 'J/(kg·K)',
     SPECIFIC_VOLUME: 'm³/kg',
+    RESISTIVITY: 'Ω·m',
+    PERMEABILITY: 'H/m',
 }
 
 
