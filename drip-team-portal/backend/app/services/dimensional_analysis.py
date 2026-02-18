@@ -143,6 +143,7 @@ LUMINOSITY = Dimension(luminosity=1)
 # Derived geometric dimensions
 AREA = Dimension(length=2)                    # L²
 VOLUME = Dimension(length=3)                  # L³
+SECOND_MOMENT_OF_AREA = Dimension(length=4)  # L⁴ (second moment of area / torsional constant)
 
 # Mechanical dimensions
 VELOCITY = Dimension(length=1, time=-1)                      # L·T⁻¹
@@ -233,6 +234,21 @@ UNIT_DIMENSIONS: Dict[str, Dimension] = {
     'gal': VOLUME,
     'fl oz': VOLUME,
     'bbl': VOLUME,
+
+    # -------------------------------------------------------------------------
+    # Second Moment of Area / Torsional Constant -> L⁴
+    # Required for structural beam calculations (deflection, bending stress, buckling)
+    # -------------------------------------------------------------------------
+    'mm^4': SECOND_MOMENT_OF_AREA,
+    'mm⁴': SECOND_MOMENT_OF_AREA,
+    'cm^4': SECOND_MOMENT_OF_AREA,
+    'cm⁴': SECOND_MOMENT_OF_AREA,
+    'm^4': SECOND_MOMENT_OF_AREA,
+    'm⁴': SECOND_MOMENT_OF_AREA,
+    'in^4': SECOND_MOMENT_OF_AREA,
+    'in⁴': SECOND_MOMENT_OF_AREA,
+    'ft^4': SECOND_MOMENT_OF_AREA,
+    'ft⁴': SECOND_MOMENT_OF_AREA,
 
     # -------------------------------------------------------------------------
     # Mass -> M
@@ -1069,6 +1085,7 @@ DIMENSION_TO_SI_UNIT: Dict[Dimension, str] = {
     LENGTH: 'm',
     AREA: 'm²',
     VOLUME: 'm³',
+    SECOND_MOMENT_OF_AREA: 'm⁴',
     MASS: 'kg',
     TIME: 's',
     TEMPERATURE: 'K',
