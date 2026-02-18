@@ -140,6 +140,15 @@ def parse_equation(
     local_dict.update(SUPPORTED_FUNCTIONS)
     local_dict.update(SUPPORTED_CONSTANTS)
 
+    # Pre-define user variables as Symbol objects so they take precedence
+    # over SymPy built-ins (e.g., 'I' -> Symbol('I') instead of ImaginaryUnit,
+    # 'E' -> Symbol('E') instead of Euler's number, 'S' -> Symbol('S'), etc.)
+    if allowed_inputs:
+        for inp in allowed_inputs:
+            norm = inp.replace(' ', '_')
+            if norm not in local_dict:
+                local_dict[norm] = Symbol(norm)
+
     try:
         # Parse with SymPy
         sympy_expr = sympify(processed_text, locals=local_dict)
