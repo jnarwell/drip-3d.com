@@ -240,29 +240,18 @@ const StepValidate: React.FC<StepValidateProps> = ({ data, onValidChange }) => {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Dimensional Analysis</h4>
                 <div className="space-y-2">
-                  {Object.entries(validation.dimensional_analysis).map(([output, result]) => (
+                  {Object.entries(validation.dimensional_analysis).map(([output, result]) => {
+                    const isWarning = result.valid && result.message &&
+                      (result.message.includes('not recognized') || result.message.includes('cannot verify') || result.message.includes('not checked'));
+                    return (
                     <div
                       key={output}
                       className={`text-sm p-2 rounded ${
-                        result.valid ? 'bg-green-50' : 'bg-red-50'
+                        !result.valid ? 'bg-red-50' : isWarning ? 'bg-yellow-50' : 'bg-green-50'
                       }`}
                     >
                       <div className="flex items-center">
-                        {result.valid ? (
-                          <svg
-                            className="h-4 w-4 text-green-500 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        ) : (
+                        {!result.valid ? (
                           <svg
                             className="h-4 w-4 text-red-500 mr-2"
                             fill="none"
@@ -276,14 +265,43 @@ const StepValidate: React.FC<StepValidateProps> = ({ data, onValidChange }) => {
                               d="M6 18L18 6M6 6l12 12"
                             />
                           </svg>
+                        ) : isWarning ? (
+                          <svg
+                            className="h-4 w-4 text-yellow-500 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-4 w-4 text-green-500 mr-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
                         )}
                         <code className="font-mono">{output}</code>
                       </div>
-                      {!result.valid && result.message && (
-                        <p className="ml-6 text-red-600">{result.message}</p>
+                      {((!result.valid) || isWarning) && result.message && (
+                        <p className={isWarning ? 'ml-6 text-yellow-700' : 'ml-6 text-red-600'}>{result.message}</p>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
