@@ -17,6 +17,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timezone, date
+import json
 import os
 
 from app.db.database import get_db
@@ -447,8 +448,8 @@ async def update_entry(
     if data.breaks is not None:
         # Get current breaks for history
         current_breaks = db.query(TimeBreak).filter(TimeBreak.time_entry_id == entry_id).all()
-        old_breaks_str = str([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in current_breaks])
-        new_breaks_str = str([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in data.breaks])
+        old_breaks_str = json.dumps([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in current_breaks])
+        new_breaks_str = json.dumps([{"started_at": b.started_at.isoformat(), "stopped_at": b.stopped_at.isoformat(), "note": b.note} for b in data.breaks])
 
         if old_breaks_str != new_breaks_str:
             changes.append({
@@ -459,6 +460,29 @@ async def update_entry(
                 "edited_at": datetime.now(timezone.utc).isoformat(),
                 "edited_by": user_id
             })
+
+            # Validate break times before modifying anything.
+            # Use updated entry times if they are being changed in this request,
+            # otherwise fall back to the existing entry times.
+            effective_start = data.started_at if data.started_at is not None else entry.started_at
+            effective_stop = data.stopped_at if data.stopped_at is not None else entry.stopped_at
+
+            for break_input in data.breaks:
+                if break_input.stopped_at <= break_input.started_at:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Break stopped_at must be after started_at"
+                    )
+                if effective_start is not None and break_input.started_at < effective_start:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Break times must be within entry time range"
+                    )
+                if effective_stop is not None and break_input.stopped_at > effective_stop:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Break times must be within entry time range"
+                    )
 
             # Delete existing breaks
             for b in current_breaks:
