@@ -239,6 +239,7 @@ const ModelsList: React.FC = () => {
                           e.stopPropagation();
                           setOpenDropdownId(openDropdownId === model.id ? null : model.id);
                         }}
+                        aria-label="Model actions"
                         className="text-gray-400 hover:text-gray-600"
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -247,7 +248,7 @@ const ModelsList: React.FC = () => {
                       </button>
 
                       {openDropdownId === model.id && (
-                        <div className="absolute right-0 z-50 bottom-full mb-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+                        <div className="absolute right-0 z-50 top-full mt-1 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
                           <div className="py-1">
                             <button
                               onClick={(e) => {
