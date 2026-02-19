@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Optional
 import io
 
@@ -24,24 +24,23 @@ router = APIRouter(prefix="/api/v1/reports")
 
 @router.get("/validation-report")
 async def generate_validation_report(
-    start_date: Optional[datetime] = Query(None),
-    end_date: Optional[datetime] = Query(None),
-    format: str = Query("pdf", regex="^(pdf|excel)$"),
+    start_date: Optional[date] = Query(None),
+    end_date: Optional[date] = Query(None),
+    format: str = Query("pdf", pattern="^(pdf|excel)$"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
     """Generate validation report in PDF or Excel format"""
     # Default date range if not provided
-    if not end_date:
-        end_date = datetime.utcnow()
-    if not start_date:
-        start_date = end_date - timedelta(days=30)
+    now = datetime.utcnow()
+    end_dt: datetime = datetime.combine(end_date, datetime.max.time()) if end_date else now
+    start_dt: datetime = datetime.combine(start_date, datetime.min.time()) if start_date else end_dt - timedelta(days=30)
     
     report_gen = ReportGenerator(db)
     
     if format == "pdf":
-        buffer = report_gen.generate_validation_report(start_date, end_date)
-        filename = f"drip_validation_report_{start_date.date()}_{end_date.date()}.pdf"
+        buffer = report_gen.generate_validation_report(start_dt, end_dt)
+        filename = f"drip_validation_report_{start_dt.date()}_{end_dt.date()}.pdf"
         media_type = "application/pdf"
     else:
         buffer = report_gen.generate_test_campaign_excel()

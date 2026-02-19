@@ -189,8 +189,8 @@ const Reports: React.FC = () => {
       const response = await api.get('/api/v1/reports/validation-report', {
         params: {
           format,
-          start_date: dateRange.start_date,
-          end_date: dateRange.end_date,
+          start_date: dateRange.start_date + 'T00:00:00',
+          end_date: dateRange.end_date + 'T23:59:59',
         },
         responseType: 'blob',
       });
