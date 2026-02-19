@@ -76,6 +76,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
   const [breaks, setBreaks] = useState<BreakEditInput[]>(() => initializeBreaks(entry.breaks));
   const [reason, setReason] = useState('');
   const [customReason, setCustomReason] = useState('');
+  const [formError, setFormError] = useState('');
 
   const updateEntry = useUpdateTimeEntry();
 
@@ -125,10 +126,36 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setFormError('');
+
     const finalReason = reason === 'Other' ? customReason : reason;
     if (!finalReason) {
-      alert('Please select a reason for editing');
+      setFormError('Please select a reason for editing');
       return;
+    }
+
+    // Validate break times against effective entry range
+    if (breaks.length > 0) {
+      const effectiveStart = new Date(startedAt);
+      const effectiveStop = stoppedAt ? new Date(stoppedAt) : null;
+
+      for (const b of breaks) {
+        const breakStart = new Date(`${b.date}T${b.startTime}`);
+        const breakEnd = new Date(`${b.date}T${b.endTime}`);
+
+        if (breakEnd <= breakStart) {
+          setFormError('Break end time must be after start time');
+          return;
+        }
+        if (breakStart < effectiveStart) {
+          setFormError('Break times must be within entry time range');
+          return;
+        }
+        if (effectiveStop && breakEnd > effectiveStop) {
+          setFormError('Break times must be within entry time range');
+          return;
+        }
+      }
     }
 
     const updates: Record<string, unknown> = {};
@@ -167,7 +194,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
     }
 
     if (Object.keys(updates).length === 0) {
-      alert('No changes detected');
+      setFormError('No changes detected');
       return;
     }
 
@@ -178,9 +205,19 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
         edit_reason: finalReason,
       });
       onClose();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to update entry:', error);
-      alert('Failed to update entry. Please try again.');
+      // Try to surface the API error detail rather than a generic message
+      let message = 'Failed to update entry. Please try again.';
+      if (error && typeof error === 'object' && 'response' in error) {
+        const resp = (error as { response?: { data?: { detail?: string } } }).response;
+        if (resp?.data?.detail) {
+          message = resp.data.detail;
+        }
+      } else if (error instanceof Error && error.message) {
+        message = error.message;
+      }
+      setFormError(message);
     }
   };
 
@@ -338,6 +375,13 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose }) => {
                 onChange={(e) => setCustomReason(e.target.value)}
                 className="w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
+            </div>
+          )}
+
+          {/* Form-level error */}
+          {formError && (
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
+              {formError}
             </div>
           )}
 
