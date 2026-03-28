@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navigation from '../../components/company/Navigation';
 import Footer from '../../components/company/Footer';
 import { useFadeInWhenVisible } from '../../hooks/useFadeInWhenVisible';
@@ -23,10 +24,10 @@ const TeamPage: React.FC = () => {
   // Mobile detection
   const isMobile = useMobile();
   
-  // Future: This will open a modal with more details from Linear
+  const navigate = useNavigate();
+
   const handleTeamMemberClick = (member: TeamMember) => {
-    console.log('Team member clicked:', member.name);
-    // TODO: Open modal with member details, projects from Linear, etc.
+    navigate(`/team/${member.slug}`);
   };
   return (
     <div style={{ 

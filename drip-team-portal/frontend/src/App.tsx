@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 import { DomainAwareAuthProvider, DomainAwareProtectedRoute } from './services/auth-domain';
 import { UnitProvider } from './contexts/UnitContext';
 import { useIsTeamDomain } from './hooks/useDomain';
@@ -34,6 +35,7 @@ import Docs from './pages/Docs';
 import HomePage from './pages/company/HomePage';
 import ProgressPage from './pages/company/ProgressPage';
 import TeamPage from './pages/company/TeamPage';
+import TeamMemberProfile from './pages/company/TeamMemberProfile';
 import ErrorBoundary from './components/ErrorBoundary';
 import TeamPortalErrorBoundary from './components/TeamPortalErrorBoundary';
 
@@ -58,6 +60,7 @@ function AppRoutes() {
         <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
         <Route path="/progress" element={<ErrorBoundary><ProgressPage /></ErrorBoundary>} />
         <Route path="/team" element={<ErrorBoundary><TeamPage /></ErrorBoundary>} />
+        <Route path="/team/:slug" element={<ErrorBoundary><TeamMemberProfile /></ErrorBoundary>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     );
@@ -118,15 +121,17 @@ function AppRoutes() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <DomainAwareAuthProvider>
-        <UnitProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
-        </UnitProvider>
-      </DomainAwareAuthProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <DomainAwareAuthProvider>
+          <UnitProvider>
+            <Router>
+              <AppRoutes />
+            </Router>
+          </UnitProvider>
+        </DomainAwareAuthProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 
