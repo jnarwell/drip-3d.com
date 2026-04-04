@@ -37,14 +37,20 @@ class DRIPValidation:
     
     def _get_viscosity(self, temp: float, material: str) -> float:
         """
-        Get material-specific viscosity based on temperature
-        Uses empirical models for common DRIP materials
+        Get material-specific viscosity based on temperature (in Celsius).
+
+        Arrhenius model: eta = eta0 * exp(Ea_over_R / T_K)
+        where T_K = temp + 273.15.
+
+        Aluminum parameters fitted to Iida & Guthrie (1988):
+            eta(660C) = 1.3 mPa.s, eta(850C) = 0.9 mPa.s.
+        Steel/titanium/copper scaled from same reference families.
         """
         viscosity_models = {
-            "aluminum": lambda T: 0.85e-3 * np.exp(3000 / (T + 273.15)),
-            "steel": lambda T: 1.9e-3 * np.exp(4200 / (T + 273.15)),
-            "titanium": lambda T: 2.3e-3 * np.exp(4500 / (T + 273.15)),
-            "copper": lambda T: 1.2e-3 * np.exp(3500 / (T + 273.15)),
+            "aluminum": lambda T: 1.479e-4 * np.exp(2028 / (T + 273.15)),
+            "steel": lambda T: 2.8e-4 * np.exp(2850 / (T + 273.15)),
+            "titanium": lambda T: 3.2e-4 * np.exp(3100 / (T + 273.15)),
+            "copper": lambda T: 1.7e-4 * np.exp(2400 / (T + 273.15)),
         }
         
         if material.lower() in viscosity_models:
